@@ -114,7 +114,7 @@ const CustomerList = () => {
                             <tr key={customer.id}>
                                 <td>{customer.firstName} {customer.lastName}</td>
                                 <td>{customer.phone}</td>
-                                <td>{customer.email}</td>
+                                <td>{customer.username}</td>
                                 <td>{customer.address}</td>
                                 <td>{customer.vehicleCount || 0}</td>
                                 <td>

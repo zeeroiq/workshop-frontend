@@ -16,7 +16,7 @@ const CustomerForm = () => {
         firstName: '',
         lastName: '',
         phone: '',
-        email: '',
+        username: '',
         address: ''
     });
 
@@ -122,7 +122,7 @@ const CustomerForm = () => {
                         type="email"
                         id="email"
                         name="email"
-                        value={customer.email}
+                        value={customer.username}
                         onChange={handleChange}
                     />
                 </div>

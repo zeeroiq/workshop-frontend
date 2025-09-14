@@ -1,6 +1,6 @@
 import axios from 'axios';
+import { authService } from './authService';
 
-// Use environment-specific API URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
@@ -8,13 +8,12 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor to add auth token if available
+// Request interceptor to add auth token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('authToken');
+        const token = authService.getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -25,21 +24,14 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle common errors
+// Response interceptor to handle auth errors
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Handle unauthorized access
-            localStorage.removeItem('authToken');
+            authService.logout();
             window.location.href = '/login';
         }
-
-        // Log errors in development but not in production
-        if (process.env.REACT_APP_DEBUG === 'true') {
-            console.error('API Error:', error);
-        }
-
         return Promise.reject(error);
     }
 );
