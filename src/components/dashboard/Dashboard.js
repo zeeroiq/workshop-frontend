@@ -12,7 +12,7 @@ import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import { dashboardService } from '../../services/dashboardService';
 import LoadingSpinner from '../common/LoadingSpinner';
-import './Dashboard.css';
+import './../../styles/Dashboard.css';
 
 const Dashboard = () => {
     const [stats, setStats] = useState(null);

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { customerService } from '../../services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import './Customer.css';
+import './../../styles/Customer.css';
 
 const CustomerList = () => {
     const [customers, setCustomers] = useState([]);

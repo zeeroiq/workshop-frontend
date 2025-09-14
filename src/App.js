@@ -6,12 +6,7 @@ import Sidebar from './components/common/Sidebar';
 import Dashboard from './components/dashboard/Dashboard';
 import CustomerList from './components/customers/CustomerList';
 import CustomerForm from './components/customers/CustomerForm';
-import VehicleList from './components/vehicles/VehicleList';
-import JobList from './components/jobs/JobList';
-import JobCalendar from './components/jobs/JobCalendar';
-import PartList from './components/inventory/PartList';
-import InvoiceList from './components/invoices/InvoiceList';
-import FinancialReports from './components/reports/FinancialReports';
+import DebugInfo from './components/DebugInfo';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,6 +17,7 @@ function App() {
         <ErrorBoundary>
             <Router>
                 <div className="app">
+                    {process.env.NODE_ENV === 'development' && <DebugInfo />}
                     <Header />
                     <div className="app-body">
                         <Sidebar />
@@ -31,12 +27,7 @@ function App() {
                                 <Route path="/customers" element={<CustomerList />} />
                                 <Route path="/customers/new" element={<CustomerForm />} />
                                 <Route path="/customers/edit/:id" element={<CustomerForm />} />
-                                <Route path="/vehicles" element={<VehicleList />} />
-                                <Route path="/jobs" element={<JobList />} />
-                                <Route path="/calendar" element={<JobCalendar />} />
-                                <Route path="/inventory" element={<PartList />} />
-                                <Route path="/invoices" element={<InvoiceList />} />
-                                <Route path="/reports/financial" element={<FinancialReports />} />
+                                {/* Add more routes as needed */}
                             </Routes>
                         </main>
                     </div>

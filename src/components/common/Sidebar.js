@@ -10,7 +10,7 @@ import {
     FaChartBar,
     FaCalendarAlt
 } from 'react-icons/fa';
-import './Sidebar.css';
+import './../../styles/Sidebar.css';
 
 const Sidebar = () => {
     const location = useLocation();

@@ -6,7 +6,7 @@ module.exports = {
                 targets: {
                     browsers: ['> 1%', 'last 2 versions'],
                 },
-                modules: false, // Let Webpack handle module bundling
+                modules: process.env.NODE_ENV === 'test' ? 'commonjs' : false,
             },
         ],
         [
@@ -23,5 +23,10 @@ module.exports = {
         production: {
             plugins: [],
         },
-    },
+        test: {
+            plugins: [
+                '@babel/plugin-transform-modules-commonjs'
+            ]
+        },
+    }
 };
