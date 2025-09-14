@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch } from 'react-icons/fa';
 import { customerService } from '../../services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
@@ -11,17 +12,20 @@ const CustomerList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
 
     useEffect(() => {
         fetchCustomers();
-    }, [currentPage]);
+    }, [currentPage, searchTerm]);
 
     const fetchCustomers = async () => {
         try {
             setLoading(true);
-            const response = await customerService.getAll(currentPage, 10);
-            setCustomers(response.data.data.content);
-            setTotalPages(response.data.data.totalPages);
+            const response = await customerService.getAll(currentPage, 10, searchTerm);
+            // The service now handles the response structure
+            setCustomers(response.data.content);
+            setTotalPages(response.data.totalPages);
+            setTotalElements(response.data.totalElements);
         } catch (error) {
             toast.error('Failed to fetch customers');
             console.error('Error fetching customers:', error);
@@ -30,23 +34,10 @@ const CustomerList = () => {
         }
     };
 
-    const handleSearch = async () => {
-        if (!searchTerm.trim()) {
-            fetchCustomers();
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const response = await customerService.search(searchTerm);
-            setCustomers(response.data.data);
-            setTotalPages(1);
-        } catch (error) {
-            toast.error('Search failed');
-            console.error('Search error:', error);
-        } finally {
-            setLoading(false);
-        }
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setCurrentPage(0);
+        fetchCustomers();
     };
 
     const handleDelete = async (id) => {
@@ -59,7 +50,8 @@ const CustomerList = () => {
             toast.success('Customer deleted successfully');
             fetchCustomers();
         } catch (error) {
-            toast.error('Failed to delete customer');
+            const message = error.response?.data?.message || 'Failed to delete customer';
+            toast.error(message);
             console.error('Delete error:', error);
         }
     };
@@ -73,24 +65,29 @@ const CustomerList = () => {
             <div className="page-header">
                 <h1>Customers</h1>
                 <Link to="/customers/new" className="btn btn-primary">
-                    Add New Customer
+                    <FaPlus /> Add New Customer
                 </Link>
             </div>
 
             <div className="search-bar">
-                <input
-                    type="text"
-                    placeholder="Search customers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <button onClick={handleSearch} className="btn btn-secondary">
-                    Search
-                </button>
+                <form onSubmit={handleSearch} className="search-form">
+                    <input
+                        type="text"
+                        placeholder="Search customers by name or phone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <button type="submit" className="btn btn-secondary">
+                        <FaSearch /> Search
+                    </button>
+                </form>
             </div>
 
             <div className="table-container">
+                <div className="table-header">
+                    <span>Showing {customers.length} of {totalElements} customers</span>
+                </div>
+
                 <table className="data-table">
                     <thead>
                     <tr>
@@ -114,22 +111,33 @@ const CustomerList = () => {
                             <tr key={customer.id}>
                                 <td>{customer.firstName} {customer.lastName}</td>
                                 <td>{customer.phone}</td>
-                                <td>{customer.username}</td>
+                                <td>{customer.email}</td>
                                 <td>{customer.address}</td>
                                 <td>{customer.vehicleCount || 0}</td>
                                 <td>
-                                    <Link
-                                        to={`/customers/edit/${customer.id}`}
-                                        className="btn btn-sm btn-info"
-                                    >
-                                        Edit
-                                    </Link>
-                                    <button
-                                        onClick={() => handleDelete(customer.id)}
-                                        className="btn btn-sm btn-danger"
-                                    >
-                                        Delete
-                                    </button>
+                                    <div className="action-buttons">
+                                        <Link
+                                            to={`/customers/${customer.id}`}
+                                            className="btn btn-sm btn-info"
+                                            title="View Details"
+                                        >
+                                            <FaEye />
+                                        </Link>
+                                        <Link
+                                            to={`/customers/edit/${customer.id}`}
+                                            className="btn btn-sm btn-warning"
+                                            title="Edit"
+                                        >
+                                            <FaEdit />
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDelete(customer.id)}
+                                            className="btn btn-sm btn-danger"
+                                            title="Delete"
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))

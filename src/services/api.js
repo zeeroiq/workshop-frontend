@@ -17,29 +17,45 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Log request for debugging
+        console.log('API Request:', {
+            url: config.url,
+            method: config.method,
+            headers: config.headers,
+            data: config.data
+        });
+
         return config;
     },
     (error) => {
+        console.error('API Request Error:', error);
         return Promise.reject(error);
     }
 );
 
-// Response interceptor to handle auth errors and format responses
+// Response interceptor to handle auth errors
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Log response for debugging
+        console.log('API Response:', {
+            url: response.config.url,
+            status: response.status,
+            data: response.data
+        });
+
+        return response;
+    },
     (error) => {
+        console.error('API Response Error:', {
+            url: error.config?.url,
+            status: error.response?.status,
+            data: error.response?.data
+        });
+
         if (error.response?.status === 401) {
             authService.logout();
             window.location.href = '/login';
-        }
-
-        // Format error message for better UX
-        if (error.response?.data) {
-            error.formattedMessage = error.response.data.message ||
-                error.response.data.error ||
-                'An error occurred';
-        } else {
-            error.formattedMessage = 'Network error. Please check your connection.';
         }
 
         return Promise.reject(error);

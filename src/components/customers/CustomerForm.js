@@ -16,7 +16,7 @@ const CustomerForm = () => {
         firstName: '',
         lastName: '',
         phone: '',
-        username: '',
+        email: '',
         address: ''
     });
 
@@ -30,7 +30,8 @@ const CustomerForm = () => {
         try {
             setLoading(true);
             const response = await customerService.getById(id);
-            setCustomer(response.data.data);
+            // The service now handles the response structure
+            setCustomer(response.data);
         } catch (error) {
             toast.error('Failed to fetch customer details');
             console.error('Error fetching customer:', error);
@@ -80,51 +81,55 @@ const CustomerForm = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-group">
-                    <label htmlFor="firstName">First Name *</label>
-                    <input
-                        type="text"
-                        id="firstName"
-                        name="firstName"
-                        value={customer.firstName}
-                        onChange={handleChange}
-                        required
-                    />
+                <div className="form-row">
+                    <div className="form-group">
+                        <label htmlFor="firstName">First Name *</label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            value={customer.firstName}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="lastName">Last Name *</label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={customer.lastName}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="lastName">Last Name *</label>
-                    <input
-                        type="text"
-                        id="lastName"
-                        name="lastName"
-                        value={customer.lastName}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+                <div className="form-row">
+                    <div className="form-group">
+                        <label htmlFor="phone">Phone *</label>
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            value={customer.phone}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
 
-                <div className="form-group">
-                    <label htmlFor="phone">Phone *</label>
-                    <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        value={customer.phone}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={customer.username}
-                        onChange={handleChange}
-                    />
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={customer.email}
+                            onChange={handleChange}
+                        />
+                    </div>
                 </div>
 
                 <div className="form-group">
