@@ -13,6 +13,9 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import { authService } from './services/authService';
 import 'react-toastify/dist/ReactToastify.css';
 import './styles/App.css';
+import VehicleDetails from "./components/vehicles/VehicleDetails";
+import VehicleForm from "./components/vehicles/VehicleForm";
+import VehicleList from "./components/vehicles/VehicleList";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -114,6 +117,38 @@ function App() {
                                 element={
                                     <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
                                         <CustomerDetails />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/vehicles"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <VehicleList />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/vehicles/new"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
+                                        <VehicleForm />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/vehicles/edit/:id"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
+                                        <VehicleForm />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/vehicles/:id"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <VehicleDetails />
                                     </ProtectedRoute>
                                 }
                             />
