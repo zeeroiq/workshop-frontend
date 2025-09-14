@@ -8,11 +8,12 @@ import {
     FaBoxes,
     FaFileInvoiceDollar,
     FaChartBar,
-    FaCalendarAlt
+    FaCalendarAlt,
+    FaCog
 } from 'react-icons/fa';
 import './../../styles/Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
     const location = useLocation();
 
     const menuItems = [
@@ -23,27 +24,38 @@ const Sidebar = () => {
         { path: '/calendar', icon: <FaCalendarAlt />, label: 'Calendar' },
         { path: '/inventory', icon: <FaBoxes />, label: 'Inventory' },
         { path: '/invoices', icon: <FaFileInvoiceDollar />, label: 'Invoices' },
-        { path: '/reports', icon: <FaChartBar />, label: 'Reports' }
+        { path: '/reports', icon: <FaChartBar />, label: 'Reports' },
+        { path: '/settings', icon: <FaCog />, label: 'Settings' }
     ];
 
     return (
-        <aside className="sidebar">
-            <nav className="sidebar-nav">
-                <ul>
-                    {menuItems.map(item => (
-                        <li key={item.path}>
-                            <Link
-                                to={item.path}
-                                className={location.pathname === item.path ? 'active' : ''}
-                            >
-                                {item.icon}
-                                <span>{item.label}</span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-        </aside>
+        <>
+            {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <h2>Menu</h2>
+                </div>
+                <nav className="sidebar-nav">
+                    <ul>
+                        {menuItems.map(item => (
+                            <li key={item.path}>
+                                <Link
+                                    to={item.path}
+                                    className={location.pathname === item.path ? 'active' : ''}
+                                    onClick={onClose}
+                                >
+                                    <span className="sidebar-icon">{item.icon}</span>
+                                    <span className="sidebar-label">{item.label}</span>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+                <div className="sidebar-footer">
+                    <p>Workshop Management v1.0</p>
+                </div>
+            </aside>
+        </>
     );
 };
 
