@@ -63,14 +63,8 @@ function App() {
 
     return (
         <Router>
-            <div className="app">
-                {user &&
-                <Header
-                    onToggleSidebar={toggleSidebar}
-                    theme={theme}
-                    toggleTheme={toggleTheme}
-                />
-                }
+            <div className="app" data-theme={theme}>
+                {user && <Header onToggleSidebar={toggleSidebar} theme={theme} toggleTheme={toggleTheme} />}
                 <div className="app-body">
                     {user && <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />}
                     <main className="main-content">
@@ -138,7 +132,7 @@ function App() {
                     pauseOnFocusLoss
                     draggable
                     pauseOnHover
-                    theme="light"
+                    theme={theme}
                 />
             </div>
         </Router>

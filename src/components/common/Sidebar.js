@@ -9,7 +9,8 @@ import {
     FaFileInvoiceDollar,
     FaChartBar,
     FaCalendarAlt,
-    FaCog
+    FaCog,
+    FaTimes
 } from 'react-icons/fa';
 import './../../styles/Sidebar.css';
 
@@ -34,6 +35,9 @@ const Sidebar = ({ isOpen, onClose }) => {
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <h2>Menu</h2>
+                    <button className="sidebar-close" onClick={onClose}>
+                        <FaTimes />
+                    </button>
                 </div>
                 <nav className="sidebar-nav">
                     <ul>
