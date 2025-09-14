@@ -24,7 +24,7 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth errors and format responses
 api.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -32,6 +32,16 @@ api.interceptors.response.use(
             authService.logout();
             window.location.href = '/login';
         }
+
+        // Format error message for better UX
+        if (error.response?.data) {
+            error.formattedMessage = error.response.data.message ||
+                error.response.data.error ||
+                'An error occurred';
+        } else {
+            error.formattedMessage = 'Network error. Please check your connection.';
+        }
+
         return Promise.reject(error);
     }
 );

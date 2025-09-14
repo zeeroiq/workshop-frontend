@@ -25,15 +25,25 @@ const Login = () => {
 
         try {
             const response = await authService.login(formData.username, formData.password);
-            const { token, ...user } = response.data;
 
-            authService.setToken(token);
-            authService.setUser(user);
+            // Handle the new API response structure
+            if (response.data.success) {
+                const { token, ...user } = response.data.data;
 
-            toast.success('Login successful!');
-            navigate('/');
+                authService.setToken(token);
+                authService.setUser(user);
+
+                toast.success('Login successful!');
+                navigate('/');
+            } else {
+                toast.error(response.data.message || 'Login failed');
+            }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Login failed');
+            // Handle different error response formats
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Login failed';
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }

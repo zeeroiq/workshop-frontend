@@ -10,9 +10,9 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
         return <Navigate to="/login" replace />;
     }
 
-    if (requiredRoles.length > 0) {
+    if (requiredRoles.length > 0 && user) {
         const hasRequiredRole = requiredRoles.some(role =>
-            authService.hasRole(role)
+            user.roles && user.roles.includes(role)
         );
 
         if (!hasRequiredRole) {

@@ -2,7 +2,7 @@ import api from './api';
 
 export const authService = {
     login: (username, password) =>
-        api.post('/auth/login', { username: username, password }), // todo - update later to support login via username/mobile no/oauth
+        api.post('/auth/login', { username, password }),
 
     register: (userData) =>
         api.post('/auth/register', userData),
@@ -39,5 +39,20 @@ export const authService = {
     hasRole: (role) => {
         const user = authService.getUser();
         return user && user.roles && user.roles.includes(role);
+    },
+
+    // Helper method to get user info from the token
+    getUserInfo: () => {
+        const user = authService.getUser();
+        if (user) {
+            return {
+                username: user.username,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                roles: user.roles
+            };
+        }
+        return null;
     }
 };
