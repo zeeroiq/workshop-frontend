@@ -11,7 +11,7 @@ import {
     FaDollarSign,
     FaFileAlt
 } from 'react-icons/fa';
-import './../../styles/jobs.css';
+import '../../styles/Jobs.css';
 
 const JobDetails = ({ job, onBack, onEdit }) => {
     const formatDate = (dateString) => {

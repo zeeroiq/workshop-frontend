@@ -9,26 +9,55 @@ import {
     FaDollarSign
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';
-import { DATE_RANGES, EXPORT_FORMATS } from './constants/reportsConstants';
+import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import './../../styles/Reports.css';
 
 const MechanicPerformance = () => {
-    const [dateRange, setDateRange] = useState(DATE_RANGES.THIS_MONTH);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [criteria, setCriteria] = useState({
+        reportType: REPORT_TYPES.MECHANIC,
+        timePeriod: TIME_PERIODS.MONTHLY,
+        startDate: '',
+        endDate: '',
+        mechanicId: '',
+        format: EXPORT_FORMATS.JSON
+    });
+
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [mechanics, setMechanics] = useState([]);
+
+    // Load mechanics (in a real app, this would come from an API)
+    React.useEffect(() => {
+        // Mock data - replace with API call
+        setMechanics([
+            { id: 1, name: 'Mike Johnson' },
+            { id: 2, name: 'Emily Chen' },
+            { id: 3, name: 'Carlos Rodriguez' }
+        ]);
+    }, []);
+
+    const handleCriteriaChange = (field, value) => {
+        setCriteria(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     const generateReport = async () => {
         try {
             setLoading(true);
-            const criteria = {
-                dateRange,
-                startDate: dateRange === DATE_RANGES.CUSTOM ? startDate : undefined,
-                endDate: dateRange === DATE_RANGES.CUSTOM ? endDate : undefined
+
+            // Prepare the request body
+            const requestBody = {
+                reportType: criteria.reportType,
+                timePeriod: criteria.timePeriod,
+                startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
+                endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
+                mechanicId: criteria.mechanicId ? parseInt(criteria.mechanicId) : undefined,
+                format: criteria.format
             };
 
-            const response = await reportsService.getMechanicPerformanceReport(criteria);
+            const response = await reportsService.getMechanicPerformanceReport(requestBody);
             setReportData(response.data);
         } catch (error) {
             console.error('Error generating mechanic performance report:', error);
@@ -40,13 +69,12 @@ const MechanicPerformance = () => {
     const exportReport = async (format) => {
         try {
             const exportRequest = {
-                reportType: 'MECHANIC_PERFORMANCE',
-                format,
-                criteria: {
-                    dateRange,
-                    startDate: dateRange === DATE_RANGES.CUSTOM ? startDate : undefined,
-                    endDate: dateRange === DATE_RANGES.CUSTOM ? endDate : undefined
-                }
+                reportType: criteria.reportType,
+                timePeriod: criteria.timePeriod,
+                startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
+                endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
+                mechanicId: criteria.mechanicId ? parseInt(criteria.mechanicId) : undefined,
+                format
             };
 
             const response = await reportsService.exportReport(exportRequest);
@@ -54,9 +82,8 @@ const MechanicPerformance = () => {
             // Create a blob from the response
             const blob = new Blob([response.data], {
                 type: format === EXPORT_FORMATS.PDF ? 'application/pdf' :
-                    format === EXPORT_FORMATS.EXCEL
-                        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                        : 'text/csv'
+                    format === EXPORT_FORMATS.EXCEL ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :
+                        'text/csv'
             });
 
             // Create a download link
@@ -96,43 +123,64 @@ const MechanicPerformance = () => {
             </div>
 
             <div className="report-filters">
-                <div className="filter-group">
-                    <label>
-                        <FaFilter /> Date Range
-                    </label>
-                    <select
-                        value={dateRange}
-                        onChange={(e) => setDateRange(e.target.value)}
-                    >
-                        <option value={DATE_RANGES.TODAY}>Today</option>
-                        <option value={DATE_RANGES.THIS_WEEK}>This Week</option>
-                        <option value={DATE_RANGES.THIS_MONTH}>This Month</option>
-                        <option value={DATE_RANGES.THIS_QUARTER}>This Quarter</option>
-                        <option value={DATE_RANGES.THIS_YEAR}>This Year</option>
-                        <option value={DATE_RANGES.CUSTOM}>Custom Range</option>
-                    </select>
+                <div className="filter-row">
+                    <div className="filter-group">
+                        <label>
+                            <FaFilter /> Time Period
+                        </label>
+                        <select
+                            value={criteria.timePeriod}
+                            onChange={(e) => handleCriteriaChange('timePeriod', e.target.value)}
+                        >
+                            <option value={TIME_PERIODS.DAILY}>Daily</option>
+                            <option value={TIME_PERIODS.WEEKLY}>Weekly</option>
+                            <option value={TIME_PERIODS.MONTHLY}>Monthly</option>
+                            <option value={TIME_PERIODS.QUARTERLY}>Quarterly</option>
+                            <option value={TIME_PERIODS.YEARLY}>Yearly</option>
+                            <option value={TIME_PERIODS.CUSTOM}>Custom Range</option>
+                        </select>
+                    </div>
+
+                    {criteria.timePeriod === TIME_PERIODS.CUSTOM && (
+                        <>
+                            <div className="filter-group">
+                                <label>Start Date</label>
+                                <input
+                                    type="date"
+                                    value={criteria.startDate}
+                                    onChange={(e) => handleCriteriaChange('startDate', e.target.value)}
+                                />
+                            </div>
+                            <div className="filter-group">
+                                <label>End Date</label>
+                                <input
+                                    type="date"
+                                    value={criteria.endDate}
+                                    onChange={(e) => handleCriteriaChange('endDate', e.target.value)}
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                {dateRange === DATE_RANGES.CUSTOM && (
-                    <div className="custom-date-range">
-                        <div className="filter-group">
-                            <label>Start Date</label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="filter-group">
-                            <label>End Date</label>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
-                        </div>
+                <div className="filter-row">
+                    <div className="filter-group">
+                        <label>
+                            <FaUserCog /> Mechanic
+                        </label>
+                        <select
+                            value={criteria.mechanicId}
+                            onChange={(e) => handleCriteriaChange('mechanicId', e.target.value)}
+                        >
+                            <option value="">All Mechanics</option>
+                            {mechanics.map(mechanic => (
+                                <option key={mechanic.id} value={mechanic.id}>
+                                    {mechanic.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                )}
+                </div>
 
                 <button
                     className="generate-btn"

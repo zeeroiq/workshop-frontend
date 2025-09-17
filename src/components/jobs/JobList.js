@@ -14,7 +14,7 @@ import {
     FaTrash,
     FaCalendar
 } from 'react-icons/fa';
-import './../../styles/jobs.css';
+import '../../styles/Jobs.css';
 
 const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar }) => {
     const [activeTab, setActiveTab] = useState('all');

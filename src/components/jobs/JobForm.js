@@ -10,7 +10,7 @@ import {
     FaCalendar,
     FaDollarSign
 } from 'react-icons/fa';
-import './../../styles/jobs.css';
+import '../../styles/Jobs.css';
 
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job && job.id);

@@ -3,7 +3,7 @@ import JobList from './JobList';
 import JobForm from './JobForm';
 import JobDetails from './JobDetails';
 import JobCalendar from './JobCalendar';
-import './../../styles/jobs.css';
+import '../../styles/Jobs.css';
 
 const Jobs = () => {
     const [activeView, setActiveView] = useState('list');

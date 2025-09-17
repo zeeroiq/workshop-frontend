@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaArrowLeft, FaCalendar, FaClock, FaUser, FaCar } from 'react-icons/fa';
-import './../../styles/jobs.css';
+import '../../styles/Jobs.css';
 
 const JobCalendar = ({ jobs, onSelectJob, onBack }) => {
     const [currentDate, setCurrentDate] = useState(new Date());

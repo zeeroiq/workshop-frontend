@@ -1,6 +1,6 @@
 import api from './api';
 
-const BASE_URL = '/api/reports';
+const BASE_URL = '/reports';
 
 export const reportsService = {
     // Report Generation Endpoints

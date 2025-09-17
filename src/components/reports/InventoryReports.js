@@ -5,22 +5,46 @@ import {
     FaBox,
     FaExclamationTriangle,
     FaArrowUp,
-    FaArrowDown
+    FaArrowDown,
+    FaTools
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';
-import { EXPORT_FORMATS } from './constants/reportsConstants';
+import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import './../../styles/Reports.css';
 
 const InventoryReports = () => {
-    const [reportType, setReportType] = useState('STATUS');
+    const [criteria, setCriteria] = useState({
+        reportType: REPORT_TYPES.INVENTORY_STATUS,
+        timePeriod: TIME_PERIODS.MONTHLY,
+        startDate: '',
+        endDate: '',
+        format: EXPORT_FORMATS.JSON
+    });
+
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    const handleCriteriaChange = (field, value) => {
+        setCriteria(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     const generateReport = async () => {
         try {
             setLoading(true);
-            const criteria = { reportType };
-            const response = await reportsService.getInventoryStatusReport(criteria);
+
+            // Prepare the request body
+            const requestBody = {
+                reportType: criteria.reportType,
+                timePeriod: criteria.timePeriod,
+                startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
+                endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
+                format: criteria.format
+            };
+
+            const response = await reportsService.getInventoryStatusReport(requestBody);
             setReportData(response.data);
         } catch (error) {
             console.error('Error generating inventory report:', error);
@@ -32,9 +56,11 @@ const InventoryReports = () => {
     const exportReport = async (format) => {
         try {
             const exportRequest = {
-                reportType: 'INVENTORY_STATUS',
-                format,
-                criteria: { reportType }
+                reportType: criteria.reportType,
+                timePeriod: criteria.timePeriod,
+                startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
+                endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
+                format
             };
 
             const response = await reportsService.exportReport(exportRequest);
@@ -60,15 +86,15 @@ const InventoryReports = () => {
         }
     };
 
-    const getStockStatus = (quantity, minQuantity) => {
-        if (quantity === 0) return 'out-of-stock';
-        if (quantity <= minQuantity) return 'low-stock';
+    const getStockStatus = (currentStock, minStockLevel) => {
+        if (currentStock === 0) return 'out-of-stock';
+        if (currentStock <= minStockLevel) return 'low-stock';
         return 'in-stock';
     };
 
-    const getStockStatusText = (quantity, minQuantity) => {
-        if (quantity === 0) return 'Out of Stock';
-        if (quantity <= minQuantity) return 'Low Stock';
+    const getStockStatusText = (currentStock, minStockLevel) => {
+        if (currentStock === 0) return 'Out of Stock';
+        if (currentStock <= minStockLevel) return 'Low Stock';
         return 'In Stock';
     };
 
@@ -90,18 +116,44 @@ const InventoryReports = () => {
             </div>
 
             <div className="report-filters">
-                <div className="filter-group">
-                    <label>
-                        <FaFilter /> Report Type
-                    </label>
-                    <select
-                        value={reportType}
-                        onChange={(e) => setReportType(e.target.value)}
-                    >
-                        <option value="STATUS">Current Status</option>
-                        <option value="LOW_STOCK">Low Stock Items</option>
-                        <option value="MOVEMENT">Inventory Movement</option>
-                    </select>
+                <div className="filter-row">
+                    <div className="filter-group">
+                        <label>
+                            <FaFilter /> Time Period
+                        </label>
+                        <select
+                            value={criteria.timePeriod}
+                            onChange={(e) => handleCriteriaChange('timePeriod', e.target.value)}
+                        >
+                            <option value={TIME_PERIODS.DAILY}>Daily</option>
+                            <option value={TIME_PERIODS.WEEKLY}>Weekly</option>
+                            <option value={TIME_PERIODS.MONTHLY}>Monthly</option>
+                            <option value={TIME_PERIODS.QUARTERLY}>Quarterly</option>
+                            <option value={TIME_PERIODS.YEARLY}>Yearly</option>
+                            <option value={TIME_PERIODS.CUSTOM}>Custom Range</option>
+                        </select>
+                    </div>
+
+                    {criteria.timePeriod === TIME_PERIODS.CUSTOM && (
+                        <>
+                            <div className="filter-group">
+                                <label>Start Date</label>
+                                <input
+                                    type="date"
+                                    value={criteria.startDate}
+                                    onChange={(e) => handleCriteriaChange('startDate', e.target.value)}
+                                />
+                            </div>
+                            <div className="filter-group">
+                                <label>End Date</label>
+                                <input
+                                    type="date"
+                                    value={criteria.endDate}
+                                    onChange={(e) => handleCriteriaChange('endDate', e.target.value)}
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <button
@@ -113,7 +165,7 @@ const InventoryReports = () => {
                 </button>
             </div>
 
-            {reportData && (
+            {reportData && reportData.data && (
                 <div className="report-results">
                     <div className="inventory-summary">
                         <h4>Inventory Summary</h4>
@@ -123,8 +175,8 @@ const InventoryReports = () => {
                                     <FaBox />
                                 </div>
                                 <div className="card-content">
-                                    <h5>Total Items</h5>
-                                    <p>{reportData.totalItems || 0}</p>
+                                    <h5>Total Parts</h5>
+                                    <p>{reportData.data.totalParts || 0}</p>
                                 </div>
                             </div>
 
@@ -133,8 +185,8 @@ const InventoryReports = () => {
                                     <FaExclamationTriangle />
                                 </div>
                                 <div className="card-content">
-                                    <h5>Low Stock Items</h5>
-                                    <p>{reportData.lowStockItems || 0}</p>
+                                    <h5>Low Stock Parts</h5>
+                                    <p>{reportData.data.lowStockParts || 0}</p>
                                 </div>
                             </div>
 
@@ -143,52 +195,40 @@ const InventoryReports = () => {
                                     <FaArrowUp />
                                 </div>
                                 <div className="card-content">
-                                    <h5>Total Value</h5>
-                                    <p>${reportData.totalValue?.toFixed(2) || '0.00'}</p>
-                                </div>
-                            </div>
-
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaArrowDown />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Out of Stock</h5>
-                                    <p>{reportData.outOfStockItems || 0}</p>
+                                    <h5>Total Inventory Value</h5>
+                                    <p>${reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {reportData.items && (
-                        <div className="inventory-items">
-                            <h4>Inventory Items</h4>
+                    {reportData.data.lowStockItems && reportData.data.lowStockItems.length > 0 && (
+                        <div className="low-stock-items">
+                            <h4>Low Stock Items</h4>
                             <table className="report-table">
                                 <thead>
                                 <tr>
                                     <th>Part Name</th>
-                                    <th>SKU</th>
-                                    <th>Category</th>
+                                    <th>Part Number</th>
                                     <th>Current Stock</th>
-                                    <th>Min Quantity</th>
-                                    <th>Status</th>
+                                    <th>Minimum Stock Level</th>
                                     <th>Value</th>
+                                    <th>Status</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {reportData.items.map((item, index) => (
-                                    <tr key={index} className={getStockStatus(item.quantity, item.minQuantity)}>
-                                        <td>{item.name}</td>
-                                        <td>{item.sku}</td>
-                                        <td>{item.category}</td>
-                                        <td>{item.quantity}</td>
-                                        <td>{item.minQuantity}</td>
+                                {reportData.data.lowStockItems.map((item, index) => (
+                                    <tr key={index} className={getStockStatus(item.currentStock, item.minStockLevel)}>
+                                        <td>{item.partName}</td>
+                                        <td>{item.partNumber}</td>
+                                        <td>{item.currentStock}</td>
+                                        <td>{item.minStockLevel}</td>
+                                        <td>${item.value?.toFixed(2) || '0.00'}</td>
                                         <td>
-                        <span className={`status-badge ${getStockStatus(item.quantity, item.minQuantity)}`}>
-                          {getStockStatusText(item.quantity, item.minQuantity)}
+                        <span className={`status-badge ${getStockStatus(item.currentStock, item.minStockLevel)}`}>
+                          {getStockStatusText(item.currentStock, item.minStockLevel)}
                         </span>
                                         </td>
-                                        <td>${item.value?.toFixed(2) || '0.00'}</td>
                                     </tr>
                                 ))}
                                 </tbody>
@@ -196,37 +236,52 @@ const InventoryReports = () => {
                         </div>
                     )}
 
-                    {reportData.movement && (
-                        <div className="inventory-movement">
-                            <h4>Inventory Movement</h4>
+                    {reportData.data.categories && reportData.data.categories.length > 0 && (
+                        <div className="categories-breakdown">
+                            <h4>Inventory by Category</h4>
                             <table className="report-table">
                                 <thead>
                                 <tr>
-                                    <th>Part Name</th>
-                                    <th>Starting Quantity</th>
-                                    <th>Received</th>
-                                    <th>Used</th>
-                                    <th>Ending Quantity</th>
-                                    <th>Change</th>
+                                    <th>Category</th>
+                                    <th>Item Count</th>
+                                    <th>Total Value</th>
+                                    <th>Percentage of Total</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {reportData.movement.map((movement, index) => (
+                                {reportData.data.categories.map((category, index) => (
                                     <tr key={index}>
-                                        <td>{movement.name}</td>
-                                        <td>{movement.startingQuantity}</td>
-                                        <td className="positive">{movement.received}</td>
-                                        <td className="negative">{movement.used}</td>
-                                        <td>{movement.endingQuantity}</td>
-                                        <td className={movement.change >= 0 ? 'positive' : 'negative'}>
-                                            {movement.change >= 0 ? '+' : ''}{movement.change}
+                                        <td>
+                                            <div className="category-info">
+                                                <FaTools className="category-icon" />
+                                                {category.category}
+                                            </div>
+                                        </td>
+                                        <td>{category.itemCount}</td>
+                                        <td>${category.totalValue?.toFixed(2) || '0.00'}</td>
+                                        <td>
+                                            {((category.totalValue / reportData.data.totalInventoryValue) * 100).toFixed(1)}%
                                         </td>
                                     </tr>
                                 ))}
                                 </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td colSpan="1" className="total-label">Total</td>
+                                    <td className="total-value">{reportData.data.totalParts}</td>
+                                    <td className="total-value">${reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</td>
+                                    <td className="total-value">100%</td>
+                                </tr>
+                                </tfoot>
                             </table>
                         </div>
                     )}
+                </div>
+            )}
+
+            {reportData && !reportData.success && (
+                <div className="error-message">
+                    <p>{reportData.message || 'Failed to generate report'}</p>
                 </div>
             )}
         </div>

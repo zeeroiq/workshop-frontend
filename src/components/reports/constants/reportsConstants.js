@@ -6,16 +6,17 @@ export const REPORT_TYPES = {
 };
 
 export const EXPORT_FORMATS = {
+    JSON: 'JSON',
     PDF: 'PDF',
     CSV: 'CSV',
     EXCEL: 'EXCEL'
 };
 
-export const DATE_RANGES = {
-    TODAY: 'TODAY',
-    THIS_WEEK: 'THIS_WEEK',
-    THIS_MONTH: 'THIS_MONTH',
-    THIS_QUARTER: 'THIS_QUARTER',
-    THIS_YEAR: 'THIS_YEAR',
+export const TIME_PERIODS = {
+    DAILY: 'DAILY',
+    WEEKLY: 'WEEKLY',
+    MONTHLY: 'MONTHLY',
+    QUARTERLY: 'QUARTERLY',
+    YEARLY: 'YEARLY',
     CUSTOM: 'CUSTOM'
 };
