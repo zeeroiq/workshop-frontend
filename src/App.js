@@ -16,6 +16,7 @@ import './styles/App.css';
 import VehicleDetails from "./components/vehicles/VehicleDetails";
 import VehicleForm from "./components/vehicles/VehicleForm";
 import VehicleList from "./components/vehicles/VehicleList";
+import Inventory from "./components/inventory/Inventory";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -149,6 +150,14 @@ function App() {
                                 element={
                                     <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
                                         <VehicleDetails />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/inventory"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <Inventory />
                                     </ProtectedRoute>
                                 }
                             />
