@@ -1,0 +1,21 @@
+export const REPORT_TYPES = {
+    FINANCIAL: 'FINANCIAL',
+    INVENTORY: 'INVENTORY',
+    MECHANIC: 'MECHANIC',
+    CUSTOMER: 'CUSTOMER'
+};
+
+export const EXPORT_FORMATS = {
+    PDF: 'PDF',
+    CSV: 'CSV',
+    EXCEL: 'EXCEL'
+};
+
+export const DATE_RANGES = {
+    TODAY: 'TODAY',
+    THIS_WEEK: 'THIS_WEEK',
+    THIS_MONTH: 'THIS_MONTH',
+    THIS_QUARTER: 'THIS_QUARTER',
+    THIS_YEAR: 'THIS_YEAR',
+    CUSTOM: 'CUSTOM'
+};

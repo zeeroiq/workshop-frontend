@@ -17,6 +17,9 @@ import VehicleDetails from "./components/vehicles/VehicleDetails";
 import VehicleForm from "./components/vehicles/VehicleForm";
 import VehicleList from "./components/vehicles/VehicleList";
 import Inventory from "./components/inventory/Inventory";
+import Jobs from "./components/jobs/Jobs";
+import Invoice from "./components/invoices/Invoice";
+import Reports from "./components/reports/Reports";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -158,6 +161,30 @@ function App() {
                                 element={
                                     <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
                                         <Inventory />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/jobs"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <Jobs />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/invoices"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <Invoice />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/reports"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <Reports />
                                     </ProtectedRoute>
                                 }
                             />
