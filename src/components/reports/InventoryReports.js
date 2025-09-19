@@ -14,7 +14,7 @@ import './../../styles/Reports.css';
 
 const InventoryReports = () => {
     const [criteria, setCriteria] = useState({
-        reportType: REPORT_TYPES.INVENTORY_STATUS,
+        reportType: REPORT_TYPES.INVENTORY,
         timePeriod: TIME_PERIODS.MONTHLY,
         startDate: '',
         endDate: '',
@@ -23,6 +23,7 @@ const InventoryReports = () => {
 
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     const handleCriteriaChange = (field, value) => {
         setCriteria(prev => ({
@@ -48,6 +49,7 @@ const InventoryReports = () => {
             setReportData(response.data);
         } catch (error) {
             console.error('Error generating inventory report:', error);
+            alert('Failed to generate report. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -55,6 +57,7 @@ const InventoryReports = () => {
 
     const exportReport = async (format) => {
         try {
+            setExporting(true);
             const exportRequest = {
                 reportType: criteria.reportType,
                 timePeriod: criteria.timePeriod,
@@ -63,26 +66,29 @@ const InventoryReports = () => {
                 format
             };
 
-            const response = await reportsService.exportReport(exportRequest);
-
-            // Create a blob from the response
-            const blob = new Blob([response.data], {
-                type: format === EXPORT_FORMATS.PDF ? 'application/pdf' :
-                    format === EXPORT_FORMATS.EXCEL ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :
-                        'text/csv'
-            });
+            const { blob, filename } = await reportsService.exportReport(exportRequest);
 
             // Create a download link
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `inventory-report-${new Date().toISOString().split('T')[0]}.${format.toLowerCase()}`);
+
+            // Set the appropriate file extension based on format
+            let fileExtension = format.toLowerCase();
+            if (format === EXPORT_FORMATS.EXCEL) fileExtension = 'xlsx';
+
+            link.setAttribute('download', `${filename}.${fileExtension}`);
             document.body.appendChild(link);
             link.click();
             link.remove();
+
+            // Clean up the URL object
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Error exporting report:', error);
+            alert('Failed to export report. Please try again.');
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -103,14 +109,23 @@ const InventoryReports = () => {
             <div className="report-header">
                 <h3>Inventory Status Report</h3>
                 <div className="export-buttons">
-                    <button onClick={() => exportReport(EXPORT_FORMATS.PDF)}>
-                        <FaDownload /> PDF
+                    <button
+                        onClick={() => exportReport(EXPORT_FORMATS.PDF)}
+                        disabled={exporting}
+                    >
+                        <FaDownload /> {exporting ? 'Exporting...' : 'PDF'}
                     </button>
-                    <button onClick={() => exportReport(EXPORT_FORMATS.EXCEL)}>
-                        <FaDownload /> Excel
+                    <button
+                        onClick={() => exportReport(EXPORT_FORMATS.EXCEL)}
+                        disabled={exporting}
+                    >
+                        <FaDownload /> {exporting ? 'Exporting...' : 'Excel'}
                     </button>
-                    <button onClick={() => exportReport(EXPORT_FORMATS.CSV)}>
-                        <FaDownload /> CSV
+                    <button
+                        onClick={() => exportReport(EXPORT_FORMATS.CSV)}
+                        disabled={exporting}
+                    >
+                        <FaDownload /> {exporting ? 'Exporting...' : 'CSV'}
                     </button>
                 </div>
             </div>

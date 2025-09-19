@@ -1,32 +1,26 @@
 import React, { useState } from 'react';
 import {
-    Box,
-    Tabs,
-    Tab,
-    Paper,
-    Typography,
-    IconButton,
-    useTheme,
-    useMediaQuery
-} from '@mui/material';
-import {
-    Dashboard as DashboardIcon,
-    Inventory as InventoryIcon,
-    People as PeopleIcon,
-    ShoppingCart as ShoppingCartIcon
-} from '@mui/icons-material';
-import PartList from './PartList';
-import PartForm from './PartForm';
-import PartDetails from './PartDetails';
-import SupplierList from './SupplierList';
-import SupplierForm from './SupplierForm';
-import PurchaseOrderList from './PurchaseOrderList';
-import PurchaseOrderForm from './PurchaseOrderForm';
-import PurchaseOrderDetails from './PurchaseOrderDetails';
+    FaBox,
+    FaTruck,
+    FaUsers,
+    FaList,
+    // FaEdit,
+    // FaEye,
+    // FaPlus,
+    // FaSearch,
+    // FaTrash
+} from 'react-icons/fa';
+import PartList from './parts/PartList';
+import PartForm from './parts/PartForm';
+import PartDetails from './parts/PartDetails';
+import SupplierList from './suppliers/SupplierList';
+import SupplierForm from './suppliers/SupplierForm';
+import PurchaseOrderList from './orders/PurchaseOrderList';
+import PurchaseOrderForm from './orders/PurchaseOrderForm';
+import PurchaseOrderDetails from './orders/PurchaseOrderDetails';
+import './../../styles/Inventory.css';
 
-function TabPanel(props) {
-    const { children, value, index, ...other } = props;
-
+function TabPanel({ children, value, index, ...other }) {
     return (
         <div
             role="tabpanel"
@@ -35,16 +29,9 @@ function TabPanel(props) {
             aria-labelledby={`inventory-tab-${index}`}
             {...other}
         >
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+            {value === index && <div className="tab-content">{children}</div>}
         </div>
     );
-}
-
-function a11yProps(index) {
-    return {
-        id: `inventory-tab-${index}`,
-        'aria-controls': `inventory-tabpanel-${index}`,
-    };
 }
 
 const Inventory = () => {
@@ -52,8 +39,6 @@ const Inventory = () => {
     const [currentView, setCurrentView] = useState('list');
     const [selectedItem, setSelectedItem] = useState(null);
     const [editItem, setEditItem] = useState(null);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const handleTabChange = (event, newValue) => {
         setCurrentTab(newValue);
@@ -184,29 +169,34 @@ const Inventory = () => {
     };
 
     return (
-        <Box sx={{ flexGrow: 1, p: isMobile ? 1 : 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <InventoryIcon sx={{ mr: 1, fontSize: '2rem' }} />
-                <Typography variant="h4" component="h1">
-                    Inventory Management
-                </Typography>
-            </Box>
+        <div className="inventory-module">
+            <div className="module-header">
+                <FaBox className="module-icon" />
+                <h2>Inventory Management</h2>
+            </div>
 
-            <Paper sx={{ width: '100%', mb: 2 }}>
-                <Tabs
-                    value={currentTab}
-                    onChange={handleTabChange}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    variant={isMobile ? "scrollable" : "fullWidth"}
-                    scrollButtons="auto"
-                    aria-label="inventory tabs"
+            <div className="inventory-tabs">
+                <button
+                    className={currentTab === 0 ? 'active' : ''}
+                    onClick={() => handleTabChange(null, 0)}
                 >
-                    <Tab icon={<InventoryIcon />} label="Parts" {...a11yProps(0)} />
-                    <Tab icon={<PeopleIcon />} label="Suppliers" {...a11yProps(1)} />
-                    <Tab icon={<ShoppingCartIcon />} label="Purchase Orders" {...a11yProps(2)} />
-                </Tabs>
+                    <FaList /> Parts
+                </button>
+                <button
+                    className={currentTab === 1 ? 'active' : ''}
+                    onClick={() => handleTabChange(null, 1)}
+                >
+                    <FaUsers /> Suppliers
+                </button>
+                <button
+                    className={currentTab === 2 ? 'active' : ''}
+                    onClick={() => handleTabChange(null, 2)}
+                >
+                    <FaTruck /> Purchase Orders
+                </button>
+            </div>
 
+            <div className="inventory-content">
                 <TabPanel value={currentTab} index={0}>
                     {renderPartViews()}
                 </TabPanel>
@@ -218,8 +208,8 @@ const Inventory = () => {
                 <TabPanel value={currentTab} index={2}>
                     {renderPurchaseOrderViews()}
                 </TabPanel>
-            </Paper>
-        </Box>
+            </div>
+        </div>
     );
 };
 
