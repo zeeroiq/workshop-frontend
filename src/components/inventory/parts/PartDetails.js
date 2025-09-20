@@ -12,7 +12,7 @@ import {
     FaCalendarAlt,
     FaFileAlt
 } from 'react-icons/fa';
-import './../../../styles/PartDetails.css';
+import '../../../styles/inventory/part/PartDetails.css';
 
 const PartDetails = ({part, onBack, onEdit}) => {
     const getStatusColor = (quantity, minStockLevel) => {

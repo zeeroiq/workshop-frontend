@@ -13,7 +13,7 @@ import {
     FaFileAlt
 } from 'react-icons/fa';
 import { inventoryService } from '../../../services/inventoryService';
-import './../../../styles/PartForm.css';
+import '../../../styles/inventory/part/PartForm.css';
 
 const PartForm = ({ part, onSave, onCancel }) => {
     const isEdit = Boolean(part && part.id);

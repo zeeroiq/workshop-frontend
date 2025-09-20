@@ -141,6 +141,11 @@
     color: #d32f2f;
 }
 
+.status-badge.unknown {
+    background-color: #285ba7;
+    color: #dac6c6;
+}
+
 .actions {
     text-align: right;
 }

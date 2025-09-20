@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa';
 import { inventoryService } from '../../../services/inventoryService';
 import './../../../styles/inventory/supplier/SupplierForm.css';
+import {toast} from "react-toastify";
 
 const SupplierForm = ({ supplier, onSave, onCancel }) => {
     const isEdit = Boolean(supplier && supplier.id);
@@ -22,7 +23,7 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
         email: '',
         phone: '',
         address: '',
-        paymentTerms: 'NET_30',
+        paymentTerm: 'NET_30',
         status: 'ACTIVE',
         notes: ''
     });
@@ -38,7 +39,7 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
                 email: supplier.email || '',
                 phone: supplier.phone || '',
                 address: supplier.address || '',
-                paymentTerms: supplier.paymentTerms || 'NET_30',
+                paymentTerm: supplier.paymentTerm || 'NET_30',
                 status: supplier.status || 'ACTIVE',
                 notes: supplier.notes || ''
             });
@@ -87,6 +88,10 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
             onSave();
         } catch (error) {
             console.error('Error saving supplier:', error);
+            if (error?.response?.data?.message) {
+                toast.error(error.response.data.message);
+            }
+
         }
     };
 
@@ -230,8 +235,8 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
                                         <FaFileInvoiceDollar className="input-icon" /> Payment Terms
                                     </label>
                                     <select
-                                        name="paymentTerms"
-                                        value={formData.paymentTerms}
+                                        name="paymentTerm"
+                                        value={formData.paymentTerm}
                                         onChange={handleChange}
                                     >
                                         {paymentTermsOptions.map(option => (

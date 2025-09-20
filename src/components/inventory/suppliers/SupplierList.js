@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     FaEdit,
     FaTrash,
@@ -10,10 +10,10 @@ import {
     // FaPhone,
     FaEllipsisV
 } from 'react-icons/fa';
-import { inventoryService } from '../../../services/inventoryService';
+import {inventoryService} from '../../../services/inventoryService';
 import './../../../styles/inventory/supplier/SupplierList.css';
 
-const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
+const SupplierList = ({onViewDetails, onEdit, onCreate}) => {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -70,9 +70,9 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
 
     const getStatusBadge = (status) => {
         return (
-            <span className={`status-badge ${status === 'ACTIVE' ? 'active' : 'inactive'}`}>
-        {status === 'ACTIVE' ? 'Active' : 'Inactive'}
-      </span>
+            <span className={`status-badge ${status ? (status === 'ACTIVE' ? 'active' : 'inactive') : 'unknown'}`}>
+                {status}
+            </span>
         );
     };
 
@@ -94,13 +94,13 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                     <p>Manage your supplier information</p>
                 </div>
                 <button className="create-button" onClick={onCreate}>
-                    <FaPlus /> Add Supplier
+                    <FaPlus/> Add Supplier
                 </button>
             </div>
 
             <div className="search-section">
                 <div className="search-box">
-                    <FaSearch className="search-icon" />
+                    <FaSearch className="search-icon"/>
                     <input
                         type="text"
                         placeholder="Search suppliers..."
@@ -144,7 +144,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                                             onClick={() => toggleRowExpansion(supplier.id)}
                                             title="More actions"
                                         >
-                                            <FaEllipsisV />
+                                            <FaEllipsisV/>
                                         </button>
                                     </div>
                                 </td>
@@ -160,7 +160,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                                                 </div>
                                                 <div className="detail-group">
                                                     <h4>Payment Terms</h4>
-                                                    <p>{supplier.paymentTerms}</p>
+                                                    <p>{supplier.paymentTerm}</p>
                                                 </div>
                                                 {supplier.notes && (
                                                     <div className="detail-group">
@@ -174,19 +174,19 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                                                     className="btn-view"
                                                     onClick={() => onViewDetails(supplier)}
                                                 >
-                                                    <FaEye /> View Details
+                                                    <FaEye/> View Details
                                                 </button>
                                                 <button
                                                     className="btn-edit"
                                                     onClick={() => onEdit(supplier)}
                                                 >
-                                                    <FaEdit /> Edit
+                                                    <FaEdit/> Edit
                                                 </button>
                                                 <button
                                                     className="btn-delete"
                                                     onClick={() => handleDeleteClick(supplier)}
                                                 >
-                                                    <FaTrash /> Delete
+                                                    <FaTrash/> Delete
                                                 </button>
                                             </div>
                                         </div>
@@ -201,11 +201,11 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 {filteredSuppliers.length === 0 && (
                     <div className="no-suppliers">
                         <div className="no-suppliers-content">
-                            <FaUser className="no-suppliers-icon" />
+                            <FaUser className="no-suppliers-icon"/>
                             <h3>No suppliers found</h3>
                             <p>Try adjusting your search or add a new supplier</p>
                             <button className="create-button" onClick={onCreate}>
-                                <FaPlus /> Add Supplier
+                                <FaPlus/> Add Supplier
                             </button>
                         </div>
                     </div>
