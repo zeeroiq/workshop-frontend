@@ -18,7 +18,8 @@ import SupplierForm from './suppliers/SupplierForm';
 import PurchaseOrderList from './orders/PurchaseOrderList';
 import PurchaseOrderForm from './orders/PurchaseOrderForm';
 import PurchaseOrderDetails from './orders/PurchaseOrderDetails';
-import './../../styles/Inventory.css';
+import '../../styles/inventory/Inventory.css';
+import SupplierDetails from "./suppliers/SupplierDetails";
 
 function TabPanel({ children, value, index, ...other }) {
     return (
@@ -118,11 +119,11 @@ const Inventory = () => {
                 );
             case 'details':
                 return (
-                    <PartDetails
-                        part={selectedItem}
-                        onBack={handleBackToList}
-                        onEdit={() => handleEdit(selectedItem)}
-                    />
+                <SupplierDetails
+                    supplier={selectedItem}
+                    onBack={handleBackToList}
+                    onEdit={() => handleEdit(selectedItem)}
+                />
                 );
             case 'form':
                 return (

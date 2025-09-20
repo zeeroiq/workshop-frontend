@@ -8,7 +8,7 @@ import {
     FaExclamationTriangle
 } from 'react-icons/fa';
 import {inventoryService} from '../../../services/inventoryService';
-import '../../../styles/PartList.css';
+import '../../../styles/inventory/part/PartList.css';
 
 const PartList = ({onViewDetails, onEdit, onCreate}) => {
     const [parts, setParts] = useState([]);
