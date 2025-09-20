@@ -193,7 +193,7 @@ const Inventory = () => {
                     className={currentTab === 2 ? 'active' : ''}
                     onClick={() => handleTabChange(null, 2)}
                 >
-                    <FaTruck /> Purchase Orders
+                    <FaTruck /> Orders
                 </button>
             </div>
 
