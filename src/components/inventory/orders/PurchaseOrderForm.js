@@ -8,10 +8,12 @@ import {
     FaRupeeSign
 } from 'react-icons/fa';
 import {inventoryService} from "../../../services/inventoryService";
-import './../../../styles/inventory/order/PurchaseOrderForm.css';
 import {toast} from "react-toastify";
 import api from "../../../services/api";
 import {formatDateForInput, isOrderEditable} from "../Utils";
+
+import './../../../styles/workshop.css';
+import './../../../styles/inventory/order/PurchaseOrderForm.css';
 
 const PurchaseOrderForm = ({order, onSave, onCancel}) => {
     const [formData, setFormData] = useState({

@@ -10,6 +10,7 @@ import {
 
 import {formatDate, handleOrderEditClick} from "../Utils";
 
+import './../../../styles/workshop.css';
 import './../../../styles/inventory/order/PurchaseOrder.css';
 
 const PurchaseOrderDetails = ({order, onBack, onEdit}) => {

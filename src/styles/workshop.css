@@ -1,8 +1,84 @@
-
 .status-badge {
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 12px;
     font-weight: 500;
-    /*color: white;*/
+    display: inline-block;
+}
+
+/*.status-badge.in-stock {*/
+/*    background-color: #4caf50;*/
+/*}*/
+
+/*.status-badge.low-stock {*/
+/*    background-color: #ff9800;*/
+/*}*/
+
+/*.status-badge.out-of-stock {*/
+/*    background-color: #f44336;*/
+/*}*/
+
+.status-badge.in-stock {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+.status-badge.low-stock {
+    background-color: #fff8e1;
+    color: #f57c00;
+}
+
+.status-badge.out-of-stock {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.status-badge.active {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+.status-badge.inactive {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.status-badge.unknown {
+    background-color: #285ba7;
+    color: #dac6c6;
+}
+
+.status-badge.scheduled {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-badge.in-progress {
+    background-color: #fff8e1;
+    color: #f57c00;
+}
+
+.status-badge.completed {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+
+.status-badge.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.status-ordered {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
 }

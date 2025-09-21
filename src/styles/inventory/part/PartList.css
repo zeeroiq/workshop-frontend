@@ -91,31 +91,6 @@
     color: #2e7d32;
 }
 
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.status-badge.in-stock {
-    background-color: #e8f5e9;
-    color: #388e3c;
-}
-
-.status-badge.low-stock {
-    background-color: #fff8e1;
-    color: #f57c00;
-}
-
-.status-badge.out-of-stock {
-    background-color: #ffebee;
-    color: #d32f2f;
-}
-
 .warning-icon {
     font-size: 10px;
 }

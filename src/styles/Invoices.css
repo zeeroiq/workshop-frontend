@@ -164,14 +164,6 @@
     color: #2e7d32;
 }
 
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: white;
-}
-
 .action-buttons {
     display: flex;
     gap: 6px;

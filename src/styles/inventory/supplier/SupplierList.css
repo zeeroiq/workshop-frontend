@@ -1,6 +1,6 @@
 .supplier-list-container {
     padding: 20px;
-    max-width: 1200px;
+    /*max-width: 1200px;*/
     margin: 0 auto;
 }
 
@@ -123,28 +123,7 @@
     color: #7b8794;
 }
 
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    display: inline-block;
-}
 
-.status-badge.active {
-    background-color: #e8f5e9;
-    color: #388e3c;
-}
-
-.status-badge.inactive {
-    background-color: #ffebee;
-    color: #d32f2f;
-}
-
-.status-badge.unknown {
-    background-color: #285ba7;
-    color: #dac6c6;
-}
 
 .actions {
     text-align: right;

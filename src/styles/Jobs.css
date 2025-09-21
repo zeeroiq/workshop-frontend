@@ -184,28 +184,6 @@
     max-width: 200px;
 }
 
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-badge.scheduled {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.status-badge.in-progress {
-    background-color: #fff8e1;
-    color: #f57c00;
-}
-
-.status-badge.completed {
-    background-color: #e8f5e9;
-    color: #388e3c;
-}
-
 .cost {
     font-weight: 600;
     color: #2e7d32;
@@ -518,28 +496,6 @@
 .job-id {
     font-weight: 600;
     color: #3f51b5;
-}
-
-.status-badge {
-    padding: 6px 12px;
-    border-radius: 16px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.status-badge.scheduled {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-.status-badge.in-progress {
-    background-color: #fff8e1;
-    color: #f57c00;
-}
-
-.status-badge.completed {
-    background-color: #e8f5e9;
-    color: #388e3c;
 }
 
 .details-grid {

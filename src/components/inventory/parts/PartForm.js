@@ -1,4 +1,3 @@
-// PartForm.js
 import React, { useState, useEffect } from 'react';
 import {
     FaArrowLeft,
@@ -7,12 +6,14 @@ import {
     FaBox,
     FaTag,
     FaIndustry,
-    FaDollarSign,
     FaMapMarkerAlt,
     FaUserTie,
-    FaFileAlt
+    FaFileAlt,
+    FaRupeeSign
 } from 'react-icons/fa';
 import { inventoryService } from '../../../services/inventoryService';
+
+import '../../../styles/workshop.css';
 import '../../../styles/inventory/part/PartForm.css';
 
 const PartForm = ({ part, onSave, onCancel }) => {
@@ -240,7 +241,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                     <div className="form-row">
                         <div className="form-group">
                             <label>
-                                <FaDollarSign className="input-icon" /> Cost Price *
+                                <FaRupeeSign className="input-icon" /> Cost Price *
                             </label>
                             <input
                                 type="number"
@@ -255,7 +256,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                         </div>
                         <div className="form-group">
                             <label>
-                                <FaDollarSign className="input-icon" /> Selling Price *
+                                <FaRupeeSign className="input-icon" /> Selling Price *
                             </label>
                             <input
                                 type="number"

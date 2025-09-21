@@ -12,6 +12,8 @@ import {
     FaCalendarAlt,
     FaFileAlt
 } from 'react-icons/fa';
+
+import '../../../styles/workshop.css';
 import '../../../styles/inventory/part/PartDetails.css';
 
 const PartDetails = ({part, onBack, onEdit}) => {

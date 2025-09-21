@@ -9,13 +9,15 @@ import {
     FaExclamationTriangle,
     FaCalendarAlt,
     FaClock,
-    FaArrowUp,
-    FaArrowDown
+    // FaArrowUp,
+    // FaArrowDown
 } from 'react-icons/fa';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import { dashboardService } from '../../services/dashboardService';
 import LoadingSpinner from '../common/LoadingSpinner';
+
+import './../../styles/workshop.css';
 import './../../styles/Dashboard.css';
 
 const Dashboard = () => {

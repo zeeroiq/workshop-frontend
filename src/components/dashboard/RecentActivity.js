@@ -1,5 +1,10 @@
 import React from 'react';
-import { FaUser, FaWrench, FaFileInvoiceDollar, FaCar } from 'react-icons/fa';
+import {
+    FaUser,
+    FaWrench,
+    FaFileInvoiceDollar,
+    FaCar
+} from 'react-icons/fa';
 
 const RecentActivity = () => {
     const activities = [

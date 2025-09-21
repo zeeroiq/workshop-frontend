@@ -10,6 +10,8 @@ import {
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
+
+import './../../styles/workshop.css';
 import './../../styles/Reports.css';
 
 const InventoryReports = () => {

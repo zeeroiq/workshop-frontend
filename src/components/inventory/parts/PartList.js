@@ -1,13 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import {
     FaEdit,
-    FaTrash,
+    // FaTrash,
     FaEye,
     FaPlus,
     FaSearch,
     FaExclamationTriangle
 } from 'react-icons/fa';
 import {inventoryService} from '../../../services/inventoryService';
+
+import '../../../styles/workshop.css';
 import '../../../styles/inventory/part/PartList.css';
 
 const PartList = ({onViewDetails, onEdit, onCreate}) => {
@@ -129,9 +131,9 @@ const PartList = ({onViewDetails, onEdit, onCreate}) => {
                                     <button className="btn-edit" onClick={() => onEdit(part)}>
                                         <FaEdit/>
                                     </button>
-                                    <button className="btn-delete" onClick={() => handleDeleteClick(part)}>
-                                        <FaTrash/>
-                                    </button>
+                                    {/*<button className="btn-delete" onClick={() => handleDeleteClick(part)}>*/}
+                                    {/*    <FaTrash/>*/}
+                                    {/*</button>*/}
                                 </div>
                             </td>
                         </tr>

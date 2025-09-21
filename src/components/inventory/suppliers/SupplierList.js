@@ -11,6 +11,8 @@ import {
     FaEllipsisV
 } from 'react-icons/fa';
 import {inventoryService} from '../../../services/inventoryService';
+
+import '../../../styles/workshop.css';
 import './../../../styles/inventory/supplier/SupplierList.css';
 
 const SupplierList = ({onViewDetails, onEdit, onCreate}) => {

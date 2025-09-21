@@ -11,8 +11,10 @@ import {
     FaFileInvoiceDollar
 } from 'react-icons/fa';
 import { inventoryService } from '../../../services/inventoryService';
-import './../../../styles/inventory/supplier/SupplierForm.css';
 import {toast} from "react-toastify";
+
+import '../../../styles/workshop.css';
+import './../../../styles/inventory/supplier/SupplierForm.css';
 
 const SupplierForm = ({ supplier, onSave, onCancel }) => {
     const isEdit = Boolean(supplier && supplier.id);

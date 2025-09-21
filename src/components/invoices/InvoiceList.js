@@ -159,7 +159,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                             <td className="customer-name">{invoice.customerName}</td>
                             <td className="invoice-date">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                             <td className="due-date">{new Date(invoice.dueDate).toLocaleDateString()}</td>
-                            <td className="amount">${invoice.totalAmount.toFixed(2)}</td>
+                            <td className="amount">₹ {invoice.totalAmount.toFixed(2)}</td>
                             <td>
                   <span
                       className="status-badge"

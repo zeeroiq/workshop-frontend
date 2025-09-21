@@ -79,28 +79,6 @@
     font-size: 1.5rem;
 }
 
-.supplier-status {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.supplier-status.active {
-    background: #28a745;
-    color: white;
-}
-
-.supplier-status.inactive {
-    background: #a7285d;
-    color: white;
-}
-
-.supplier-status.unknown {
-    background: #285ba7;
-    color: white;
-}
-
 .info-section {
     margin-bottom: 24px;
 }

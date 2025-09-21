@@ -1,7 +1,9 @@
-// src/components/dashboard/StatsCard.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import {
+    FaArrowUp,
+    FaArrowDown
+} from 'react-icons/fa';
 
 const StatsCard = ({ title, value, icon, color, trend, link }) => {
     const cardContent = (

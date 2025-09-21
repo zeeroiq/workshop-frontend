@@ -11,6 +11,8 @@ import {
     FaBuilding,
     FaStickyNote
 } from 'react-icons/fa';
+
+import '../../../styles/workshop.css';
 import './../../../styles/inventory/supplier/SupplierDetails.css';
 
 const SupplierDetails = ({supplier, onBack, onEdit}) => {
@@ -58,7 +60,7 @@ const SupplierDetails = ({supplier, onBack, onEdit}) => {
                             <FaBuilding className="supplier-icon"/>
                             <h3> {supplier.name}</h3>
                         </div>
-                        <span className={`supplier-status ${supplier.status ? (supplier.status === 'ACTIVE' ? 'active' : 'inactive') : 'unknown'}`}>
+                        <span className={`status-badge ${supplier?.status ? (supplier.status === 'ACTIVE' ? 'active' : 'inactive') : 'unknown'}`}>
                             {supplier.status}
                         </span>
                     </div>

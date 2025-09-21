@@ -18,8 +18,10 @@ import SupplierForm from './suppliers/SupplierForm';
 import PurchaseOrderList from './orders/PurchaseOrderList';
 import PurchaseOrderForm from './orders/PurchaseOrderForm';
 import PurchaseOrderDetails from './orders/PurchaseOrderDetails';
-import '../../styles/inventory/Inventory.css';
 import SupplierDetails from "./suppliers/SupplierDetails";
+
+import './../../styles/workshop.css';
+import '../../styles/inventory/Inventory.css';
 
 function TabPanel({ children, value, index, ...other }) {
     return (

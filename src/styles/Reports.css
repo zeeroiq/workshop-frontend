@@ -312,26 +312,6 @@
     font-weight: 600;
 }
 
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: white;
-}
-
-.status-badge.in-stock {
-    background-color: #4caf50;
-}
-
-.status-badge.low-stock {
-    background-color: #ff9800;
-}
-
-.status-badge.out-of-stock {
-    background-color: #f44336;
-}
-
 .low-stock-items tr.low-stock {
     background-color: #fff8e1;
 }

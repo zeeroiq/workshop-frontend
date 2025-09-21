@@ -11,6 +11,7 @@ import {toast} from "react-toastify";
 
 import '../../../styles/workshop.css'
 import './../../../styles/inventory/order/PurchaseOrder.css';
+
 import {handleOrderEditClick} from "../Utils";
 
 const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {

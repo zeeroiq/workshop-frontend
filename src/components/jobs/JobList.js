@@ -3,7 +3,7 @@ import {
     FaWrench,
     FaCar,
     FaUser,
-    FaCalendarAlt,
+    // FaCalendarAlt,
     FaClock,
     FaDollarSign,
     FaSearch,
@@ -14,7 +14,9 @@ import {
     FaTrash,
     FaCalendar
 } from 'react-icons/fa';
+
 import '../../styles/Jobs.css';
+import '../../styles/workshop.css';
 
 const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar }) => {
     const [activeTab, setActiveTab] = useState('all');
