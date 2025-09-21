@@ -1,329 +1,375 @@
-import React, { useState } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-    Box,
-    TextField,
-    Button,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Select,
-    Typography,
-    Paper,
-    Grid,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    IconButton
-} from '@mui/material';
-import {
-    Add as AddIcon,
-    Delete as DeleteIcon
-} from '@mui/icons-material';
+    FaSave,
+    FaTimes,
+    FaPlus,
+    FaMinus,
+    FaBox,
+    FaRupeeSign
+} from 'react-icons/fa';
+import {inventoryService} from "../../../services/inventoryService";
+import './../../../styles/inventory/order/PurchaseOrderForm.css';
+import {toast} from "react-toastify";
+import api from "../../../services/api";
+import {formatDateForInput, isOrderEditable} from "../Utils";
 
-// Mock data
-const mockSuppliers = [
-    { id: 1, name: 'Auto Parts Central' },
-    { id: 2, name: 'Engine Components Inc' }
-];
-
-const mockParts = [
-    { id: 1, sku: 'BRK-001', name: 'Brake Pad Set', unitPrice: 89.99 },
-    { id: 2, sku: 'OIL-002', name: 'Synthetic Engine Oil 5W-30', unitPrice: 34.99 },
-    { id: 3, sku: 'FLT-003', name: 'Oil Filter', unitPrice: 12.99 }
-];
-
-const ORDER_STATUS = [
-    'DRAFT',
-    'ORDERED',
-    'SHIPPED',
-    'RECEIVED',
-    'CANCELLED'
-];
-
-const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
-    const isEdit = Boolean(order && order.id);
-
+const PurchaseOrderForm = ({order, onSave, onCancel}) => {
     const [formData, setFormData] = useState({
-        supplier: order?.supplier?.id || '',
-        orderDate: order?.orderDate || new Date().toISOString().split('T')[0],
-        expectedDate: order?.expectedDate || '',
-        status: order?.status || 'DRAFT',
-        notes: order?.notes || '',
-        items: order?.items || []
+        orderNumber: '',
+        supplierId: '',
+        orderDate: new Date().toISOString().split('T')[0],
+        expectedDeliveryDate: '',
+        items: [],
+        status: 'PENDING'
     });
+    const [suppliers, setSuppliers] = useState([]);
+    const [parts, setParts] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const [newItem, setNewItem] = useState({
-        part: '',
-        quantity: 1
-    });
+    const isEditMode = Boolean(order?.id);
+    const canEditOrder = isEditMode ? isOrderEditable(order) : true;
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    useEffect(() => {
+        if (order) {
+            setFormData({
+                ...order,
+                orderDate: formatDateForInput(order.orderDate),
+                expectedDeliveryDate: formatDateForInput(order.expectedDeliveryDate)
+            });
+        }
+        fetchSuppliers();
+        fetchParts();
+    }, [order]);
+
+    const fetchSuppliers = async () => {
+        try {
+            const response = await inventoryService.getSuppliers();
+            if (response?.data?.success && response.data.data) {
+                setSuppliers(response.data.data);
+            } else {
+                toast.warn('Failed to fetch suppliers');
+            }
+        } catch (error) {
+            console.error('Error fetching suppliers:', error);
+            toast.error('Error fetching suppliers - ', error.message);
+        }
     };
 
-    const handleItemChange = (e) => {
-        const { name, value } = e.target;
-        setNewItem(prev => ({
+    const fetchParts = async () => {
+        try {
+            const response = await inventoryService.getParts();
+            if (response?.data?.success && response.data.data?.content) { // todo: api returns a pageable response, handle it later
+                setParts(response.data.data.content);
+            }
+        } catch (error) {
+            console.error('Error fetching parts:', error);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const {name, value} = e.target;
+        if (isEditMode && (name === 'orderNumber' || name === 'supplierId')) {
+            return; // Prevent changes to orderNumber and supplierId in edit mode
+        }
+        setFormData(prev => ({
             ...prev,
             [name]: value
         }));
     };
 
     const handleAddItem = () => {
-        if (!newItem.part || newItem.quantity < 1) return;
-
-        const part = mockParts.find(p => p.id === parseInt(newItem.part));
-        const itemTotal = part.unitPrice * newItem.quantity;
-
         setFormData(prev => ({
             ...prev,
-            items: [
-                ...prev.items,
-                {
-                    part,
-                    quantity: newItem.quantity,
-                    unitPrice: part.unitPrice,
-                    total: itemTotal
-                }
-            ]
+            items: [...prev.items, {
+                id: Date.now(), // temporary ID
+                partId: '',
+                quantity: 1,
+                unitPrice: 0,
+                totalPrice: 0
+            }]
         }));
-
-        setNewItem({
-            part: '',
-            quantity: 1
-        });
     };
 
     const handleRemoveItem = (index) => {
+        const currentItem = formData.items[index];
+        if (!canEditOrder && order.items.find(item => item.id === currentItem.id)) {
+            toast.warn('Cannot remove items from an existing order');
+            return;
+        }
         setFormData(prev => ({
             ...prev,
             items: prev.items.filter((_, i) => i !== index)
         }));
     };
 
-    const calculateTotal = () => {
-        return formData.items.reduce((sum, item) => sum + item.total, 0);
-    };
+    const handleItemChange = (index, field, value) => {
+        const updatedItems = [...formData.items];
+        const numericValue = field === 'quantity' || field === 'unitPrice' ? parseFloat(value) : value;
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const orderData = {
-            ...formData,
-            totalAmount: calculateTotal(),
-            supplier: mockSuppliers.find(s => s.id === parseInt(formData.supplier))
+        updatedItems[index] = {
+            ...updatedItems[index],
+            [field]: numericValue
         };
 
-        // In a real app, this would save to the backend
-        onSave(orderData);
+        // Calculate totalPrice if quantity or unitPrice changes
+        if (field === 'quantity' || field === 'unitPrice') {
+            updatedItems[index].totalPrice = updatedItems[index].quantity * updatedItems[index].unitPrice;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            items: updatedItems
+        }));
+    };
+
+    const calculateTotal = () => {
+        return formData.items.reduce((total, item) => {
+            return total + (item.quantity * item.unitPrice);
+        }, 0);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const method = formData.id ? 'PUT' : 'POST';
+            const url = formData.id
+                ? `/inventory/purchase-orders/${formData.id}/items`
+                : '/inventory/purchase-orders';
+
+            // Prepare data for API
+            const apiData = {
+                ...formData,
+                orderDate: formData.orderDate,
+                expectedDeliveryDate: formData.expectedDeliveryDate,
+                totalAmount: calculateTotal() // should not be needed as backend calculates it, but just in case
+            };
+
+            const response = await api[method.toLowerCase()](url, apiData);
+            if (response?.data?.success) {
+                // todo: update it so that post update/create it should opens up detail page instead of going back to list
+                // const submittedOrder = response.data.data;
+                // setFormData({
+                //     ...submittedOrder,
+                //     orderDate: formatDateForInput(submittedOrder.orderDate),
+                //     expectedDeliveryDate: formatDateForInput(submittedOrder.expectedDeliveryDate)
+                // });
+
+                onSave();
+            } else {
+                console.error('Failed to save purchase order:', result.message);
+                toast.error('Failed to save purchase order - ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error saving purchase order:', error);
+            if (error.response?.data?.message) {
+                console.error(error.response.data.message);
+            }
+            toast.error('Error saving purchase order - ' + error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" component="h2" gutterBottom>
-                {isEdit ? 'Edit Purchase Order' : 'Create Purchase Order'}
-            </Typography>
+        <div className="purchase-order-form">
+            <div className="form-header">
+                <h2>{formData.id ? 'Edit Purchase Order' : 'Create Purchase Order'}</h2>
+                <div className="form-actions">
+                    <button className="btn-secondary" onClick={onCancel}>
+                        <FaTimes/> Cancel
+                    </button>
+                    <button className="btn-primary" onClick={handleSubmit} disabled={loading}>
+                        <FaSave/> {loading ? 'Saving...' : 'Save Order'}
+                    </button>
+                </div>
+            </div>
 
-            <Box component="form" onSubmit={handleSubmit}>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth>
-                            <InputLabel>Supplier *</InputLabel>
-                            <Select
-                                name="supplier"
-                                value={formData.supplier}
-                                onChange={handleChange}
-                                label="Supplier *"
+            <form onSubmit={handleSubmit} className="order-form">
+                <div className="form-section">
+                    <h3>Order Information</h3>
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label>Order Number *</label>
+                            <input
+                                type="text"
+                                name="orderNumber"
+                                value={formData.orderNumber}
+                                onChange={handleInputChange}
                                 required
+                                placeholder={!isEditMode ? "AUTO GENERATED" : "e.g., PO-2023-1001"}
+                                disabled
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Supplier *</label>
+                            <select
+                                name="supplierId"
+                                value={formData.supplierId}
+                                onChange={handleInputChange}
+                                required
+                                disabled={isEditMode}
                             >
-                                {mockSuppliers.map(supplier => (
-                                    <MenuItem key={supplier.id} value={supplier.id}>
+                                <option value="">Select Supplier</option>
+                                {suppliers.map(supplier => (
+                                    <option key={supplier.id} value={supplier.id}>
                                         {supplier.name}
-                                    </MenuItem>
+                                    </option>
                                 ))}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth>
-                            <InputLabel>Status</InputLabel>
-                            <Select
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Order Date *</label>
+                            <input
+                                type="date"
+                                name="orderDate"
+                                value={formData.orderDate || ''}
+                                onChange={handleInputChange}
+                                required
+                                disabled={isEditMode}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Expected Delivery Date *</label>
+                            <input
+                                type="date"
+                                name="expectedDeliveryDate"
+                                value={formData.expectedDeliveryDate}
+                                onChange={handleInputChange}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Status</label>
+                            <select
                                 name="status"
                                 value={formData.status}
-                                onChange={handleChange}
-                                label="Status"
+                                onChange={handleInputChange}
                             >
-                                {ORDER_STATUS.map(status => (
-                                    <MenuItem key={status} value={status}>
-                                        {status}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Grid>
+                                <option value="PENDING">Pending</option>
+                                <option value="ORDERED">Ordered</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="CANCELLED">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="Order Date *"
-                            name="orderDate"
-                            type="date"
-                            value={formData.orderDate}
-                            onChange={handleChange}
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                            required
-                        />
-                    </Grid>
+                <div className="form-section">
+                    <div className="section-header">
+                        <h3>Order Items</h3>
+                        <button type="button" className="btn-secondary" onClick={handleAddItem}>
+                            <FaPlus/> Add Item
+                        </button>
+                    </div>
 
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="Expected Delivery Date"
-                            name="expectedDate"
-                            type="date"
-                            value={formData.expectedDate}
-                            onChange={handleChange}
-                            InputLabelProps={{
-                                shrink: true,
-                            }}
-                        />
-                    </Grid>
+                    {formData.items.length > 0 ? (
+                        <div className="order-items-container">
+                            {formData.items.map((item, index) => (
+                                <div key={item.id} className="order-item-card">
+                                    <div className="item-header">
+                                        <span className="item-number">Item #{index + 1}</span>
+                                        {(canEditOrder || !order.items.find(oi => oi.id === item.id)) && (
+                                            <button
+                                                type="button"
+                                                className="btn-icon danger"
+                                                onClick={() => handleRemoveItem(index)}
+                                                title="Remove item"
+                                            >
+                                                <FaMinus/>
+                                            </button>
+                                        )}
+                                    </div>
+                                    {/* TODO: might need to restrict update to existing items as well. we'll keep it for now*/}
+                                    <div className="item-form-grid">
+                                        <div className="form-group">
+                                            <label>Part *</label>
+                                            <select
+                                                value={item.partId}
+                                                onChange={(e) => handleItemChange(index, 'partId', e.target.value)}
+                                                required
+                                            >
+                                                <option value="">Select Part</option>
+                                                {parts.map(part => (
+                                                    <option key={part.id} value={part.id}>
+                                                        {part.name} ({part.partNumber})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                    <Grid item xs={12}>
-                        <Typography variant="h6" gutterBottom>
-                            Order Items
-                        </Typography>
+                                        <div className="form-group">
+                                            <label>Quantity *</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                                required
+                                            />
+                                        </div>
 
-                        <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                            <Grid item xs={5}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Part</InputLabel>
-                                    <Select
-                                        name="part"
-                                        value={newItem.part}
-                                        onChange={handleItemChange}
-                                        label="Part"
-                                    >
-                                        {mockParts.map(part => (
-                                            <MenuItem key={part.id} value={part.id}>
-                                                {part.name} ({part.sku})
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <TextField
-                                    fullWidth
-                                    label="Quantity"
-                                    name="quantity"
-                                    type="number"
-                                    value={newItem.quantity}
-                                    onChange={handleItemChange}
-                                    inputProps={{ min: 1 }}
-                                />
-                            </Grid>
-                            <Grid item xs={4}>
-                                <Button
-                                    variant="outlined"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleAddItem}
-                                    disabled={!newItem.part}
-                                >
-                                    Add Item
-                                </Button>
-                            </Grid>
-                        </Grid>
+                                        <div className="form-group">
+                                            <label>Unit Price (₹) *</label>
+                                            <div className="price-input-flex-container">
+                                                <FaRupeeSign className="price-flex-icon"/>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={item.unitPrice}
+                                                    onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
 
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Part</TableCell>
-                                        <TableCell>Quantity</TableCell>
-                                        <TableCell>Unit Price</TableCell>
-                                        <TableCell>Total</TableCell>
-                                        <TableCell>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {formData.items.map((item, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{item.part.name} ({item.part.sku})</TableCell>
-                                            <TableCell>{item.quantity}</TableCell>
-                                            <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
-                                            <TableCell>${item.total.toFixed(2)}</TableCell>
-                                            <TableCell>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleRemoveItem(index)}
-                                                    color="error"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {formData.items.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={5} align="center">
-                                                No items added yet
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                                        <div className="item-total">
+                                            <label>Total</label>
+                                            <div className="total-amount">
+                                                <FaRupeeSign className="price-icon"/>
+                                                <span>{(item.quantity * item.unitPrice).toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="no-items-placeholder">
+                            <FaBox className="placeholder-icon"/>
+                            <p>No items added to this order</p>
+                            <button type="button" className="btn-secondary" onClick={handleAddItem}>
+                                <FaPlus/> Add Your First Item
+                            </button>
+                        </div>
+                    )}
+                </div>
 
-                        {formData.items.length > 0 && (
-                            <Box sx={{ mt: 2, textAlign: 'right' }}>
-                                <Typography variant="h6">
-                                    Total: ${calculateTotal().toFixed(2)}
-                                </Typography>
-                            </Box>
-                        )}
-                    </Grid>
+                <div className="form-section">
+                    <h3>Order Summary</h3>
+                    <div className="order-summary">
+                        <div className="summary-row total">
+                            <span>Total Amount:</span>
+                            <span>&#8377;{calculateTotal().toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
 
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Notes"
-                            name="notes"
-                            multiline
-                            rows={4}
-                            value={formData.notes}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                </Grid>
 
-                <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <Button
-                        type="button"
-                        variant="outlined"
-                        onClick={onCancel}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                    >
-                        {isEdit ? 'Update Order' : 'Create Order'}
-                    </Button>
-                </Box>
-            </Box>
-        </Paper>
+            <div className="form-footer">
+                <div className="form-actions">
+                    <button className="btn-secondary" onClick={onCancel}>
+                        <FaTimes/> Cancel
+                    </button>
+                    <button className="btn-primary" onClick={handleSubmit} disabled={loading}>
+                        <FaSave/> {loading ? 'Saving...' : 'Save Order'}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
 
