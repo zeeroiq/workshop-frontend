@@ -1,185 +1,148 @@
 import React from 'react';
 import {
-    Box,
-    Paper,
-    Typography,
-    Chip,
-    Button,
-    Grid,
-    Divider,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow
-} from '@mui/material';
-import {
-    Edit as EditIcon,
-    ArrowBack as BackIcon
-} from '@mui/icons-material';
+    FaArrowLeft,
+    FaBoxOpen,
+    FaCheckCircle,
+    FaEdit,
+    FaPrint,
+    FaTimesCircle
+} from 'react-icons/fa';
 
-const PurchaseOrderDetails = ({ order, onBack, onEdit }) => {
-    const getStatusColor = (status) => {
+import {formatDate, handleOrderEditClick} from "../Utils";
+
+import './../../../styles/inventory/order/PurchaseOrder.css';
+
+const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
+
+    if (!order) {
+        return (
+            <div className="purchase-order-details">
+                <div className="details-header">
+                    <button className="back-button" onClick={onBack}>
+                        <FaArrowLeft/> Back to Orders
+                    </button>
+                    <h2>Orders Details</h2>
+                    <div className="order-summary">
+                        No Order Selected
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const getStatusIcon = (status) => {
         switch (status) {
-            case 'DRAFT':
-                return 'default';
+            case 'COMPLETED':
+                return <FaCheckCircle className="status-icon completed"/>;
             case 'ORDERED':
-                return 'primary';
-            case 'SHIPPED':
-                return 'info';
-            case 'RECEIVED':
-                return 'success';
+                return <FaBoxOpen className="status-icon ordered"/>;
             case 'CANCELLED':
-                return 'error';
+                return <FaTimesCircle className="status-icon cancelled"/>;
             default:
-                return 'default';
+                return null;
         }
     };
 
     return (
-        <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Button
-                    startIcon={<BackIcon />}
-                    onClick={onBack}
-                    sx={{ mr: 2 }}
-                >
-                    Back to List
-                </Button>
-                <Button
-                    variant="contained"
-                    startIcon={<EditIcon />}
-                    onClick={onEdit}
-                >
-                    Edit Order
-                </Button>
-            </Box>
+        <div className="purchase-order-details">
+            <div className="details-header">
+                <button className="back-button" onClick={onBack}>
+                    <FaArrowLeft/> Back to List
+                </button>
+                <h2>Purchase Order Details</h2>
+                <div className="header-actions">
+                    <button className="edit-button" onClick={() => handleOrderEditClick(order, onEdit)}>
+                        <FaEdit/> Edit
+                    </button>
+                    <button className="edit-button">
+                        <FaPrint/> Print
+                    </button>
+                </div>
+            </div>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                <Box>
-                    <Typography variant="h4" component="h1" gutterBottom>
-                        {order.poNumber}
-                    </Typography>
-                    <Chip
-                        label={order.status}
-                        color={getStatusColor(order.status)}
-                        size="medium"
-                    />
-                </Box>
-                <Box sx={{ textAlign: 'right' }}>
-                    <Typography variant="h5" component="p">
-                        ${order.totalAmount.toFixed(2)}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                        Total Amount
-                    </Typography>
-                </Box>
-            </Box>
+            <div className="order-summary">
+                <div className="summary-card">
+                    <h3>Order Information</h3>
+                    <div className="summary-grid">
+                        <div className="summary-item">
+                            <span className="label">Order Number:</span>
+                            <span className="value">{order.orderNumber}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="label">Order Date:</span>
+                            <span className="value">{formatDate(order.orderDate)}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="label">Expected Delivery Date:</span>
+                            <span className="value">{formatDate(order.expectedDeliveryDate)}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="label">Received Date:</span>
+                            <span className="value">{formatDate(order.receivedDate)}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="label">Status:</span>
+                            <span className={`value status ${order.status.toLowerCase()}`}>
+                            {getStatusIcon(order.status)}
+                                            {order.status}
+                          </span>
+                        </div>
+                    </div>
+                </div>
 
-            <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="h6" gutterBottom>
-                            Order Information
-                        </Typography>
-                        <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                    Supplier
-                                </Typography>
-                                <Typography variant="body1">{order.supplier.name}</Typography>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                    Order Date
-                                </Typography>
-                                <Typography variant="body1">
-                                    {new Date(order.orderDate).toLocaleDateString()}
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Typography variant="subtitle2" color="textSecondary">
-                                    Expected Date
-                                </Typography>
-                                <Typography variant="body1">
-                                    {new Date(order.expectedDate).toLocaleDateString()}
-                                </Typography>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Grid>
+                <div className="summary-card">
+                    <h3>Supplier Information</h3>
+                    <div className="summary-grid">
+                        <div className="summary-item">
+                            <span className="label">Supplier:</span>
+                            <span className="value">{order.supplierName}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span className="label">Supplier ID:</span>
+                            <span className="value">{order.supplierId}</span>
+                        </div>
+                    </div>
+                </div>
 
-                <Grid item xs={12} md={6}>
-                    {order.notes && (
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Notes
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                                {order.notes}
-                            </Typography>
-                        </Box>
-                    )}
-                </Grid>
-            </Grid>
+                <div className="summary-card">
+                    <h3>Financial Summary</h3>
+                    <div className="summary-grid">
+                        <div className="summary-item">
+                            <span className="label">Total Amount:</span>
+                            <span className="value">₹ {order.totalAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                    Order Items
-                </Typography>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Part</TableCell>
-                                <TableCell>SKU</TableCell>
-                                <TableCell>Quantity</TableCell>
-                                <TableCell>Unit Price</TableCell>
-                                <TableCell>Total</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {order.items.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{item.part.name}</TableCell>
-                                    <TableCell>{item.part.sku}</TableCell>
-                                    <TableCell>{item.quantity}</TableCell>
-                                    <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
-                                    <TableCell>${item.total.toFixed(2)}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            <Box>
-                <Typography variant="h6" gutterBottom>
-                    System Information
-                </Typography>
-                <Grid container spacing={2}>
-                    <Grid item xs={6} sm={3}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                            Created
-                        </Typography>
-                        <Typography variant="body2">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={6} sm={3}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                            Last Updated
-                        </Typography>
-                        <Typography variant="body2">
-                            {new Date(order.updatedAt).toLocaleDateString()}
-                        </Typography>
-                    </Grid>
-                </Grid>
-            </Box>
-        </Paper>
+            <div className="order-items">
+                <h3>Order Items ({order.items?.length || 0})</h3>
+                <div className="items-table">
+                    <div className="table-header">
+                        <div>Part Name</div>
+                        <div>Part Number</div>
+                        <div>Quantity</div>
+                        <div>Unit Price</div>
+                        <div>Total Price</div>
+                    </div>
+                    <div className="table-body">
+                        {order.items && order.items.length > 0 ? (
+                            order.items.map(item => (
+                                <div key={item.id} className="table-row">
+                                    <div>{item.partName}</div>
+                                    <div>{item.partNumber}</div>
+                                    <div>{item.quantity}</div>
+                                    <div>₹{item.unitPrice.toFixed(2)}</div>
+                                    <div>₹{item.totalPrice.toFixed(2)}</div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="no-items">No items in this order</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 
