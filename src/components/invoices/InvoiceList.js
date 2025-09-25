@@ -13,6 +13,7 @@ import {
 import { invoiceService } from '../../services/invoiceService';
 import { INVOICE_STATUS_OPTIONS } from './constants/invoiceConstants';
 import './../../styles/invoices.css';
+import {toast} from "react-toastify";
 
 const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayment }) => {
     const [invoices, setInvoices] = useState([]);
@@ -93,6 +94,119 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const downloadInvoice = async (id) => {
+        try {
+            setLoading(true);
+
+            // The service should be configured to return a blob
+            const response = await invoiceService.exportInvoice(id);
+            const blob = new Blob([response.data], {
+                type: response.headers['content-type'] || 'application/pdf'
+            });
+
+            // Check if blob is valid
+            if (blob.size === 0) {
+                throw new Error('Server returned empty PDF file');
+            }
+
+            // Create download URL
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+
+            // Extract filename from headers or use default
+            const contentDisposition = response.headers['content-disposition'];
+            let filename = `invoice-${id}.pdf`;
+
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+                if (filenameMatch && filenameMatch[1]) {
+                    filename = filenameMatch[1];
+                }
+            }
+
+            link.download = filename;
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Cleanup
+            window.URL.revokeObjectURL(url);
+
+            toast.success('Invoice downloaded successfully!');
+
+        } catch (error) {
+            console.error('Error downloading invoice:', error);
+
+            if (error.response?.status === 404) {
+                toast.error('Invoice not found');
+            } else if (error.response?.status === 500) {
+                toast.error('Server error while generating PDF');
+            } else {
+                toast.error(error.message || 'Failed to download invoice');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+            // if (response?.status !== 200) {
+            //     toast.error(response.message || 'Failed to download invoice');
+            //     return;
+            // }
+            //
+            // const blob = new Blob([response.data], {
+            //     type: 'application/pdf'
+            // });
+            //
+            // // Check if blob is valid
+            // if (blob.size === 0) {
+            //     throw new Error('Received empty file from server');
+            // }
+            //
+            // // Create download
+            // const url = window.URL.createObjectURL(blob);
+            // const link = document.createElement('a');
+            // link.href = url;
+            // link.download = `invoice-${id}-${new Date().getTime()}.pdf`;
+            //
+            // document.body.appendChild(link);
+            // link.click();
+            // document.body.removeChild(link);
+            //
+            // // Cleanup
+            // window.URL.revokeObjectURL(url);
+            //
+            // toast.success('Invoice downloaded successfully!');
+
+            // let blob;
+            // if (response.data instanceof Blob) {
+            //     blob = response.data;
+            // } else {
+            //     blob = new Blob([response], { type: 'application/pdf' });
+            // }
+            //
+            // // Create a blob URL from the response data and trigger download
+            // const blobUrl = URL.createObjectURL(blob, { type: 'application/pdf' });
+            // const a = document.createElement('a');
+            // a.href = blobUrl;
+            // a.download = `invoice-${id}.pdf`;
+            // document.body.appendChild(a);
+            // a.click();
+            // document.body.removeChild(a);
+            //
+            // URL.revokeObjectURL(blobUrl);
+            // toast.success('Invoice downloaded successfully!');
+    //
+    //     } catch (error) {
+    //         console.error('Error downloading invoice:', error);
+    //         toast.error('Failed to download invoice');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     if (loading) {
         return <div className="loading">Loading invoices...</div>;
     }
@@ -159,7 +273,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                             <td className="customer-name">{invoice.customerName}</td>
                             <td className="invoice-date">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
                             <td className="due-date">{new Date(invoice.dueDate).toLocaleDateString()}</td>
-                            <td className="amount">${invoice.totalAmount.toFixed(2)}</td>
+                            <td className="amount">₹{invoice.totalAmount.toFixed(2)}</td>
                             <td>
                   <span
                       className="status-badge"
@@ -177,13 +291,15 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                     >
                                         <FaEye />
                                     </button>
-                                    <button
-                                        className="btn-edit"
-                                        onClick={() => onEditInvoice(invoice)}
-                                        title="Edit Invoice"
-                                    >
-                                        <FaEdit />
-                                    </button>
+                                    {invoice.status === 'PAID' && invoice.status === 'CANCELLED' && (
+                                        <button
+                                            className="btn-edit"
+                                            onClick={() => onEditInvoice(invoice)}
+                                            title="Edit Invoice"
+                                        >
+                                            <FaEdit/>
+                                        </button>
+                                    )}
                                     {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
                                         <button
                                             className="btn-payment"
@@ -222,7 +338,8 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                     )}
                                     <button
                                         className="btn-pdf"
-                                        onClick={() => window.open(`/api/invoices/${invoice.id}/pdf`, '_blank')}
+                                        // onClick={() => window.open(`/api/invoices/${invoice.id}/pdf`, '_blank')}
+                                        onClick={() => downloadInvoice(invoice.id)}
                                         title="Download PDF"
                                     >
                                         <FaFilePdf />

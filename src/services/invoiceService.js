@@ -9,6 +9,12 @@ export const invoiceService = {
     getAllInvoices: (params = {}) => api.get(BASE_URL, { params }),
     updateInvoice: (id, data) => api.put(`${BASE_URL}/${id}`, data),
     deleteInvoice: (id) => api.delete(`${BASE_URL}/${id}`),
+    exportInvoice: (id) => api.post(`${BASE_URL}/${id}/export`,  null, {
+        responseType: 'blob', // Crucial for file downloads
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }),
 
     // Filtering and Searching
     getInvoicesByCustomer: (customerId) => api.get(`${BASE_URL}/customer/${customerId}`),

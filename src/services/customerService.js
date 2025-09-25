@@ -7,7 +7,20 @@ export const customerService = {
         return api.get('/customers', { params })
             .then(response => {
                 // Handle the API response structure
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
+                    return {
+                        ...response,
+                        data: response.data.data
+                    };
+                }
+                return response;
+            });
+    },
+    listAll: () => {
+        return api.get('/customers')
+            .then(response => {
+                // Handle the API response structure
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -20,7 +33,7 @@ export const customerService = {
     getById: (id) =>
         api.get(`/customers/${id}`)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -32,7 +45,7 @@ export const customerService = {
     getWithVehicles: (id) =>
         api.get(`/customers/${id}/with-vehicles`)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -44,7 +57,7 @@ export const customerService = {
     create: (customerData) =>
         api.post('/customers', customerData)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -56,7 +69,7 @@ export const customerService = {
     update: (id, customerData) =>
         api.put(`/customers/${id}`, customerData)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -68,7 +81,7 @@ export const customerService = {
     delete: (id) =>
         api.delete(`/customers/${id}`)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -80,7 +93,7 @@ export const customerService = {
     search: (query) =>
         api.get(`/customers/search?q=${query}`)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data
@@ -92,7 +105,7 @@ export const customerService = {
     addNote: (customerId, note) =>
         api.post(`/customers/${customerId}/notes`, note)
             .then(response => {
-                if (response.data && response.data.success) {
+                if (response?.data?.success) {
                     return {
                         ...response,
                         data: response.data.data

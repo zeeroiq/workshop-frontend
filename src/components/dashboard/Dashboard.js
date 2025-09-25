@@ -9,17 +9,31 @@ import {
     FaExclamationTriangle,
     FaCalendarAlt,
     FaClock,
-    FaArrowUp,
-    FaArrowDown
+    // FaArrowUp,
+    // FaArrowDown
 } from 'react-icons/fa';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import { dashboardService } from '../../services/dashboardService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import './../../styles/Dashboard.css';
+import {toast} from "react-toastify";
 
 const Dashboard = () => {
-    const [stats, setStats] = useState(null);
+    const [stats, setStats] = useState({
+        totalCustomers: 0,
+        newCustomers: 0,
+        customerTrend: 0,
+        totalJobs: 0,
+        inProgressJobs: 0,
+        completedJobs: 0,
+        jobTrend: 0,
+        totalVehicles: 0,
+        totalInventoryValue: 0,
+        revenue: 0.0,
+        accountsReceivable: 0,
+        lowStockItems: 0
+    });
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('monthly');
 
@@ -27,12 +41,28 @@ const Dashboard = () => {
         fetchDashboardStats();
     }, [timeRange]);
 
+    // todo: fix would be needed as there might be other jobs like completed, pending payment etc
+    const getJobTrend = (response) => {
+        return response.data?.data?.totalJobs
+            ? (response.data?.data.totalJobs - response.data?.data.completedJobs) / response.data?.data.totalJobs * 100
+            : 5; // default to 5% if no jobs
+    }
+
     const fetchDashboardStats = async () => {
+
         try {
             const response = await dashboardService.getStats(timeRange);
-            setStats(response.data.data);
+            if (response?.data?.success) {
+                setStats({
+                    ...response.data.data,
+                    jobTrend: getJobTrend(response),
+                });
+            } else {
+                toast.error('Error fetching dashboard stats');
+            }
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
+            toast.error('Error fetching dashboard stats:', error);
         } finally {
             setLoading(false);
         }
@@ -74,10 +104,10 @@ const Dashboard = () => {
                 />
                 <StatsCard
                     title="Active Jobs"
-                    value={stats?.activeJobs || 0}
+                    value={stats?.inProgressJobs || 0}
                     icon={<FaWrench />}
                     color="var(--warning-color)"
-                    trend={{ value: 5, isPositive: true }}
+                    trend={{ value: `${stats?.jobTrend}`, isPositive: true }}
                     link="/jobs"
                 />
                 <StatsCard
@@ -90,7 +120,7 @@ const Dashboard = () => {
                 />
                 <StatsCard
                     title="Revenue"
-                    value={`$${stats?.revenue || 0}`}
+                    value={`₹${stats?.revenue || 0.00}`}
                     icon={<FaChartLine />}
                     color="var(--info-color)"
                     trend={{ value: 15, isPositive: true }}
