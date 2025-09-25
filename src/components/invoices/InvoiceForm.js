@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { FaArrowLeft, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
+import {
+    FaArrowLeft,
+    FaSave,
+    FaTimes,
+    FaPlus,
+    FaTrash
+} from 'react-icons/fa';
 import { invoiceService } from '../../services/invoiceService';
 import { INVOICE_STATUS } from './constants/invoiceConstants';
 import './../../styles/invoices.css';
+import {customerService} from "../../services/customerService";
+import {toast} from "react-toastify";
 
 const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const isEdit = Boolean(invoice && invoice.id);
@@ -30,6 +38,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
 
     const [errors, setErrors] = useState({});
     const [customers, setCustomers] = useState([]);
+    const isEditMode = Boolean(invoice?.invoiceNumber);
 
     useEffect(() => {
         if (invoice) {
@@ -53,13 +62,17 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     }, [invoice]);
 
     const loadCustomers = async () => {
-        // This would typically come from a customer service
-        const mockCustomers = [
-            { id: 1, name: 'John Smith', email: 'john@example.com', address: '123 Main St' },
-            { id: 2, name: 'Sarah Wilson', email: 'sarah@example.com', address: '456 Oak Ave' },
-            { id: 3, name: 'Robert Davis', email: 'robert@example.com', address: '789 Pine Rd' }
-        ];
-        setCustomers(mockCustomers);
+        try {
+            const response = await customerService.listAll();
+            if (response?.data?.content) {
+                setCustomers(response.data.content);
+            } else {
+                toast.error('Failed to fetch customers - ', response?.data?.message || 'Unknown error');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch customers');
+            console.error('Error fetching customers:', error);
+        }
     };
 
     const handleChange = (e) => {
@@ -75,7 +88,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
             if (selectedCustomer) {
                 setFormData(prev => ({
                     ...prev,
-                    customerName: selectedCustomer.name,
+                    customerName: selectedCustomer.firstName + ' ' + selectedCustomer.lastName,
                     customerEmail: selectedCustomer.email,
                     customerAddress: selectedCustomer.address
                 }));
@@ -114,7 +127,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                     quantity: parseFloat(newItem.quantity),
                     unitPrice: parseFloat(newItem.unitPrice),
                     taxRate: parseFloat(newItem.taxRate),
-                    total: itemTotal + taxAmount
+                    totalPrice: itemTotal + taxAmount
                 }
             ]
         }));
@@ -135,13 +148,13 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     };
 
     const calculateTotal = () => {
-        return formData.items.reduce((sum, item) => sum + item.total, 0);
+        return formData.items.reduce((sum, item) => sum + item.totalPrice, 0);
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.invoiceNumber.trim()) newErrors.invoiceNumber = 'Invoice number is required';
+        if (isEditMode && !formData.invoiceNumber.trim()) newErrors.invoiceNumber = 'Invoice number is required';
         if (!formData.customerId) newErrors.customerId = 'Customer is required';
         if (!formData.customerName.trim()) newErrors.customerName = 'Customer name is required';
         if (!formData.invoiceDate) newErrors.invoiceDate = 'Invoice date is required';
@@ -194,8 +207,10 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 type="text"
                                 name="invoiceNumber"
                                 value={formData.invoiceNumber}
+                                placeholder={!isEditMode ? "AUTO GENERATED" : "e.g., PO-2023-1001"}
                                 onChange={handleChange}
                                 className={errors.invoiceNumber ? 'error' : ''}
+                                disabled
                             />
                             {errors.invoiceNumber && <span className="error-text">{errors.invoiceNumber}</span>}
                         </div>
@@ -205,9 +220,17 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
+                                disabled
                             >
-                                <option value="DRAFT">Draft</option>
-                                <option value="SENT">Sent</option>
+                                {
+                                    Object.values(INVOICE_STATUS).map(status => (
+                                        <option key={status} value={status}>
+                                            {status.charAt(0) + status.slice(1).toLowerCase()}
+                                        </option>
+                                    ))
+                                }
+                                {/*<option value="DRAFT">Draft</option>*/}
+                                {/*<option value="SENT">Sent</option>*/}
                             </select>
                         </div>
                     </div>
@@ -252,7 +275,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 <option value="">Select Customer</option>
                                 {customers.map(customer => (
                                     <option key={customer.id} value={customer.id}>
-                                        {customer.name}
+                                        {customer.firstName + ' ' + customer.lastName}
                                     </option>
                                 ))}
                             </select>
@@ -269,6 +292,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 value={formData.customerName}
                                 onChange={handleChange}
                                 className={errors.customerName ? 'error' : ''}
+                                disabled={formData?.customerName}
                             />
                             {errors.customerName && <span className="error-text">{errors.customerName}</span>}
                         </div>
@@ -279,6 +303,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 name="customerEmail"
                                 value={formData.customerEmail}
                                 onChange={handleChange}
+                                disabled={formData?.customerName} //
                             />
                         </div>
                     </div>
@@ -290,6 +315,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                             value={formData.customerAddress}
                             onChange={handleChange}
                             rows={2}
+                            disabled={formData?.customerAddress}
                         />
                     </div>
                 </div>
@@ -372,9 +398,9 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                     <tr key={index}>
                                         <td>{item.description}</td>
                                         <td>{item.quantity}</td>
-                                        <td>${item.unitPrice.toFixed(2)}</td>
-                                        <td>{item.taxRate}%</td>
-                                        <td>${item.total.toFixed(2)}</td>
+                                        <td>₹{item?.unitPrice?.toFixed(2)}</td>
+                                        <td>{item?.taxRate}%</td>
+                                        <td>₹{item?.totalPrice?.toFixed(2)}</td>
                                         <td>
                                             <button
                                                 type="button"
@@ -390,7 +416,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 <tfoot>
                                 <tr>
                                     <td colSpan="4" className="total-label">Total Amount:</td>
-                                    <td className="total-amount">${calculateTotal().toFixed(2)}</td>
+                                    <td className="total-amount">₹{calculateTotal().toFixed(2)}</td>
                                     <td></td>
                                 </tr>
                                 </tfoot>
@@ -420,6 +446,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                             onChange={handleChange}
                             rows={2}
                             placeholder="Payment terms and conditions"
+                            disabled
                         />
                     </div>
                 </div>

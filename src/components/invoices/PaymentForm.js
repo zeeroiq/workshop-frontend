@@ -3,11 +3,13 @@ import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { invoiceService } from '../../services/invoiceService';
 import { PAYMENT_METHODS } from './constants/invoiceConstants';
 import './../../styles/invoices.css';
+import {todayDate} from "../helper/utils";
 
 const PaymentForm = ({ invoice, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
-        amount: invoice?.totalAmount - (invoice?.paidAmount || 0) || 0,
-        paymentDate: new Date().toISOString().split('T')[0],
+        invoiceNumber: invoice?.invoiceNumber || '',
+        amount: invoice?.totalAmount - (invoice?.amountPaid || 0) || 0,
+        paymentDate: todayDate(),
         paymentMethod: PAYMENT_METHODS[0],
         reference: '',
         notes: ''
@@ -33,7 +35,7 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
 
     const validateForm = () => {
         const newErrors = {};
-        const outstandingBalance = invoice.totalAmount - (invoice.paidAmount || 0);
+        const outstandingBalance = invoice.totalAmount - (invoice.amountPaid || 0);
 
         if (!formData.amount || formData.amount <= 0) {
             newErrors.amount = 'Valid payment amount is required';
@@ -61,7 +63,7 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
         }
     };
 
-    const outstandingBalance = invoice ? invoice.totalAmount - (invoice.paidAmount || 0) : 0;
+    const outstandingBalance = invoice ? invoice.totalAmount - (invoice.amountPaid || 0) : 0;
 
     return (
         <div className="payment-form-container">
@@ -79,15 +81,15 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                 </div>
                 <div className="info-item">
                     <label>Invoice Total:</label>
-                    <span>${invoice?.totalAmount?.toFixed(2)}</span>
+                    <span>₹{invoice?.totalAmount?.toFixed(2)}</span>
                 </div>
                 <div className="info-item">
                     <label>Amount Paid:</label>
-                    <span>${(invoice?.paidAmount || 0).toFixed(2)}</span>
+                    <span>₹{(invoice?.amountPaid || 0).toFixed(2)}</span>
                 </div>
                 <div className="info-item">
                     <label>Outstanding Balance:</label>
-                    <span className="outstanding-balance">${outstandingBalance.toFixed(2)}</span>
+                    <span className="outstanding-balance">₹{outstandingBalance.toFixed(2)}</span>
                 </div>
             </div>
 

@@ -566,7 +566,7 @@
 
 .payment-form {
     padding: 20px;
-    max-width: 800px;
+    /*max-width: 800px;*/
 }
 
 @media (max-width: 768px) {

@@ -4,6 +4,7 @@ import InvoiceForm from './InvoiceForm';
 import PaymentForm from './PaymentForm';
 import { FaFileInvoiceDollar } from 'react-icons/fa';
 import './../../styles/invoices.css';
+import InvoiceDetails from "./InvoiceDetails";
 
 const Invoice = () => {
     const [activeView, setActiveView] = useState('list');
@@ -43,6 +44,14 @@ const Invoice = () => {
                         onEditInvoice={handleEditInvoice}
                         onCreateInvoice={handleCreateInvoice}
                         onAddPayment={handleAddPayment}
+                    />
+                );
+            case 'details':
+                return (
+                    <InvoiceDetails
+                        invoice={selectedInvoice}
+                        onEditInvoice={handleEditInvoice}
+                        onCancel={handleBackToList}
                     />
                 );
             case 'form':

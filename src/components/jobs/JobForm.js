@@ -1,35 +1,58 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     FaArrowLeft,
+    FaCar,
+    FaCalendar,
+    FaRupeeSign,
     FaSave,
+    FaSearch,
     FaTimes,
     FaUser,
-    FaCar,
     FaWrench,
-    FaUserCog,
-    FaCalendar,
-    FaDollarSign
+    FaUserCog
 } from 'react-icons/fa';
 import '../../styles/Jobs.css';
+import {customerService} from "../../services/customerService";
+import {toast} from "react-toastify";
 
-const JobForm = ({ job, onSave, onCancel }) => {
+const JobForm = ({job, onSave, onCancel}) => {
     const isEdit = Boolean(job && job.id);
+    const initialFormState = {
+        customer: '',
+        customerId: '',
+        vehicle: '',
+        license: '',
+        service: '',
+        technician: '',
+        status: 'scheduled',
+        estimatedCompletion: '',
+        cost: '',
+        description: '',
+        notes: ''
+    };
 
     const [formData, setFormData] = useState({
-        customer: job?.customer || '',
-        customerId: job?.customerId || '',
-        vehicle: job?.vehicle || '',
-        license: job?.license || '',
-        service: job?.service || '',
-        technician: job?.technician || '',
-        status: job?.status || 'scheduled',
-        estimatedCompletion: job?.estimatedCompletion || '',
-        cost: job?.cost || '',
-        description: job?.description || '',
-        notes: job?.notes || ''
+        // customer: job?.customer || '',
+        // customerId: job?.customerId || '',
+        // vehicle: job?.vehicle || '',
+        // license: job?.license || '',
+        // service: job?.service || '',
+        // technician: job?.technician || '',
+        // status: job?.status || 'scheduled',
+        // estimatedCompletion: job?.estimatedCompletion || '',
+        // cost: job?.cost || '',
+        // description: job?.description || '',
+        // notes: job?.notes || ''
+        ...initialFormState,
+        ...(job || {})
     });
 
     const [errors, setErrors] = useState({});
+    const [searchTerm, setSearchTerm] = useState('');
+    const [renderJobForm, setRenderJobForm] = useState(isEdit);
+    const [customerSearchResults, setCustomerSearchResults] = useState([]);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    
 
     useEffect(() => {
         if (job) {
@@ -40,7 +63,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 license: job.license || '',
                 service: job.service || '',
                 technician: job.technician || '',
-                status: job.status || 'scheduled',
+                status: job.status || 'scheduled', // Keep default
                 estimatedCompletion: job.estimatedCompletion || '',
                 cost: job.cost || '',
                 description: job.description || '',
@@ -50,7 +73,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
     }, [job]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -93,28 +116,120 @@ const JobForm = ({ job, onSave, onCancel }) => {
         onSave(jobData);
     };
 
-    return (
-        <div className="job-form-container">
-            <div className="job-form-header">
-                <button className="back-button" onClick={onCancel}>
-                    <FaArrowLeft /> Back to Jobs
-                </button>
-                <h2>{isEdit ? 'Edit Job' : 'Create New Job'}</h2>
-            </div>
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        if (searchTerm?.trim()) {
+            await searchCustomer(searchTerm.trim());
+        }
+    };
 
+    const searchCustomer = async (query) => {
+        try {
+            const response = await customerService.search(query);
+            if (response?.status === 200 && response?.data?.length > 0) {
+                setCustomerSearchResults(response.data);
+                toast.success(`${response.data.length} customer(s) found.`);
+            } else {
+                setCustomerSearchResults([]);
+                toast.error('Customer not found');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch customer details');
+            console.error('Error fetching customer:', error);
+        }
+    };
+
+    const handleSelectCustomer = (customer) => {
+        setSelectedCustomer(customer);
+        setFormData(prev => ({
+            ...prev,
+            customer: `${customer.firstName} ${customer.lastName}`,
+            customerId: customer.id
+        }));
+        setCustomerSearchResults([]); // Clear search results
+        // Don't render job form yet, wait for vehicle selection
+    };
+
+    const handleSelectVehicle = (vehicle) => {
+        setFormData(prev => ({ ...prev, vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, license: vehicle.licensePlate }));
+        setRenderJobForm(true); // Now show the full form
+    };
+
+    const searchExistingCustomerForm = () => {
+        return (
+            <form className="job-form-search" onSubmit={handleSearch} >
+                <div className="form-section">
+                    <input
+                        type="text"
+                        placeholder="Customer first/last name, phone, email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="form-control"
+                    />
+                    <button type="submit" className="save-btn">
+                        <FaSearch /> Search
+                    </button>
+                </div>
+                {customerSearchResults.length > 0 && (
+                    <div className="customer-search-results">
+                        <h4>Select a Customer</h4>
+                        <ul>
+                            {customerSearchResults.map(cust => (
+                                <li key={cust.id} onClick={() => handleSelectCustomer(cust)}>
+                                    <strong>{cust.firstName} {cust.lastName}</strong>
+                                    <span>{cust.email} | {cust.contactNo}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </form>
+        )
+    }
+
+    const selectVehicleForm = () => {
+        if (!selectedCustomer) return null;
+
+        return (
+            <div className="vehicle-selection-form">
+                <div className="form-section">
+                    <h4>Select a Vehicle for {selectedCustomer.firstName} {selectedCustomer.lastName}</h4>
+                    {selectedCustomer.vehicles && selectedCustomer.vehicles.length > 0 ? (
+                        <div className="vehicle-list">
+                            {selectedCustomer.vehicles.map(vehicle => (
+                                <div key={vehicle.id} className="vehicle-item" onClick={() => handleSelectVehicle(vehicle)}>
+                                    <FaCar />
+                                    <div>
+                                        <strong>{vehicle.year} {vehicle.make} {vehicle.model}</strong>
+                                        <span>License: {vehicle.licensePlate}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>No vehicles found for this customer. Please add vehicle details manually.</p>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    const getJobForm = () => {
+        return (
             <form className="job-form" onSubmit={handleSubmit}>
                 <div className="form-section">
                     <h3>Customer Information</h3>
                     <div className="form-row">
                         <div className="form-group">
                             <label>
-                                <FaUser className="input-icon" /> Customer Name *
+                                <FaUser className="input-icon"/> Customer Name *
                             </label>
                             <input
                                 type="text"
                                 name="customer"
                                 value={formData.customer}
                                 onChange={handleChange}
+                                disabled={!isEdit}
                                 className={errors.customer ? 'error' : ''}
                             />
                             {errors.customer && <span className="error-text">{errors.customer}</span>}
@@ -125,6 +240,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 type="text"
                                 name="customerId"
                                 value={formData.customerId}
+                                disabled
                                 onChange={handleChange}
                             />
                         </div>
@@ -136,7 +252,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                     <div className="form-row">
                         <div className="form-group">
                             <label>
-                                <FaCar className="input-icon" /> Vehicle *
+                                <FaCar className="input-icon"/> Vehicle *
                             </label>
                             <input
                                 type="text"
@@ -166,7 +282,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                     <div className="form-row">
                         <div className="form-group">
                             <label>
-                                <FaWrench className="input-icon" /> Service *
+                                <FaWrench className="input-icon"/> Service *
                             </label>
                             <input
                                 type="text"
@@ -180,7 +296,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         </div>
                         <div className="form-group">
                             <label>
-                                <FaUserCog className="input-icon" /> Technician *
+                                <FaUserCog className="input-icon"/> Technician *
                             </label>
                             <select
                                 name="technician"
@@ -227,7 +343,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         </div>
                         <div className="form-group">
                             <label>
-                                <FaCalendar className="input-icon" /> Est. Completion *
+                                <FaCalendar className="input-icon"/> Est. Completion *
                             </label>
                             <input
                                 type="datetime-local"
@@ -236,11 +352,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 onChange={handleChange}
                                 className={errors.estimatedCompletion ? 'error' : ''}
                             />
-                            {errors.estimatedCompletion && <span className="error-text">{errors.estimatedCompletion}</span>}
+                            {errors.estimatedCompletion &&
+                                <span className="error-text">{errors.estimatedCompletion}</span>}
                         </div>
                         <div className="form-group">
                             <label>
-                                <FaDollarSign className="input-icon" /> Cost *
+                                <FaRupeeSign className="input-icon"/> Cost *
                             </label>
                             <input
                                 type="number"
@@ -259,25 +376,41 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 <div className="form-section">
                     <h3>Additional Notes</h3>
                     <div className="form-group">
-            <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Additional notes or special instructions"
-            />
+                        <textarea
+                            name="notes"
+                            value={formData.notes}
+                            onChange={handleChange}
+                            rows={3}
+                            placeholder="Additional notes or special instructions"
+                        />
                     </div>
                 </div>
 
                 <div className="form-actions">
                     <button type="button" className="cancel-btn" onClick={onCancel}>
-                        <FaTimes /> Cancel
+                        <FaTimes/> Cancel
                     </button>
                     <button type="submit" className="save-btn">
-                        <FaSave /> {isEdit ? 'Update Job' : 'Create Job'}
+                        <FaSave/> {isEdit ? 'Update Job' : 'Create Job'}
                     </button>
                 </div>
             </form>
+        )
+    }
+
+    return (
+        <div className="job-form-container">
+            <div className="job-form-header">
+                <button className="back-button" onClick={onCancel}>
+                    <FaArrowLeft/> Back to Jobs
+                </button>
+                <h2>{isEdit ? 'Edit Job' : 'Create New Job'}</h2>
+            </div>
+            <div className="job-form">
+                {!isEdit && searchExistingCustomerForm()}
+                {!isEdit && !renderJobForm && selectVehicleForm()}
+                {renderJobForm && getJobForm()}
+            </div>
         </div>
     );
 };

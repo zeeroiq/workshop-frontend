@@ -31,7 +31,10 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     return (
         <>
-            {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
+            <div
+                className={`sidebar-overlay ${isOpen ? 'visible' : ''}`}
+                onClick={onClose}
+            ></div>
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <h2>Menu</h2>
