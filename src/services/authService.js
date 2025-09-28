@@ -38,7 +38,7 @@ export const authService = {
 
     hasRole: (role) => {
         const user = authService.getUser();
-        return user && user.roles && user.roles.includes(role);
+        return user?.roles?.includes(role);
     },
 
     // Helper method to get user info from the token

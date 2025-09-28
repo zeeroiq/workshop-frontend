@@ -29,7 +29,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
         switch(status) {
             case 'scheduled':
                 return <span className="status-badge scheduled">Scheduled</span>;
-            case 'in-progress':
+            case 'in_progress':
                 return <span className="status-badge in-progress">In Progress</span>;
             case 'completed':
                 return <span className="status-badge completed">Completed</span>;
@@ -172,7 +172,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                     </div>
                 )}
 
-                {job.parts && job.parts.length > 0 && (
+                {job?.parts?.length > 0 && (
                     <div className="detail-section">
                         <h3>Parts Used</h3>
                         <table className="parts-table">

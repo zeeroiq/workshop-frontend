@@ -44,7 +44,7 @@ const Dashboard = () => {
     // todo: fix would be needed as there might be other jobs like completed, pending payment etc
     const getJobTrend = (response) => {
         return response.data?.data?.totalJobs
-            ? (response.data?.data.totalJobs - response.data?.data.completedJobs) / response.data?.data.totalJobs * 100
+            ? ((response.data?.data.totalJobs - response.data?.data.completedJobs) / response.data?.data.totalJobs * 100).toFixed(2)
             : 5; // default to 5% if no jobs
     }
 

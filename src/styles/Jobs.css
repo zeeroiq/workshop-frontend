@@ -332,8 +332,14 @@
 
 .job-form {
     padding: 20px;
-    max-width: 1000px;
+    /*max-width: 1000px;*/
 }
+
+/*.customer-search-form {*/
+/*    display: flex;*/
+/*    gap: 12px;*/
+/*    align-content: flex-end;*/
+/*}*/
 
 .form-section {
     margin-bottom: 30px;

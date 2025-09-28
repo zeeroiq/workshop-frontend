@@ -19,7 +19,7 @@ const PurchaseOrderForm = ({order, onSave, onCancel}) => {
         supplierId: '',
         orderDate: new Date().toISOString().split('T')[0],
         expectedDeliveryDate: '',
-        items: [],
+        parts: [],
         status: 'PENDING'
     });
     const [suppliers, setSuppliers] = useState([]);
@@ -80,7 +80,7 @@ const PurchaseOrderForm = ({order, onSave, onCancel}) => {
     const handleAddItem = () => {
         setFormData(prev => ({
             ...prev,
-            items: [...prev.items, {
+            parts: [...prev.parts, {
                 id: Date.now(), // temporary ID
                 partId: '',
                 quantity: 1,
@@ -91,19 +91,19 @@ const PurchaseOrderForm = ({order, onSave, onCancel}) => {
     };
 
     const handleRemoveItem = (index) => {
-        const currentItem = formData.items[index];
-        if (!canEditOrder && order.items.find(item => item.id === currentItem.id)) {
+        const currentItem = formData.parts[index];
+        if (!canEditOrder && order.parts.find(item => item.id === currentItem.id)) {
             toast.warn('Cannot remove items from an existing order');
             return;
         }
         setFormData(prev => ({
             ...prev,
-            items: prev.items.filter((_, i) => i !== index)
+            parts: prev.parts.filter((_, i) => i !== index)
         }));
     };
 
     const handleItemChange = (index, field, value) => {
-        const updatedItems = [...formData.items];
+        const updatedItems = [...formData.parts];
         const numericValue = field === 'quantity' || field === 'unitPrice' ? parseFloat(value) : value;
 
         updatedItems[index] = {
@@ -118,12 +118,12 @@ const PurchaseOrderForm = ({order, onSave, onCancel}) => {
 
         setFormData(prev => ({
             ...prev,
-            items: updatedItems
+            parts: updatedItems
         }));
     };
 
     const calculateTotal = () => {
-        return formData.items.reduce((total, item) => {
+        return formData.parts.reduce((total, item) => {
             return total + (item.quantity * item.unitPrice);
         }, 0);
     };
@@ -264,13 +264,13 @@ const PurchaseOrderForm = ({order, onSave, onCancel}) => {
                         </button>
                     </div>
 
-                    {formData.items.length > 0 ? (
+                    {formData.parts.length > 0 ? (
                         <div className="order-items-container">
-                            {formData.items.map((item, index) => (
+                            {formData.parts.map((item, index) => (
                                 <div key={item.id} className="order-item-card">
                                     <div className="item-header">
                                         <span className="item-number">Item #{index + 1}</span>
-                                        {(canEditOrder || !order.items.find(oi => oi.id === item.id)) && (
+                                        {(canEditOrder || !order.parts.find(oi => oi.id === item.id)) && (
                                             <button
                                                 type="button"
                                                 className="btn-icon danger"

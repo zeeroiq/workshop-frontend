@@ -20,12 +20,18 @@ import Inventory from "./components/inventory/Inventory";
 import Jobs from "./components/jobs/Jobs";
 import Invoice from "./components/invoices/Invoice";
 import Reports from "./components/reports/Reports";
+import JobForm from "./components/jobs/JobForm";
+import InvoiceForm from "./components/invoices/InvoiceForm";
 
 function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [theme, setTheme] = useState('light');
+
+    // useEffect(() => {
+    //     setSidebarOpen(false);
+    // }, [location]);
 
     useEffect(() => {
         // Check if user is logged in on app load
@@ -42,7 +48,8 @@ function App() {
         }
 
         setLoading(false);
-    }, []);
+        setSidebarOpen(false);
+    }, [location]);
 
     const toggleTheme = () => {
         const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -173,10 +180,26 @@ function App() {
                                 }
                             />
                             <Route
+                                path="/jobs/new"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <JobForm />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
                                 path="/invoices"
                                 element={
                                     <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
                                         <Invoice />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/invoices/new"
+                                element={
+                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
+                                        <InvoiceForm />
                                     </ProtectedRoute>
                                 }
                             />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     FaWrench,
     FaCar,
@@ -15,8 +15,14 @@ import {
     FaCalendar
 } from 'react-icons/fa';
 import '../../styles/Jobs.css';
+import {formatDateAsEnUS} from "../helper/utils";
+import {jobService} from "../../services/jobService";
+import {inventoryService} from "../../services/inventoryService";
 
 const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar }) => {
+
+    const [parts, setParts] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -35,7 +41,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
         switch(status) {
             case 'scheduled':
                 return <span className="status-badge scheduled">Scheduled</span>;
-            case 'in-progress':
+            case 'in_progress':
                 return <span className="status-badge in-progress">In Progress</span>;
             case 'completed':
                 return <span className="status-badge completed">Completed</span>;
@@ -44,7 +50,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
         }
     };
 
-    const formatDate = (dateString) => {
+    /*const formatDate = (dateString) => {
         const options = {
             month: 'short',
             day: 'numeric',
@@ -52,7 +58,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
             minute: '2-digit'
         };
         return new Date(dateString).toLocaleDateString('en-US', options);
-    };
+    };*/
 
     return (
         <div className="job-list-container">
@@ -156,7 +162,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                                     <td>
                                         <div className="completion-time">
                                             <FaClock className="time-icon" />
-                                            {formatDate(job.estimatedCompletion)}
+                                            {formatDateAsEnUS(job.estimatedCompletion)}
                                         </div>
                                     </td>
                                     <td className="cost">
@@ -171,7 +177,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                                             <button className="btn-edit" onClick={() => onEditJob(job)} title="Edit Job">
                                                 <FaEdit />
                                             </button>
-                                            <button className="btn-delete" onClick={() => onDeleteJob(job.id)} title="Delete Job">
+                                            <button className="btn-delete" onClick={() => onDeleteJob(job.id, job.key)} title="Delete Job">
                                                 <FaTrash />
                                             </button>
                                         </div>
