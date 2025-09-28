@@ -116,7 +116,7 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
             </div>
 
             <div className="order-items">
-                <h3>Order Items ({order.items?.length || 0})</h3>
+                <h3>Order Items ({order.parts?.length || 0})</h3>
                 <div className="items-table">
                     <div className="table-header">
                         <div>Part Name</div>
@@ -126,8 +126,8 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
                         <div>Total Price</div>
                     </div>
                     <div className="table-body">
-                        {order.items && order.items.length > 0 ? (
-                            order.items.map(item => (
+                        {order.parts && order.parts.length > 0 ? (
+                            order.parts.map(item => (
                                 <div key={item.id} className="table-row">
                                     <div>{item.partName}</div>
                                     <div>{item.partNumber}</div>

@@ -23,7 +23,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         customerAddress: '',
         invoiceDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        items: [],
+        parts: [],
         notes: '',
         terms: '',
         status: INVOICE_STATUS.DRAFT
@@ -50,7 +50,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                 customerAddress: invoice.customerAddress || '',
                 invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
                 dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
-                items: invoice.items || [],
+                parts: invoice.parts || [],
                 notes: invoice.notes || '',
                 terms: invoice.terms || '',
                 status: invoice.status || INVOICE_STATUS.DRAFT
@@ -120,8 +120,8 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
 
         setFormData(prev => ({
             ...prev,
-            items: [
-                ...prev.items,
+            parts: [
+                ...prev.parts,
                 {
                     ...newItem,
                     quantity: parseFloat(newItem.quantity),
@@ -143,12 +143,12 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const handleRemoveItem = (index) => {
         setFormData(prev => ({
             ...prev,
-            items: prev.items.filter((_, i) => i !== index)
+            parts: prev.parts.filter((_, i) => i !== index)
         }));
     };
 
     const calculateTotal = () => {
-        return formData.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        return formData.parts.reduce((sum, item) => sum + item.totalPrice, 0);
     };
 
     const validateForm = () => {
@@ -159,7 +159,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         if (!formData.customerName.trim()) newErrors.customerName = 'Customer name is required';
         if (!formData.invoiceDate) newErrors.invoiceDate = 'Invoice date is required';
         if (!formData.dueDate) newErrors.dueDate = 'Due date is required';
-        if (formData.items.length === 0) newErrors.items = 'At least one item is required';
+        if (formData.parts.length === 0) newErrors.parts = 'At least one item is required';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -322,7 +322,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
 
                 <div className="form-section">
                     <h3>Invoice Items</h3>
-                    {errors.items && <span className="error-text">{errors.items}</span>}
+                    {errors.parts && <span className="error-text">{errors.parts}</span>}
 
                     <div className="item-form">
                         <div className="form-row">
@@ -380,7 +380,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                         </div>
                     </div>
 
-                    {formData.items.length > 0 && (
+                    {formData.parts.length > 0 && (
                         <div className="items-table">
                             <table>
                                 <thead>
@@ -394,7 +394,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {formData.items.map((item, index) => (
+                                {formData.parts.map((item, index) => (
                                     <tr key={index}>
                                         <td>{item.description}</td>
                                         <td>{item.quantity}</td>

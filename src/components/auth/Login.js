@@ -27,7 +27,7 @@ const Login = () => {
             const response = await authService.login(formData.username, formData.password);
 
             // Handle the new API response structure
-            if (response.data.success) {
+            if (response?.data?.success) {
                 const { token, ...user } = response.data.data;
 
                 authService.setToken(token);

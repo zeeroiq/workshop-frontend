@@ -340,6 +340,30 @@ h3 {
     color: var(--text-primary);
 }
 
+.form-control-search {
+    /*width: 80%;*/
+    /*padding: 0.75rem;*/
+    display: flex;
+    align-items: center;
+    /*border: 1px solid var(--border-color);*/
+    /*border-radius: var(--border-radius);*/
+    font-size: var(--font-size-base);
+    /*transition: var(--transition);*/
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.form-control-search-btn {
+    width: 20%;
+    padding: 0.75rem;
+    /*padding: 0.75rem 0.75rem 0.75rem var(--spacing-lg);*/
+    justify-content: flex-end;
+    background-color: #3f51b5;
+    color: white;
+    margin-left: var(--spacing-sm);
+    border-radius: var(--border-radius);
+}
+
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
