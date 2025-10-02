@@ -122,6 +122,13 @@ export const jobService = {
                     };
                 }
                 return response;
+            })
+            .catch(error => {
+                return {
+                    status: error?.response?.status || 500,
+                    message: error.message,
+                    details: error?.response?.data?.message
+                };
             }),
 
     assignMechanic: (jobId, mechanicId) =>

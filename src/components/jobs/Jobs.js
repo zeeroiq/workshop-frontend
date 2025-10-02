@@ -11,7 +11,6 @@ const Jobs = () => {
     const [activeView, setActiveView] = useState('list');
     const [selectedJob, setSelectedJob] = useState(null);
     const [loading, setLoading] = useState(false);
-    // const [parts, setParts] = useState([]);
     const [jobs, setJobs] = useState([]);
 
     useEffect(() => {
@@ -35,7 +34,9 @@ const Jobs = () => {
 
     const transformJobData = (apiJob) => {
         const [vehicle, license] = (apiJob.vehicleDetails || ' - ').split(' - ');
-        const serviceItems = apiJob.items?.filter(item => item.type === 'LABOR').map(item => item.description).join(', ');
+        const serviceItems = apiJob.items?.filter(item => item.type === 'LABOR')
+            .map(item => item.description)
+            .join(', ');
 
         return {
             id: apiJob.id,
@@ -120,16 +121,15 @@ const Jobs = () => {
         setActiveView('list');
     };
 
-    const handleDeleteJob = async (jobId, key) => {
-        setJobs(jobs.filter(job => job.jobNumber !== jobId));
-        const response =  await jobService.deleteJob(key);
-        if (response.status === 200 && response.data) {
+    const handleDeleteJob = async (jobId) => {
+        const response =  await jobService.deleteJob(jobId);
+        if (response?.status === 200) {
             // await loadJobs(); // wont be needed as we already removed it from UI optimistically
+            setJobs(jobs.filter(job => job.jobNumber !== jobId));
         } else {
-            console.error("error deleting job:", response.message);
+            console.error("error deleting job:", response.details);
             toast.error(`Error while deleting job: ${response.message}`);
         }
-        // toast.success("Job deleted successfully!");
     };
 
     const handleBackToList = () => {
