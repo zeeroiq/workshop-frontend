@@ -28,7 +28,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
 
     const filteredJobs = jobs.filter(job => {
         const matchesSearch =
-            job.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            job.jobNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.license.toLowerCase().includes(searchTerm.toLowerCase());
@@ -139,8 +139,8 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                             </thead>
                             <tbody>
                             {filteredJobs.map(job => (
-                                <tr key={job.id}>
-                                    <td className="job-id">{job.id}</td>
+                                <tr key={job.jobNumber}>
+                                    <td className="job-id">{job.jobNumber}</td>
                                     <td>
                                         <div className="customer-info">
                                             <FaUser className="info-icon" />
@@ -177,7 +177,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                                             <button className="btn-edit" onClick={() => onEditJob(job)} title="Edit Job">
                                                 <FaEdit />
                                             </button>
-                                            <button className="btn-delete" onClick={() => onDeleteJob(job.id, job.key)} title="Delete Job">
+                                            <button className="btn-delete" onClick={() => onDeleteJob(job.jobNumber, job.key)} title="Delete Job">
                                                 <FaTrash />
                                             </button>
                                         </div>

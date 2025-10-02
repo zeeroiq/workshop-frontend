@@ -6,6 +6,7 @@ import JobCalendar from './JobCalendar';
 import '../../styles/Jobs.css';
 import {jobService} from "../../services/jobService";
 import {toast} from "react-toastify";
+import JobForm2 from "./JobForm2";
 
 const Jobs = () => {
     const [activeView, setActiveView] = useState('list');
@@ -47,11 +48,11 @@ const Jobs = () => {
 
     const transformJobData = (apiJob) => {
         const [vehicle, license] = (apiJob.vehicleDetails || ' - ').split(' - ');
-        const serviceItems = apiJob.parts?.filter(item => item.type === 'LABOR').map(item => item.description).join(', ');
+        const serviceItems = apiJob.items?.filter(item => item.type === 'LABOR').map(item => item.description).join(', ');
 
         return {
-            key: apiJob.id,
-            id: apiJob.jobNumber,
+            id: apiJob.id,
+            jobNumber: apiJob.jobNumber,
             customer: apiJob.customerName,
             customerId: apiJob.customerId,
             vehicle: vehicle.trim(),
@@ -64,74 +65,21 @@ const Jobs = () => {
             cost: apiJob.totalCost,
             createdAt: apiJob.createdAt,
             description: apiJob.description,
-            notes: apiJob.notes?.map(note => note.content).join('\n'),
-            parts: apiJob.parts?.filter(item => item.type === 'PART').map(part => ({
-                partId: part.id,
-                name: part.partName || part.description,
-                quantity: part.quantity,
-                price: part.rate,
-                totalCost: part.totalCost
-            })) || [],
+            notes: apiJob.notes || [],
+            // items: apiJob.items?.filter(item => item.type === 'PART').map(part => ({
+            //     partId: part.id,
+            //     partNumber: part.jobNumber,
+            //     partName: part.partName || part.description,
+            //     description: part.description,
+            //     quantity: part.quantity,
+            //     rate: part.rate,
+            //     totalCost: part.totalCost,
+            //     type: part.type,
+            // })) || [],
+            items: apiJob.items || [],
         };
     };
 
-    /*
-    const [jobs, setJobs] = useState([
-        {
-            id: 'JOB-001',
-            customer: 'John Smith',
-            customerId: 'CUST-001',
-            vehicle: '2018 Toyota Camry',
-            license: 'ABC-123',
-            service: 'Oil Change & Brake Inspection',
-            technician: 'Mike Johnson',
-            status: 'in-progress',
-            estimatedCompletion: '2023-10-25T14:30:00',
-            cost: 89.99,
-            createdAt: '2023-10-24T09:15:00',
-            description: 'Full synthetic oil change and comprehensive brake system inspection',
-            notes: 'Customer reported slight vibration when braking',
-            parts: [
-                { name: 'Synthetic Oil 5W-30', quantity: 5, price: 12.99 },
-                { name: 'Oil Filter', quantity: 1, price: 9.99 }
-            ]
-        },
-        {
-            id: 'JOB-002',
-            customer: 'Sarah Wilson',
-            customerId: 'CUST-002',
-            vehicle: '2020 Honda CR-V',
-            license: 'XYZ-789',
-            service: 'Tire Rotation & Balance',
-            technician: 'Emily Chen',
-            status: 'scheduled',
-            estimatedCompletion: '2023-10-26T11:00:00',
-            cost: 45.00,
-            createdAt: '2023-10-23T14:20:00',
-            description: 'Four-tire rotation and wheel balancing',
-            notes: 'Customer requested nitrogen refill after balancing',
-            parts: []
-        },
-        {
-            id: 'JOB-003',
-            customer: 'Robert Davis',
-            customerId: 'CUST-003',
-            vehicle: '2016 Ford F-150',
-            license: 'TRK-456',
-            service: 'Transmission Flush',
-            technician: 'Carlos Rodriguez',
-            status: 'completed',
-            estimatedCompletion: '2023-10-24T16:45:00',
-            cost: 149.99,
-            createdAt: '2023-10-22T10:05:00',
-            description: 'Complete transmission fluid flush and replacement',
-            notes: 'Transmission was making whining noise prior to service',
-            parts: [
-                { name: 'Transmission Fluid', quantity: 12, price: 8.99 }
-            ]
-        }
-    ]);
-*/
     const handleViewJob = (job) => {
         setSelectedJob(job);
         setActiveView('details');
@@ -161,9 +109,9 @@ const Jobs = () => {
             payload.notes = []; // Ensure it's an empty array if no notes
         }
         
-        if (jobData.id) {
+        if (jobData.jobNumber) {
             // Update existing job
-            const response = await jobService.updateJob(payload.id, payload);
+            const response = await jobService.updateJobBuNumber(payload.jobNumber, payload);
             if (response.status === 200 && response.data) {
                 // On successful update, reload all jobs to ensure data consistency
                 await loadJobs();
@@ -186,7 +134,7 @@ const Jobs = () => {
     };
 
     const handleDeleteJob = async (jobId, key) => {
-        setJobs(jobs.filter(job => job.id !== jobId));
+        setJobs(jobs.filter(job => job.jobNumber !== jobId));
         const response =  await jobService.deleteJob(key);
         if (response.status === 200 && response.data) {
             // await loadJobs(); // wont be needed as we already removed it from UI optimistically

@@ -8,8 +8,8 @@ import {
     FaUserCog,
     FaCalendar,
     FaClock,
-    FaDollarSign,
-    FaFileAlt
+    FaFileAlt,
+    FaRupeeSign
 } from 'react-icons/fa';
 import '../../styles/Jobs.css';
 
@@ -66,7 +66,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                 <div className="job-header">
                     <h2>{job.service}</h2>
                     <div className="job-id-status">
-                        <span className="job-id">{job.id}</span>
+                        <span className="job-id">{job.jobNumber}</span>
                         {getStatusBadge(job.status)}
                     </div>
                 </div>
@@ -154,10 +154,10 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                             </div>
                         </div>
                         <div className="detail-item">
-                            <FaDollarSign className="detail-icon" />
+                            <FaRupeeSign className="detail-icon" />
                             <div>
                                 <label>Cost</label>
-                                <p>${job.cost.toFixed(2)}</p>
+                                <p>₹ {job.cost.toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
@@ -172,7 +172,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                     </div>
                 )}
 
-                {job?.parts?.length > 0 && (
+                {job?.items?.length > 0 && (
                     <div className="detail-section">
                         <h3>Parts Used</h3>
                         <table className="parts-table">
@@ -185,12 +185,12 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                             </tr>
                             </thead>
                             <tbody>
-                            {job.parts.map((part, index) => (
+                            {job.items.map((item, index) => (
                                 <tr key={index}>
-                                    <td>{part.name}</td>
-                                    <td>{part.quantity}</td>
-                                    <td>${part.price.toFixed(2)}</td>
-                                    <td>${(part.quantity * part.price).toFixed(2)}</td>
+                                    <td>{item.partName || item.description}</td>
+                                    <td>{item.quantity}</td>
+                                    <td>₹ {item.rate.toFixed(2)}</td>
+                                    <td>₹ {(item.quantity * item.rate).toFixed(2)}</td>
                                 </tr>
                             ))}
                             </tbody>
