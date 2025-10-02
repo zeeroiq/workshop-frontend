@@ -104,7 +104,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                         </button>
                         <button
                             className={activeTab === 'in-progress' ? 'active' : ''}
-                            onClick={() => setActiveTab('in-progress')}
+                            onClick={() => setActiveTab('in_progress')}
                         >
                             In Progress
                         </button>
@@ -161,13 +161,15 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                                     <td>{getStatusBadge(job.status)}</td>
                                     <td>
                                         <div className="completion-time">
-                                            <FaClock className="time-icon" />
+                                            <FaClock className="time-icon"/>
                                             {formatDateAsEnUS(job.estimatedCompletion)}
                                         </div>
                                     </td>
-                                    <td className="cost">
+                                    <td>
+                                        <div className="cost">
                                         <FaDollarSign className="dollar-icon" />
                                         {job.cost.toFixed(2)}
+                                        </div>
                                     </td>
                                     <td>
                                         <div className="action-buttons">
@@ -177,7 +179,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                                             <button className="btn-edit" onClick={() => onEditJob(job)} title="Edit Job">
                                                 <FaEdit />
                                             </button>
-                                            <button className="btn-delete" onClick={() => onDeleteJob(job.jobNumber, job.key)} title="Delete Job">
+                                            <button className="btn-delete" onClick={() => onDeleteJob(job.id)} title="Delete Job">
                                                 <FaTrash />
                                             </button>
                                         </div>
