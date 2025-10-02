@@ -104,7 +104,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                         </button>
                         <button
                             className={activeTab === 'in-progress' ? 'active' : ''}
-                            onClick={() => setActiveTab('in-progress')}
+                            onClick={() => setActiveTab('in_progress')}
                         >
                             In Progress
                         </button>
@@ -177,7 +177,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                                             <button className="btn-edit" onClick={() => onEditJob(job)} title="Edit Job">
                                                 <FaEdit />
                                             </button>
-                                            <button className="btn-delete" onClick={() => onDeleteJob(job.jobNumber, job.key)} title="Delete Job">
+                                            <button className="btn-delete" onClick={() => onDeleteJob(job.id)} title="Delete Job">
                                                 <FaTrash />
                                             </button>
                                         </div>
