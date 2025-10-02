@@ -19,7 +19,7 @@
     --warning-color: #f9c74f;
     --danger-color: #f94144;
     --info-color: #4895ef;
-
+    /*--color-primary-light: #3b82f6; !* Blue-500 *!*/
     /* Typography */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     --font-size-xs: 0.75rem;

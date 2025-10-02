@@ -100,6 +100,18 @@ export const jobService = {
                 return response;
             }),
 
+    updateJobBuNumber: (jobNumber, jobData) =>
+        api.put(`/jobs/${jobNumber}/by-number`, jobData)
+            .then(response => {
+                if (response?.data?.success) {
+                    return {
+                        ...response,
+                        data: response.data.data
+                    };
+                }
+                return response;
+            }),
+
     deleteJob: (id) =>
         api.delete(`/jobs/${id}`)
             .then(response => {
