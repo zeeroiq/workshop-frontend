@@ -1,19 +1,19 @@
 import React from 'react';
 import {
     FaArrowLeft,
-    FaEdit,
-    FaUser,
-    FaCar,
-    FaWrench,
-    FaUserCog,
     FaCalendar,
+    FaCar,
     FaClock,
+    FaEdit,
     FaFileAlt,
-    FaRupeeSign
+    FaRupeeSign,
+    FaUser,
+    FaUserCog,
+    FaWrench
 } from 'react-icons/fa';
 import '../../styles/Jobs.css';
 
-const JobDetails = ({ job, onBack, onEdit }) => {
+const JobDetails = ({job, onBack, onEdit}) => {
     const formatDate = (dateString) => {
         const options = {
             year: 'numeric',
@@ -26,7 +26,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
     };
 
     const getStatusBadge = (status) => {
-        switch(status) {
+        switch (status) {
             case 'scheduled':
                 return <span className="status-badge scheduled">Scheduled</span>;
             case 'in_progress':
@@ -43,7 +43,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
             <div className="job-details-container">
                 <div className="job-not-found">
                     <button className="back-button" onClick={onBack}>
-                        <FaArrowLeft /> Back to Jobs
+                        <FaArrowLeft/> Back to Jobs
                     </button>
                     <h2>Job not found</h2>
                 </div>
@@ -55,10 +55,10 @@ const JobDetails = ({ job, onBack, onEdit }) => {
         <div className="job-details-container">
             <div className="job-details-header">
                 <button className="back-button" onClick={onBack}>
-                    <FaArrowLeft /> Back to Jobs
+                    <FaArrowLeft/> Back to Jobs
                 </button>
                 <button className="edit-button" onClick={onEdit}>
-                    <FaEdit /> Edit Job
+                    <FaEdit/> Edit Job
                 </button>
             </div>
 
@@ -75,7 +75,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                     <div className="detail-section">
                         <h3>Customer Information</h3>
                         <div className="detail-item">
-                            <FaUser className="detail-icon" />
+                            <FaUser className="detail-icon"/>
                             <div>
                                 <label>Customer</label>
                                 <p>{job.customer}</p>
@@ -94,7 +94,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                     <div className="detail-section">
                         <h3>Vehicle Information</h3>
                         <div className="detail-item">
-                            <FaCar className="detail-icon" />
+                            <FaCar className="detail-icon"/>
                             <div>
                                 <label>Vehicle</label>
                                 <p>{job.vehicle}</p>
@@ -113,14 +113,14 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                     <div className="detail-section">
                         <h3>Service Details</h3>
                         <div className="detail-item">
-                            <FaWrench className="detail-icon" />
+                            <FaWrench className="detail-icon"/>
                             <div>
                                 <label>Service</label>
                                 <p>{job.service}</p>
                             </div>
                         </div>
                         <div className="detail-item">
-                            <FaUserCog className="detail-icon" />
+                            <FaUserCog className="detail-icon"/>
                             <div>
                                 <label>Technician</label>
                                 <p>{job.technician}</p>
@@ -128,7 +128,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                         </div>
                         {job.description && (
                             <div className="detail-item">
-                                <FaFileAlt className="detail-icon" />
+                                <FaFileAlt className="detail-icon"/>
                                 <div>
                                     <label>Description</label>
                                     <p>{job.description}</p>
@@ -140,21 +140,21 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                     <div className="detail-section">
                         <h3>Schedule & Pricing</h3>
                         <div className="detail-item">
-                            <FaCalendar className="detail-icon" />
+                            <FaCalendar className="detail-icon"/>
                             <div>
                                 <label>Created</label>
                                 <p>{formatDate(job.createdAt)}</p>
                             </div>
                         </div>
                         <div className="detail-item">
-                            <FaClock className="detail-icon" />
+                            <FaClock className="detail-icon"/>
                             <div>
                                 <label>Estimated Completion</label>
                                 <p>{formatDate(job.estimatedCompletion)}</p>
                             </div>
                         </div>
                         <div className="detail-item">
-                            <FaRupeeSign className="detail-icon" />
+                            <FaRupeeSign className="detail-icon"/>
                             <div>
                                 <label>Cost</label>
                                 <p>₹ {job.cost.toFixed(2)}</p>
@@ -164,12 +164,29 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                 </div>
 
                 {job.notes && (
-                    <div className="detail-section">
-                        <h3>Additional Notes</h3>
-                        <div className="notes-content">
-                            <p>{job.notes}</p>
+                    <>
+                        {/*<div className="detail-section">*/}
+                        {/*    <h3>Additional Notes</h3>*/}
+                        {/*    {job.notes?.map((note) => (*/}
+                        {/*        <div className="notes-content">*/}
+                        {/*        <p>{note.content}</p>*/}
+                        {/*    </div>*/}
+                        {/*    ))}*/}
+                        {/*</div>*/}
+                        <div className="detail-section">
+                            <h3>Additional Notes</h3>
+                            <div className="notes-list">
+                                {job.notes?.map((note) => (
+                                    <div key={note.id} className="note-item">
+                                        <p className="note-content">{note.content}</p>
+                                        <p className="note-meta">
+                                            — {note.authorName} on {formatDate(note.createdAt)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {job?.items?.length > 0 && (
