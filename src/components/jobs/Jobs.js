@@ -6,7 +6,6 @@ import JobCalendar from './JobCalendar';
 import '../../styles/Jobs.css';
 import {jobService} from "../../services/jobService";
 import {toast} from "react-toastify";
-import JobForm2 from "./JobForm2";
 
 const Jobs = () => {
     const [activeView, setActiveView] = useState('list');
@@ -18,18 +17,6 @@ const Jobs = () => {
     useEffect(() => {
         loadJobs();
     }, []);
-
-    // const loadParts = async () => {
-    //     try {
-    //         setLoading(true);
-    //         const response = await inventoryService.getParts();
-    //         setParts(response.data.data.content);
-    //     } catch (error) {
-    //         console.error('Error loading parts:', error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     const loadJobs = async () => {
         try {
@@ -106,7 +93,7 @@ const Jobs = () => {
                 .filter(content => content.trim() !== '') // Remove empty lines
                 .map(content => ({ content }));
         } else {
-            payload.notes = []; // Ensure it's an empty array if no notes
+            payload.notes = payload.notes || []; // Ensure it's an empty array if no notes
         }
         
         if (jobData.jobNumber) {

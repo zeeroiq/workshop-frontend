@@ -270,7 +270,7 @@ const JobForm = ({job, onSave, onCancel}) => {
         }
 
         const newNote = {
-            id: `new-${Date.now()}`, // Temporary unique ID
+            id: `${Date.now()}`, // Temporary unique ID
             content: newNoteContent,
             authorId: currentUser?.id,
             authorName: `${currentUser.firstName} ${currentUser.lastName}`,
@@ -300,7 +300,7 @@ const JobForm = ({job, onSave, onCancel}) => {
         }));
         setNewNoteContent('');
         setShowAddNote(false);
-        toast.success("Note added.");
+        // toast.success("Note added.");
     };
 
     const searchExistingCustomerForm = () => {
