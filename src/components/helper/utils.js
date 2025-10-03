@@ -36,3 +36,21 @@ export const formatDateTimeAMPM = (dateString) => {
     // Slice to get YYYY-MM-DDTHH:mm:ss.sss format and then remove the Z
     return date.toISOString().slice(0, 23);
 };
+
+// Convert a string to Title Case (e.g., "hello world" -> "Hello World")
+export const to_TitleCase = (str) => {
+    return str.replace(
+        /\w\S*/g,
+        (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+}
+
+// Convert a string to Upper Case with spaces instead of hyphens/underscores (e.g., "in-progress" -> "In Progress")
+export const toUpperCase_space = (str) => {
+    return str.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+}
+
+// Convert a date string from "YYYY-MM-DD" to "YYYY/MM/DD"
+export const to_DateCase = (str) => {
+    return str.replace(/-/g, '/');
+}

@@ -548,6 +548,12 @@
     color: #388e3c;
 }
 
+.status-badge.default {
+    background-color: #b1d1e8;
+    color: #107070;
+    font-weight: bolder;
+}
+
 .details-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

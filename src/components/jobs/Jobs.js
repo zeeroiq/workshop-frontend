@@ -48,7 +48,7 @@ const Jobs = () => {
             service: serviceItems || apiJob.description,
             technicianId: apiJob.technicianId,
             technician: apiJob.technicianName,
-            status: apiJob.status.toLowerCase(), // e.g., 'COMPLETED' -> 'completed'
+            status: apiJob.status.toLowerCase().replace(/_/g, '-'), // e.g., 'IN_PROGRESS' -> 'in-progress'
             estimatedCompletion: apiJob.completedAt || apiJob.updatedAt, // Using completedAt or updatedAt as a fallback
             cost: apiJob.totalCost,
             createdAt: apiJob.createdAt,

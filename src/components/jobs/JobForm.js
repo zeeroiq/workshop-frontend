@@ -3,7 +3,7 @@ import {
     FaArrowLeft,
     FaBox,
     FaCalendar,
-    FaCar, FaFileAlt,
+    FaCar,
     FaMinus,
     FaPlus,
     FaRupeeSign,
@@ -15,7 +15,7 @@ import {
     FaWrench
 } from 'react-icons/fa';
 
-import {formatDate, formatDateTimeAMPM} from "../helper/utils";
+import {formatDate, formatDateTimeAMPM, toUpperCase_space} from "../helper/utils";
 import {customerService} from "../../services/customerService";
 import {userService} from "../../services/userService";
 import {inventoryService} from "../../services/inventoryService";
@@ -24,6 +24,7 @@ import {toast} from "react-toastify";
 import '../../styles/Jobs.css';
 import '../../styles/App.css';
 import {authService} from "../../services/authService";
+import {jobStatuses} from "./helper/constants";
 
 const JobForm = ({job, onSave, onCancel}) => {
     const isEdit = Boolean(job?.jobNumber);
@@ -37,7 +38,7 @@ const JobForm = ({job, onSave, onCancel}) => {
         vehicleId: '',
         technicianId: '',
         technician: '',
-        status: 'scheduled',
+        status: 'estimate-pending',
         estimatedCompletion: '',
         cost: 0,
         description: '',
@@ -84,7 +85,7 @@ const JobForm = ({job, onSave, onCancel}) => {
                 technicianId: job.technicianId || '',
                 technician: job.technician || '',
                 vehicleId: job.vehicleId || '',
-                status: job.status || 'scheduled', // Keep default
+                status: job.status || 'estimate-pending', // Keep default
                 estimatedCompletion: formatDateTimeAMPM(job.estimatedCompletion) || '',
                 cost: job.cost || 0,
                 // Ensure notes and parts are always arrays
@@ -685,9 +686,12 @@ const JobForm = ({job, onSave, onCancel}) => {
                                 value={formData.status}
                                 onChange={handleChange}
                             >
-                                <option value="scheduled">Scheduled</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
+                                {jobStatuses.map(status => (
+                                    <option key={status} value={status}>
+                                        {/*{status.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}*/}
+                                        {toUpperCase_space(status)}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div className="form-group">

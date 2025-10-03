@@ -11,6 +11,7 @@ import {
     FaUserCog,
     FaWrench
 } from 'react-icons/fa';
+import {getStatusBadge} from "./helper/utils";
 import '../../styles/Jobs.css';
 
 const JobDetails = ({job, onBack, onEdit}) => {
@@ -23,19 +24,6 @@ const JobDetails = ({job, onBack, onEdit}) => {
             minute: '2-digit'
         };
         return new Date(dateString).toLocaleDateString('en-US', options);
-    };
-
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'scheduled':
-                return <span className="status-badge scheduled">Scheduled</span>;
-            case 'in_progress':
-                return <span className="status-badge in-progress">In Progress</span>;
-            case 'completed':
-                return <span className="status-badge completed">Completed</span>;
-            default:
-                return <span className="status-badge">Unknown</span>;
-        }
     };
 
     if (!job) {
