@@ -1,23 +1,21 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {
-    FaWrench,
+    FaCalendar,
     FaCar,
-    FaUser,
-    FaCalendarAlt,
     FaClock,
     FaDollarSign,
-    FaSearch,
-    FaFilter,
-    FaPlus,
     FaEdit,
     FaEye,
+    FaFilter,
+    FaPlus,
+    FaSearch,
     FaTrash,
-    FaCalendar
+    FaUser,
+    FaWrench
 } from 'react-icons/fa';
 import '../../styles/Jobs.css';
 import {formatDateAsEnUS} from "../helper/utils";
-import {jobService} from "../../services/jobService";
-import {inventoryService} from "../../services/inventoryService";
+import {getStatusBadge} from "./helper/utils";
 
 const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar }) => {
 
@@ -36,29 +34,6 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
         if (activeTab === 'all') return matchesSearch;
         return matchesSearch && job.status === activeTab;
     });
-
-    const getStatusBadge = (status) => {
-        switch(status) {
-            case 'scheduled':
-                return <span className="status-badge scheduled">Scheduled</span>;
-            case 'in_progress':
-                return <span className="status-badge in-progress">In Progress</span>;
-            case 'completed':
-                return <span className="status-badge completed">Completed</span>;
-            default:
-                return <span className="status-badge">Unknown</span>;
-        }
-    };
-
-    /*const formatDate = (dateString) => {
-        const options = {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        return new Date(dateString).toLocaleDateString('en-US', options);
-    };*/
 
     return (
         <div className="job-list-container">
@@ -104,7 +79,7 @@ const JobList = ({ jobs, onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowC
                         </button>
                         <button
                             className={activeTab === 'in-progress' ? 'active' : ''}
-                            onClick={() => setActiveTab('in_progress')}
+                            onClick={() => setActiveTab('in-progress')}
                         >
                             In Progress
                         </button>
