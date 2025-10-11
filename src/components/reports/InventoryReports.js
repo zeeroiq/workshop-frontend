@@ -211,7 +211,7 @@ const InventoryReports = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Inventory Value</h5>
-                                    <p>${reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</p>
+                                    <p>₹ {reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
                         </div>
@@ -238,7 +238,7 @@ const InventoryReports = () => {
                                         <td>{item.partNumber}</td>
                                         <td>{item.currentStock}</td>
                                         <td>{item.minStockLevel}</td>
-                                        <td>${item.value?.toFixed(2) || '0.00'}</td>
+                                        <td>₹ {item.value?.toFixed(2) || '0.00'}</td>
                                         <td>
                         <span className={`status-badge ${getStockStatus(item.currentStock, item.minStockLevel)}`}>
                           {getStockStatusText(item.currentStock, item.minStockLevel)}
@@ -273,7 +273,7 @@ const InventoryReports = () => {
                                             </div>
                                         </td>
                                         <td>{category.itemCount}</td>
-                                        <td>${category.totalValue?.toFixed(2) || '0.00'}</td>
+                                        <td>₹ {category.totalValue?.toFixed(2) || '0.00'}</td>
                                         <td>
                                             {((category.totalValue / reportData.data.totalInventoryValue) * 100).toFixed(1)}%
                                         </td>
@@ -284,7 +284,7 @@ const InventoryReports = () => {
                                 <tr>
                                     <td colSpan="1" className="total-label">Total</td>
                                     <td className="total-value">{reportData.data.totalParts}</td>
-                                    <td className="total-value">${reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</td>
+                                    <td className="total-value">₹ {reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</td>
                                     <td className="total-value">100%</td>
                                 </tr>
                                 </tfoot>

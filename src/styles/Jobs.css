@@ -258,6 +258,15 @@
     background-color: #ffcdd2;
 }
 
+.btn-invoice {
+    background-color: #88ade4;
+    color: #0a0b9c;
+}
+
+.btn-invoice:hover {
+    background-color: #d39a2f;
+}
+
 .no-jobs {
     padding: 40px;
     text-align: center;

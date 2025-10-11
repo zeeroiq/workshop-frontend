@@ -20,6 +20,8 @@ const SupplierList = ({onViewDetails, onEdit, onCreate}) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [supplierToDelete, setSupplierToDelete] = useState(null);
     const [expandedRow, setExpandedRow] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
         loadSuppliers();
