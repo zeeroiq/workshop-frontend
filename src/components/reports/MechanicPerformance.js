@@ -6,11 +6,13 @@ import {
     FaStar,
     FaClock,
     FaWrench,
-    FaDollarSign
+    FaDollarSign, FaRupeeSign
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import './../../styles/Reports.css';
+import {userService} from "../../services/userService";
+import {toast} from "react-toastify";
 
 const MechanicPerformance = () => {
     const [criteria, setCriteria] = useState({
@@ -28,13 +30,40 @@ const MechanicPerformance = () => {
 
     // Load mechanics (in a real app, this would come from an API)
     React.useEffect(() => {
-        // Mock data - replace with API call
-        setMechanics([
-            { id: 1, name: 'Mike Johnson' },
-            { id: 2, name: 'Emily Chen' },
-            { id: 3, name: 'Carlos Rodriguez' }
-        ]);
+        loadMechanics();
     }, []);
+
+    const loadMechanics = async () => {
+        try {
+            const response = await userService.getByRole("MECHANIC");
+            const results = response?.data || [];
+            if (response?.status === 200 && results.length > 0) {
+                setMechanics(results);
+            } else {
+                setMechanics([]);
+                console.error('No Technician available in system');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch technician details');
+            console.error('Error fetching technicians:', error);
+        }
+    }
+
+    // Calculate summary data from the performances array
+    const summary = React.useMemo(() => {
+        if (!reportData?.performances?.length > 0) {
+            return { totalMechanics: 0, totalJobs: 0, totalRevenue: 0 };
+        }
+        const totalJobs = reportData.performances.reduce((sum, p) => sum + p.completedJobs, 0);
+        const totalHours = reportData.performances.reduce((sum, p) => sum + (p.actualHours || 0), 0);
+        const totalRevenue = reportData.performances.reduce((sum, p) => sum + p.totalRevenue, 0);
+        return {
+            totalMechanics: reportData.performances.length,
+            totalJobs,
+            totalHours,
+            totalRevenue
+        };
+    }, [reportData]);
 
     const handleCriteriaChange = (field, value) => {
         setCriteria(prev => ({
@@ -58,7 +87,11 @@ const MechanicPerformance = () => {
             };
 
             const response = await reportsService.getMechanicPerformanceReport(requestBody);
-            setReportData(response.data);
+            if (response?.status === 200 && response?.data?.success) {
+                setReportData(response.data.data);
+            } else {
+                toast.dark('Failed to fetch technician details');
+            }
         } catch (error) {
             console.error('Error generating mechanic performance report:', error);
         } finally {
@@ -175,7 +208,7 @@ const MechanicPerformance = () => {
                             <option value="">All Mechanics</option>
                             {mechanics.map(mechanic => (
                                 <option key={mechanic.id} value={mechanic.id}>
-                                    {mechanic.name}
+                                    {mechanic.firstName} {mechanic.lastName}
                                 </option>
                             ))}
                         </select>
@@ -202,7 +235,7 @@ const MechanicPerformance = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Mechanics</h5>
-                                    <p>{reportData.totalMechanics || 0}</p>
+                                    <p>{summary.totalMechanics || 0}</p>
                                 </div>
                             </div>
 
@@ -212,7 +245,7 @@ const MechanicPerformance = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Jobs Completed</h5>
-                                    <p>{reportData.totalJobs || 0}</p>
+                                    <p>{summary.totalJobs || 0}</p>
                                 </div>
                             </div>
 
@@ -222,23 +255,23 @@ const MechanicPerformance = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Hours</h5>
-                                    <p>{reportData.totalHours?.toFixed(1) || '0.0'}</p>
+                                    <p>{summary.totalHours?.toFixed(1) || '0.0'}</p>
                                 </div>
                             </div>
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaDollarSign />
+                                    <FaRupeeSign />
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Revenue</h5>
-                                    <p>${reportData.totalRevenue?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{summary.totalRevenue?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {reportData.mechanics && (
+                    {reportData.performances && (
                         <div className="mechanic-details">
                             <h4>Mechanic Details</h4>
                             <table className="report-table">
@@ -254,16 +287,16 @@ const MechanicPerformance = () => {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {reportData.mechanics.map((mechanic, index) => (
+                                {reportData.performances.map((mechanic, index) => (
                                     <tr key={index}>
-                                        <td>{mechanic.name}</td>
-                                        <td>{mechanic.jobsCompleted}</td>
+                                        <td>{mechanic.mechanicName}</td>
+                                        <td>{mechanic.completedJobs}</td>
                                         <td>{mechanic.estimatedHours?.toFixed(1) || '0.0'}</td>
                                         <td>{mechanic.actualHours?.toFixed(1) || '0.0'}</td>
                                         <td className={calculateEfficiency(mechanic) >= 100 ? 'positive' : 'negative'}>
                                             {calculateEfficiency(mechanic)}%
                                         </td>
-                                        <td>${mechanic.revenueGenerated?.toFixed(2) || '0.00'}</td>
+                                        <td>₹{mechanic.totalRevenue?.toFixed(2) || '0.00'}</td>
                                         <td>
                                             <div className="rating">
                                                 <FaStar className="star" />
@@ -296,7 +329,7 @@ const MechanicPerformance = () => {
                                         <td>{jobType.type}</td>
                                         <td>{jobType.count}</td>
                                         <td>{jobType.totalHours?.toFixed(1) || '0.0'}</td>
-                                        <td>${jobType.totalRevenue?.toFixed(2) || '0.00'}</td>
+                                        <td>₹{jobType.totalRevenue?.toFixed(2) || '0.00'}</td>
                                         <td>{jobType.averageTime?.toFixed(1) || '0.0'} hrs</td>
                                     </tr>
                                 ))}

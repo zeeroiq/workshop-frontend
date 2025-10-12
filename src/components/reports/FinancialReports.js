@@ -8,11 +8,14 @@ import {
     FaReceipt,
     FaClock,
     FaUser,
-    FaUserCog
+    FaUserCog, FaRupeeSign
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import './../../styles/Reports.css';
+import {customerService} from "../../services/customerService";
+import {userService} from "../../services/userService";
+import {toast} from "react-toastify";
 
 const FinancialReports = () => {
     const [criteria, setCriteria] = useState({
@@ -32,20 +35,37 @@ const FinancialReports = () => {
     const [mechanics, setMechanics] = useState([]);
 
     // Load customers and mechanics
-    React.useEffect(() => {
-        // Mock data - replace with API calls
-        setCustomers([
-            { id: 1, name: 'John Smith' },
-            { id: 2, name: 'Sarah Wilson' },
-            { id: 3, name: 'Robert Davis' }
-        ]);
-
-        setMechanics([
-            { id: 1, name: 'Mike Johnson' },
-            { id: 2, name: 'Emily Chen' },
-            { id: 3, name: 'Carlos Rodriguez' }
-        ]);
+    React.useEffect( () => {
+        loadCustomersAndMechanics()
     }, []);
+
+    const loadCustomersAndMechanics = async () => {
+        try {
+            const response = await customerService.listAll();
+            if (response?.data?.content) {
+                setCustomers(response.data.content);
+            } else {
+                toast.error('Failed to fetch customers - ', response?.data?.message || 'Unknown error');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch customers');
+            console.error('Error fetching customers:', error);
+        }
+
+        try {
+            const response = await userService.getByRole("MECHANIC");
+            const results = response?.data || [];
+            if (response?.status === 200 && results.length > 0) {
+                setMechanics(results);
+            } else {
+                setMechanics([]);
+                console.error('No Technician available in system');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch technician details');
+            console.error('Error fetching technicians:', error);
+        }
+    }
 
     const handleCriteriaChange = (field, value) => {
         setCriteria(prev => ({
@@ -69,7 +89,12 @@ const FinancialReports = () => {
             };
 
             const response = await reportsService.getFinancialSummaryReport(requestBody);
-            setReportData(response.data);
+            if (response?.status === 200 && response?.data?.success) {
+                setReportData(response.data.data);
+            } else {
+                toast.error('No data found for the selected criteria.');
+                setReportData(null);
+            }
         } catch (error) {
             console.error('Error generating financial report:', error);
             alert('Failed to generate report. Please try again.');
@@ -196,7 +221,7 @@ const FinancialReports = () => {
                             <option value="">All Customers</option>
                             {customers.map(customer => (
                                 <option key={customer.id} value={customer.id}>
-                                    {customer.name}
+                                    {customer.firstName} {customer.lastName}
                                 </option>
                             ))}
                         </select>
@@ -213,7 +238,7 @@ const FinancialReports = () => {
                             <option value="">All Mechanics</option>
                             {mechanics.map(mechanic => (
                                 <option key={mechanic.id} value={mechanic.id}>
-                                    {mechanic.name}
+                                    {mechanic.firstName} {mechanic.lastName}
                                 </option>
                             ))}
                         </select>
@@ -236,11 +261,11 @@ const FinancialReports = () => {
                         <div className="summary-cards">
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaDollarSign />
+                                    <FaRupeeSign />
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Revenue</h5>
-                                    <p>${reportData.totalRevenue?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{reportData.totalRevenue?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
 
@@ -250,7 +275,7 @@ const FinancialReports = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Expenses</h5>
-                                    <p>${reportData.totalExpenses?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{reportData.totalExpenses?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
 
@@ -260,7 +285,7 @@ const FinancialReports = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Net Profit</h5>
-                                    <p>${reportData.netProfit?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{reportData.netProfit?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
 
