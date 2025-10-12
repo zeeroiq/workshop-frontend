@@ -295,29 +295,48 @@ const FinancialReports = () => {
                                 </div>
                                 <div className="card-content">
                                     <h5>Invoices Processed</h5>
-                                    <p>{reportData.invoicesProcessed || 0}</p>
+                                    <table className="report-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Total</th>
+                                            <th>Paid</th>
+                                            <th>Overdue</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{reportData.totalInvoices || 0}</td>
+                                            <td>{reportData.paidInvoices || 0}</td>
+                                            <td>{reportData.overdueInvoices || 0}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    {/*<p>{reportData.totalInvoices || 0}</p>*/}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {reportData.revenueByCategory && (
+                    {/*{reportData.revenueByCategory && (*/}
+                    {reportData.revenueByServices && (
                         <div className="revenue-by-category">
                             <h4>Revenue by Category</h4>
                             <table className="report-table">
                                 <thead>
                                 <tr>
                                     <th>Service Category</th>
+                                    <th>Count</th>
                                     <th>Revenue</th>
                                     <th>Percentage</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {Object.entries(reportData.revenueByCategory).map(([category, revenue]) => (
+                                {Object.entries(reportData.revenueByServices).map(([category, service]) => (
                                     <tr key={category}>
-                                        <td>{category}</td>
-                                        <td>${revenue.toFixed(2)}</td>
+                                        <td>{service.serviceType}</td>
+                                        <td>{service.serviceCount}</td>
+                                        <td>₹{service.totalRevenue?.toFixed(2)}</td>
                                         <td>
-                                            {((revenue / reportData.totalRevenue) * 100).toFixed(1)}%
+                                            {((service.totalRevenue / reportData.totalRevenue) * 100).toFixed(1)}%
                                         </td>
                                     </tr>
                                 ))}
