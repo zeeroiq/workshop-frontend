@@ -254,6 +254,35 @@
     border-bottom: 2px solid #eaeef2;
 }
 
+.toggle-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.toggle-tabs button {
+    padding: 3px 5px;
+    border: 1px solid #d1d9e6;
+    background: white;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.2s;
+}
+
+.toggle-tabs button:hover {
+    background-color: #f5f7f9;
+}
+
+.toggle-tabs button.active {
+    background-color: #3f51b5;
+    color: white;
+    border-color: #3f51b5;
+}
+
 .report-table td {
     padding: 12px;
     border-bottom: 1px solid #eaeef2;

@@ -1,21 +1,24 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
     FaFilter,
     FaDownload,
     FaMoneyBillWave,
     FaChartLine,
-    FaDollarSign,
     FaReceipt,
-    FaClock,
     FaUser,
-    FaUserCog, FaRupeeSign
+    FaUserCog,
+    FaRupeeSign,
+    FaChartBar,
+    FaChartPie,
+    FaTable
 } from 'react-icons/fa';
-import { reportsService } from '../../services/reportsService';
-import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
+import {reportsService} from '../../services/reportsService';
+import {TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES, CHART_COLORS} from './constants/reportsConstants';
 import './../../styles/Reports.css';
 import {customerService} from "../../services/customerService";
 import {userService} from "../../services/userService";
 import {toast} from "react-toastify";
+import {Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 
 const FinancialReports = () => {
     const [criteria, setCriteria] = useState({
@@ -33,9 +36,11 @@ const FinancialReports = () => {
     const [exporting, setExporting] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [mechanics, setMechanics] = useState([]);
+    const [revenueView, setRevenueView] = useState('table'); // 'table', 'pie', 'bar'
+
 
     // Load customers and mechanics
-    React.useEffect( () => {
+    React.useEffect(() => {
         loadCustomersAndMechanics()
     }, []);
 
@@ -116,7 +121,7 @@ const FinancialReports = () => {
                 format
             };
 
-            const { blob, filename } = await reportsService.exportReport(exportRequest);
+            const {blob, filename} = await reportsService.exportReport(exportRequest);
 
             // Create a download link
             const url = window.URL.createObjectURL(blob);
@@ -151,19 +156,19 @@ const FinancialReports = () => {
                         onClick={() => exportReport(EXPORT_FORMATS.PDF)}
                         disabled={exporting}
                     >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'PDF'}
+                        <FaDownload/> {exporting ? 'Exporting...' : 'PDF'}
                     </button>
                     <button
                         onClick={() => exportReport(EXPORT_FORMATS.EXCEL)}
                         disabled={exporting}
                     >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'Excel'}
+                        <FaDownload/> {exporting ? 'Exporting...' : 'Excel'}
                     </button>
                     <button
                         onClick={() => exportReport(EXPORT_FORMATS.CSV)}
                         disabled={exporting}
                     >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'CSV'}
+                        <FaDownload/> {exporting ? 'Exporting...' : 'CSV'}
                     </button>
                 </div>
             </div>
@@ -172,7 +177,7 @@ const FinancialReports = () => {
                 <div className="filter-row">
                     <div className="filter-group">
                         <label>
-                            <FaFilter /> Time Period
+                            <FaFilter/> Time Period
                         </label>
                         <select
                             value={criteria.timePeriod}
@@ -212,7 +217,7 @@ const FinancialReports = () => {
                 <div className="filter-row">
                     <div className="filter-group">
                         <label>
-                            <FaUser /> Customer
+                            <FaUser/> Customer
                         </label>
                         <select
                             value={criteria.customerId}
@@ -229,7 +234,7 @@ const FinancialReports = () => {
 
                     <div className="filter-group">
                         <label>
-                            <FaUserCog /> Mechanic
+                            <FaUserCog/> Mechanic
                         </label>
                         <select
                             value={criteria.mechanicId}
@@ -261,7 +266,7 @@ const FinancialReports = () => {
                         <div className="summary-cards">
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaRupeeSign />
+                                    <FaRupeeSign/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Revenue</h5>
@@ -271,7 +276,7 @@ const FinancialReports = () => {
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaMoneyBillWave />
+                                    <FaMoneyBillWave/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Expenses</h5>
@@ -281,7 +286,7 @@ const FinancialReports = () => {
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaChartLine />
+                                    <FaChartLine/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Net Profit</h5>
@@ -291,7 +296,7 @@ const FinancialReports = () => {
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaReceipt />
+                                    <FaReceipt/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Invoices Processed</h5>
@@ -319,29 +324,99 @@ const FinancialReports = () => {
                     {/*{reportData.revenueByCategory && (*/}
                     {reportData.revenueByServices && (
                         <div className="revenue-by-category">
-                            <h4>Revenue by Category</h4>
-                            <table className="report-table">
-                                <thead>
-                                <tr>
-                                    <th>Service Category</th>
-                                    <th>Count</th>
-                                    <th>Revenue</th>
-                                    <th>Percentage</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {Object.entries(reportData.revenueByServices).map(([category, service]) => (
-                                    <tr key={category}>
-                                        <td>{service.serviceType}</td>
-                                        <td>{service.serviceCount}</td>
-                                        <td>₹{service.totalRevenue?.toFixed(2)}</td>
-                                        <td>
-                                            {((service.totalRevenue / reportData.totalRevenue) * 100).toFixed(1)}%
-                                        </td>
+                            <div className="section-header">
+                                <h4>Revenue by Category</h4>
+                                <div className="toggle-tabs">
+                                    <button onClick={() => setRevenueView('table')}
+                                            className={revenueView === 'table' ? 'active' : ''}><FaTable/> Table
+                                    </button>
+                                    <button onClick={() => setRevenueView('pie')}
+                                            className={revenueView === 'pie' ? 'active' : ''}><FaChartPie/> Pie Chart
+                                    </button>
+                                    <button onClick={() => setRevenueView('bar')}
+                                            className={revenueView === 'bar' ? 'active' : ''}><FaChartBar/> Bar Chart
+                                    </button>
+                                </div>
+                            </div>
+
+                            {revenueView === 'table' && (
+                                <table className="report-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Service Category</th>
+                                        <th>Count</th>
+                                        <th>Revenue</th>
+                                        <th>Percentage</th>
                                     </tr>
-                                ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                    {Object.entries(reportData.revenueByServices).map(([category, service]) => (
+                                        <tr key={category}>
+                                            <td>{service.serviceType}</td>
+                                            <td>{service.serviceCount}</td>
+                                            <td>₹{service.totalRevenue?.toFixed(2)}</td>
+                                            <td>
+                                                {((service.totalRevenue / reportData.totalRevenue) * 100).toFixed(1)}%
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {revenueView === 'pie' && (
+                                <div className="chart-container">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={Object.values(reportData.revenueByServices)}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                outerRadius={100}
+                                                fill="#8884d8"
+                                                dataKey="totalRevenue"
+                                                nameKey="serviceType"
+                                            >
+                                                {
+                                                    Object.values(reportData.revenueByServices)
+                                                        .map((entry, index) => (
+                                                                <Cell key={`cell-${index}`}
+                                                                      fill={CHART_COLORS[index % CHART_COLORS.length]}/>
+                                                            )
+                                                        )
+                                                }
+                                            </Pie>
+                                            <Tooltip formatter={(value) => `₹${value.toFixed(2)}`}/>
+                                            <Legend/>
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+
+                            {revenueView === 'bar' && (
+                                <div className="chart-container">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart data={Object.values(reportData.revenueByServices)}>
+                                            <XAxis dataKey="serviceType"/>
+                                            <YAxis tickFormatter={(value) => `₹${value / 1000}k`}/>
+                                            <Tooltip formatter={(value) => `₹${value.toFixed(2)}`}/>
+                                            <Legend/>
+                                            <Bar dataKey="totalRevenue" name="Revenue" fill="#8884d8">
+                                                {
+                                                    Object.values(reportData.revenueByServices)
+                                                        .map((entry, index) => (
+                                                                <Cell key={`cell-${index}`}
+                                                                      fill={CHART_COLORS[index % CHART_COLORS.length]}/>
+                                                            )
+                                                        )
+                                                }
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -361,9 +436,9 @@ const FinancialReports = () => {
                                 {reportData.monthlyTrends.map((monthData, index) => (
                                     <tr key={index}>
                                         <td>{monthData.month}</td>
-                                        <td>${monthData.revenue.toFixed(2)}</td>
-                                        <td>${monthData.expenses.toFixed(2)}</td>
-                                        <td>${monthData.profit.toFixed(2)}</td>
+                                        <td>₹{monthData.revenue.toFixed(2)}</td>
+                                        <td>₹{monthData.expenses.toFixed(2)}</td>
+                                        <td>₹{monthData.profit.toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 </tbody>
