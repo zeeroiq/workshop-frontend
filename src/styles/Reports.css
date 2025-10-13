@@ -289,6 +289,12 @@
     color: #34495e;
 }
 
+.data-visualizer-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .report-table tr:hover {
     background-color: #f8f9fa;
 }
@@ -297,6 +303,12 @@
 .monthly-trends {
     margin-bottom: 24px;
 }
+
+.chart-container {
+    margin-top: 20px;
+}
+
+
 
 .revenue-by-category h4,
 .monthly-trends h4 {

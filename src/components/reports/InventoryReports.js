@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    FaFilter,
     FaDownload,
     FaBox,
     FaExclamationTriangle,
@@ -10,6 +9,9 @@ import {
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
+import ExportControls from './ExportControls';
+import DataVisualizer from './DataVisualizer';
+import TimePeriodFilter from './TimePeriodFilter';
 import './../../styles/Reports.css';
 
 const InventoryReports = () => {
@@ -23,7 +25,6 @@ const InventoryReports = () => {
 
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [exporting, setExporting] = useState(false);
 
     const handleCriteriaChange = (field, value) => {
         setCriteria(prev => ({
@@ -55,41 +56,13 @@ const InventoryReports = () => {
         }
     };
 
-    const exportReport = async (format) => {
-        try {
-            setExporting(true);
-            const exportRequest = {
-                reportType: criteria.reportType,
-                timePeriod: criteria.timePeriod,
-                startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
-                endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
-                format
-            };
-
-            const { blob, filename } = await reportsService.exportReport(exportRequest);
-
-            // Create a download link
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-
-            // Set the appropriate file extension based on format
-            let fileExtension = format.toLowerCase();
-            if (format === EXPORT_FORMATS.EXCEL) fileExtension = 'xlsx';
-
-            link.setAttribute('download', `${filename}.${fileExtension}`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
-            // Clean up the URL object
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error exporting report:', error);
-            alert('Failed to export report. Please try again.');
-        } finally {
-            setExporting(false);
-        }
+    const getExportCriteria = () => {
+        return {
+            reportType: criteria.reportType,
+            timePeriod: criteria.timePeriod,
+            startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
+            endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
+        };
     };
 
     const getStockStatus = (currentStock, minStockLevel) => {
@@ -104,71 +77,34 @@ const InventoryReports = () => {
         return 'In Stock';
     };
 
+    const inventoryByCategoryConfig = {
+        table: {
+            columns: [
+                { header: 'Category', accessor: 'category', render: (row) => <div className="category-info"><FaTools className="category-icon" />{row.category}</div> },
+                { header: 'Item Count', accessor: 'itemCount' },
+                { header: 'Total Value', accessor: 'totalValue', render: (row) => `₹ ${row.totalValue?.toFixed(2) || '0.00'}` },
+                { header: 'Percentage of Total', render: (row, data) => {
+                        const totalValue = data.reduce((sum, item) => sum + item.totalValue, 0);
+                        return `${((row.totalValue / totalValue) * 100).toFixed(1)}%`;
+                    }}
+            ]
+        },
+        pie: { dataKey: 'totalValue', nameKey: 'category' },
+        bar: { xAxisKey: 'category', bars: [{ dataKey: 'totalValue', name: 'Value' }] },
+        tooltipFormatter: (value) => `₹ ${Number(value).toFixed(2)}`
+    };
+
+
     return (
         <div className="inventory-reports">
             <div className="report-header">
                 <h3>Inventory Status Report</h3>
-                <div className="export-buttons">
-                    <button
-                        onClick={() => exportReport(EXPORT_FORMATS.PDF)}
-                        disabled={exporting}
-                    >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'PDF'}
-                    </button>
-                    <button
-                        onClick={() => exportReport(EXPORT_FORMATS.EXCEL)}
-                        disabled={exporting}
-                    >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'Excel'}
-                    </button>
-                    <button
-                        onClick={() => exportReport(EXPORT_FORMATS.CSV)}
-                        disabled={exporting}
-                    >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'CSV'}
-                    </button>
-                </div>
+                <ExportControls getCriteria={getExportCriteria} />
             </div>
 
             <div className="report-filters">
                 <div className="filter-row">
-                    <div className="filter-group">
-                        <label>
-                            <FaFilter /> Time Period
-                        </label>
-                        <select
-                            value={criteria.timePeriod}
-                            onChange={(e) => handleCriteriaChange('timePeriod', e.target.value)}
-                        >
-                            <option value={TIME_PERIODS.DAILY}>Daily</option>
-                            <option value={TIME_PERIODS.WEEKLY}>Weekly</option>
-                            <option value={TIME_PERIODS.MONTHLY}>Monthly</option>
-                            <option value={TIME_PERIODS.QUARTERLY}>Quarterly</option>
-                            <option value={TIME_PERIODS.YEARLY}>Yearly</option>
-                            <option value={TIME_PERIODS.CUSTOM}>Custom Range</option>
-                        </select>
-                    </div>
-
-                    {criteria.timePeriod === TIME_PERIODS.CUSTOM && (
-                        <>
-                            <div className="filter-group">
-                                <label>Start Date</label>
-                                <input
-                                    type="date"
-                                    value={criteria.startDate}
-                                    onChange={(e) => handleCriteriaChange('startDate', e.target.value)}
-                                />
-                            </div>
-                            <div className="filter-group">
-                                <label>End Date</label>
-                                <input
-                                    type="date"
-                                    value={criteria.endDate}
-                                    onChange={(e) => handleCriteriaChange('endDate', e.target.value)}
-                                />
-                            </div>
-                        </>
-                    )}
+                    <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
                 </div>
 
                 <button
@@ -251,46 +187,13 @@ const InventoryReports = () => {
                         </div>
                     )}
 
-                    {reportData.data.categories && reportData.data.categories.length > 0 && (
-                        <div className="categories-breakdown">
-                            <h4>Inventory by Category</h4>
-                            <table className="report-table">
-                                <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Item Count</th>
-                                    <th>Total Value</th>
-                                    <th>Percentage of Total</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {reportData.data.categories.map((category, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            <div className="category-info">
-                                                <FaTools className="category-icon" />
-                                                {category.category}
-                                            </div>
-                                        </td>
-                                        <td>{category.itemCount}</td>
-                                        <td>₹ {category.totalValue?.toFixed(2) || '0.00'}</td>
-                                        <td>
-                                            {((category.totalValue / reportData.data.totalInventoryValue) * 100).toFixed(1)}%
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                                <tfoot>
-                                <tr>
-                                    <td colSpan="1" className="total-label">Total</td>
-                                    <td className="total-value">{reportData.data.totalParts}</td>
-                                    <td className="total-value">₹ {reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</td>
-                                    <td className="total-value">100%</td>
-                                </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    )}
+                    <DataVisualizer
+                        title="Inventory by Category"
+                        data={reportData.data.categories}
+                        availableViews={['table', 'pie', 'bar']}
+                        viewConfig={inventoryByCategoryConfig}
+                    />
+
                 </div>
             )}
 
