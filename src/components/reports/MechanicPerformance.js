@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
-    FaDownload,
     FaUserCog,
-    FaClock,
     FaWrench,
     FaRupeeSign
 } from 'react-icons/fa';
@@ -27,7 +25,6 @@ const MechanicPerformance = () => {
 
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [exporting, setExporting] = useState(false);
     const [mechanics, setMechanics] = useState([]);
 
     // Load mechanics (in a real app, this would come from an API)

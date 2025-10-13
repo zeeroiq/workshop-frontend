@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import {
-    FaDownload,
     FaBox,
     FaExclamationTriangle,
     FaArrowUp,
-    FaArrowDown,
     FaTools
 } from 'react-icons/fa';
 import { reportsService } from '../../services/reportsService';

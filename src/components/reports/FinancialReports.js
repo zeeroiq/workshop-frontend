@@ -1,18 +1,14 @@
 import React, {useState} from 'react';
 import {
-    FaDownload,
     FaMoneyBillWave,
     FaChartLine,
     FaReceipt,
     FaUser,
     FaUserCog,
-    FaRupeeSign,
-    FaChartBar,
-    FaChartPie,
-    FaTable
+    FaRupeeSign
 } from 'react-icons/fa';
 import {reportsService} from '../../services/reportsService';
-import {TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES, CHART_COLORS} from './constants/reportsConstants';
+import {TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES} from './constants/reportsConstants';
 import './../../styles/Reports.css';
 import { customerService } from "../../services/customerService";
 import { userService } from "../../services/userService";
@@ -112,8 +108,8 @@ const FinancialReports = () => {
             timePeriod: criteria.timePeriod,
             startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
             endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
-            mechanicId: criteria.mechanicId ? parseInt(criteria.mechanicId) : undefined,
-            customerId: criteria.customerId ? parseInt(criteria.customerId) : undefined,
+            mechanicId: criteria.mechanicId ? Number.parseInt(criteria.mechanicId) : undefined,
+            customerId: criteria.customerId ? Number.parseInt(criteria.customerId) : undefined,
         };
     };
 
