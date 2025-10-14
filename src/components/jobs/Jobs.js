@@ -11,62 +11,7 @@ const Jobs = () => {
     const [activeView, setActiveView] = useState('list');
     const [selectedJob, setSelectedJob] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [jobs, setJobs] = useState([]);
-
-    useEffect(() => {
-        loadJobs();
-    }, []);
-
-    const loadJobs = async () => {
-        try {
-            setLoading(true);
-            const response = await jobService.getAllJobs();
-            if (response?.data?.content?.length > 0) {
-                const transformedJobs = response.data.content.map(transformJobData);
-                setJobs(transformedJobs);
-            }
-        } catch (error) {
-            console.error('Error loading jobs:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const transformJobData = (apiJob) => {
-        const [vehicle, license] = (apiJob.vehicleDetails || ' - ').split(' - ');
-        const serviceItems = apiJob.items?.filter(item => item.type === 'LABOR')
-            .map(item => item.description)
-            .join(', ');
-
-        return {
-            id: apiJob.id,
-            jobNumber: apiJob.jobNumber,
-            customer: apiJob.customerName,
-            customerId: apiJob.customerId,
-            vehicle: vehicle.trim(),
-            license: license.trim(),
-            service: serviceItems || apiJob.description,
-            technicianId: apiJob.technicianId,
-            technician: apiJob.technicianName,
-            status: apiJob.status.toLowerCase().replace(/_/g, '-'), // e.g., 'IN_PROGRESS' -> 'in-progress'
-            estimatedCompletion: apiJob.completedAt || apiJob.updatedAt, // Using completedAt or updatedAt as a fallback
-            cost: apiJob.totalCost,
-            createdAt: apiJob.createdAt,
-            description: apiJob.description,
-            notes: apiJob.notes || [],
-            // items: apiJob.items?.filter(item => item.type === 'PART').map(part => ({
-            //     partId: part.id,
-            //     partNumber: part.jobNumber,
-            //     partName: part.partName || part.description,
-            //     description: part.description,
-            //     quantity: part.quantity,
-            //     rate: part.rate,
-            //     totalCost: part.totalCost,
-            //     type: part.type,
-            // })) || [],
-            items: apiJob.items || [],
-        };
-    };
+    // const [jobs, setJobs] = useState([]);
 
     const handleViewJob = (job) => {
         setSelectedJob(job);
@@ -142,7 +87,7 @@ const Jobs = () => {
             case 'list':
                 return (
                     <JobList
-                        jobs={jobs}
+                        // jobs={jobs}
                         onViewJob={handleViewJob}
                         onEditJob={handleEditJob}
                         onDeleteJob={handleDeleteJob}
@@ -169,13 +114,15 @@ const Jobs = () => {
             case 'calendar':
                 return (
                     <JobCalendar
-                        jobs={jobs}
+                        // jobs={jobs}
                         onSelectJob={handleViewJob}
                         onBack={handleBackToList}
                     />
                 );
             default:
-                return <JobList jobs={jobs} onCreateJob={handleCreateJob} />;
+                return <JobList
+                    // jobs={jobs}
+                    onCreateJob={handleCreateJob} />;
         }
     };
 

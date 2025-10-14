@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
-    FaFilter,
-    FaDownload,
     FaMoneyBillWave,
     FaChartLine,
-    FaDollarSign,
     FaReceipt,
-    FaClock,
     FaUser,
-    FaUserCog
+    FaUserCog,
+    FaRupeeSign
 } from 'react-icons/fa';
-import { reportsService } from '../../services/reportsService';
-import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
+import {reportsService} from '../../services/reportsService';
+import {TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES} from './constants/reportsConstants';
 import './../../styles/Reports.css';
+import { customerService } from "../../services/customerService";
+import { userService } from "../../services/userService";
+import {toast} from "react-toastify";
+import ExportControls from "./ExportControls";
+import DataVisualizer from "./DataVisualizer";
+import TimePeriodFilter from "./TimePeriodFilter";
 
 const FinancialReports = () => {
     const [criteria, setCriteria] = useState({
@@ -27,25 +30,41 @@ const FinancialReports = () => {
 
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [exporting, setExporting] = useState(false);
     const [customers, setCustomers] = useState([]);
     const [mechanics, setMechanics] = useState([]);
 
     // Load customers and mechanics
     React.useEffect(() => {
-        // Mock data - replace with API calls
-        setCustomers([
-            { id: 1, name: 'John Smith' },
-            { id: 2, name: 'Sarah Wilson' },
-            { id: 3, name: 'Robert Davis' }
-        ]);
-
-        setMechanics([
-            { id: 1, name: 'Mike Johnson' },
-            { id: 2, name: 'Emily Chen' },
-            { id: 3, name: 'Carlos Rodriguez' }
-        ]);
+        loadCustomersAndMechanics()
     }, []);
+
+    const loadCustomersAndMechanics = async () => {
+        try {
+            const response = await customerService.listAll();
+            if (response?.data?.content) {
+                setCustomers(response.data.content);
+            } else {
+                toast.error('Failed to fetch customers - ', response?.data?.message || 'Unknown error');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch customers');
+            console.error('Error fetching customers:', error);
+        }
+
+        try {
+            const response = await userService.getByRole("MECHANIC");
+            const results = response?.data || [];
+            if (response?.status === 200 && results.length > 0) {
+                setMechanics(results);
+            } else {
+                setMechanics([]);
+                console.error('No Technician available in system');
+            }
+        } catch (error) {
+            toast.error('Failed to fetch technician details');
+            console.error('Error fetching technicians:', error);
+        }
+    }
 
     const handleCriteriaChange = (field, value) => {
         setCriteria(prev => ({
@@ -69,7 +88,12 @@ const FinancialReports = () => {
             };
 
             const response = await reportsService.getFinancialSummaryReport(requestBody);
-            setReportData(response.data);
+            if (response?.status === 200 && response?.data?.success) {
+                setReportData(response.data.data);
+            } else {
+                toast.error('No data found for the selected criteria.');
+                setReportData(null);
+            }
         } catch (error) {
             console.error('Error generating financial report:', error);
             alert('Failed to generate report. Please try again.');
@@ -78,116 +102,54 @@ const FinancialReports = () => {
         }
     };
 
-    const exportReport = async (format) => {
-        try {
-            setExporting(true);
-            const exportRequest = {
-                reportType: criteria.reportType,
-                timePeriod: criteria.timePeriod,
-                startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
-                endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
-                mechanicId: criteria.mechanicId ? parseInt(criteria.mechanicId) : undefined,
-                customerId: criteria.customerId ? parseInt(criteria.customerId) : undefined,
-                format
-            };
-
-            const { blob, filename } = await reportsService.exportReport(exportRequest);
-
-            // Create a download link
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-
-            // Set the appropriate file extension based on format
-            let fileExtension = format.toLowerCase();
-            if (format === EXPORT_FORMATS.EXCEL) fileExtension = 'xlsx';
-
-            link.setAttribute('download', `${filename}.${fileExtension}`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
-            // Clean up the URL object
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Error exporting report:', error);
-            alert('Failed to export report. Please try again.');
-        } finally {
-            setExporting(false);
-        }
+    const getExportCriteria = () => {
+        return {
+            reportType: criteria.reportType,
+            timePeriod: criteria.timePeriod,
+            startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
+            endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
+            mechanicId: criteria.mechanicId ? Number.parseInt(criteria.mechanicId) : undefined,
+            customerId: criteria.customerId ? Number.parseInt(criteria.customerId) : undefined,
+        };
     };
+
+    const revenueByCategoryConfig = {
+        table: {
+            columns: [
+                { header: 'Service Category', accessor: 'serviceType' },
+                { header: 'Count', accessor: 'serviceCount' },
+                { header: 'Revenue', accessor: 'totalRevenue', render: (row) => `₹${row.totalRevenue.toFixed(2)}` },
+                { header: 'Percentage', render: (row, data) => {
+                        const total = data.reduce((sum, item) => sum + item.totalRevenue, 0);
+                        return `${((row.totalRevenue / total) * 100).toFixed(1)}%`;
+                    }}
+            ]
+        },
+        pie: { dataKey: 'totalRevenue', nameKey: 'serviceType' },
+        bar: {
+            xAxisKey: 'serviceType',
+            bars: [{ dataKey: 'totalRevenue', name: 'Revenue' }]
+        },
+        tooltipFormatter: (value) => `₹${Number(value).toFixed(2)}`
+    };
+
 
     return (
         <div className="financial-reports">
             <div className="report-header">
                 <h3>Financial Summary Report</h3>
-                <div className="export-buttons">
-                    <button
-                        onClick={() => exportReport(EXPORT_FORMATS.PDF)}
-                        disabled={exporting}
-                    >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'PDF'}
-                    </button>
-                    <button
-                        onClick={() => exportReport(EXPORT_FORMATS.EXCEL)}
-                        disabled={exporting}
-                    >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'Excel'}
-                    </button>
-                    <button
-                        onClick={() => exportReport(EXPORT_FORMATS.CSV)}
-                        disabled={exporting}
-                    >
-                        <FaDownload /> {exporting ? 'Exporting...' : 'CSV'}
-                    </button>
-                </div>
+                <ExportControls getCriteria={getExportCriteria} />
             </div>
 
             <div className="report-filters">
                 <div className="filter-row">
-                    <div className="filter-group">
-                        <label>
-                            <FaFilter /> Time Period
-                        </label>
-                        <select
-                            value={criteria.timePeriod}
-                            onChange={(e) => handleCriteriaChange('timePeriod', e.target.value)}
-                        >
-                            <option value={TIME_PERIODS.DAILY}>Daily</option>
-                            <option value={TIME_PERIODS.WEEKLY}>Weekly</option>
-                            <option value={TIME_PERIODS.MONTHLY}>Monthly</option>
-                            <option value={TIME_PERIODS.QUARTERLY}>Quarterly</option>
-                            <option value={TIME_PERIODS.YEARLY}>Yearly</option>
-                            <option value={TIME_PERIODS.CUSTOM}>Custom Range</option>
-                        </select>
-                    </div>
-
-                    {criteria.timePeriod === TIME_PERIODS.CUSTOM && (
-                        <>
-                            <div className="filter-group">
-                                <label>Start Date</label>
-                                <input
-                                    type="date"
-                                    value={criteria.startDate}
-                                    onChange={(e) => handleCriteriaChange('startDate', e.target.value)}
-                                />
-                            </div>
-                            <div className="filter-group">
-                                <label>End Date</label>
-                                <input
-                                    type="date"
-                                    value={criteria.endDate}
-                                    onChange={(e) => handleCriteriaChange('endDate', e.target.value)}
-                                />
-                            </div>
-                        </>
-                    )}
+                    <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
                 </div>
 
                 <div className="filter-row">
                     <div className="filter-group">
                         <label>
-                            <FaUser /> Customer
+                            <FaUser/> Customer
                         </label>
                         <select
                             value={criteria.customerId}
@@ -196,7 +158,7 @@ const FinancialReports = () => {
                             <option value="">All Customers</option>
                             {customers.map(customer => (
                                 <option key={customer.id} value={customer.id}>
-                                    {customer.name}
+                                    {customer.firstName} {customer.lastName}
                                 </option>
                             ))}
                         </select>
@@ -204,7 +166,7 @@ const FinancialReports = () => {
 
                     <div className="filter-group">
                         <label>
-                            <FaUserCog /> Mechanic
+                            <FaUserCog/> Mechanic
                         </label>
                         <select
                             value={criteria.mechanicId}
@@ -213,7 +175,7 @@ const FinancialReports = () => {
                             <option value="">All Mechanics</option>
                             {mechanics.map(mechanic => (
                                 <option key={mechanic.id} value={mechanic.id}>
-                                    {mechanic.name}
+                                    {mechanic.firstName} {mechanic.lastName}
                                 </option>
                             ))}
                         </select>
@@ -236,70 +198,68 @@ const FinancialReports = () => {
                         <div className="summary-cards">
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaDollarSign />
+                                    <FaRupeeSign/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Revenue</h5>
-                                    <p>${reportData.totalRevenue?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{reportData.totalRevenue?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaMoneyBillWave />
+                                    <FaMoneyBillWave/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Total Expenses</h5>
-                                    <p>${reportData.totalExpenses?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{reportData.totalExpenses?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaChartLine />
+                                    <FaChartLine/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Net Profit</h5>
-                                    <p>${reportData.netProfit?.toFixed(2) || '0.00'}</p>
+                                    <p>₹{reportData.netProfit?.toFixed(2) || '0.00'}</p>
                                 </div>
                             </div>
 
                             <div className="summary-card">
                                 <div className="card-icon">
-                                    <FaReceipt />
+                                    <FaReceipt/>
                                 </div>
                                 <div className="card-content">
                                     <h5>Invoices Processed</h5>
-                                    <p>{reportData.invoicesProcessed || 0}</p>
+                                    <table className="report-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Total</th>
+                                            <th>Paid</th>
+                                            <th>Overdue</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{reportData.totalInvoices || 0}</td>
+                                            <td>{reportData.paidInvoices || 0}</td>
+                                            <td>{reportData.overdueInvoices || 0}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    {/*<p>{reportData.totalInvoices || 0}</p>*/}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {reportData.revenueByCategory && (
-                        <div className="revenue-by-category">
-                            <h4>Revenue by Category</h4>
-                            <table className="report-table">
-                                <thead>
-                                <tr>
-                                    <th>Service Category</th>
-                                    <th>Revenue</th>
-                                    <th>Percentage</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {Object.entries(reportData.revenueByCategory).map(([category, revenue]) => (
-                                    <tr key={category}>
-                                        <td>{category}</td>
-                                        <td>${revenue.toFixed(2)}</td>
-                                        <td>
-                                            {((revenue / reportData.totalRevenue) * 100).toFixed(1)}%
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    {/*{reportData.revenueByCategory && (*/}
+                    <DataVisualizer
+                        title="Revenue by Category"
+                        data={reportData.revenueByServices ? Object.values(reportData.revenueByServices) : []}
+                        availableViews={['table', 'pie', 'bar']}
+                        viewConfig={revenueByCategoryConfig}
+                    />
 
                     {reportData.monthlyTrends && (
                         <div className="monthly-trends">
@@ -317,9 +277,9 @@ const FinancialReports = () => {
                                 {reportData.monthlyTrends.map((monthData, index) => (
                                     <tr key={index}>
                                         <td>{monthData.month}</td>
-                                        <td>${monthData.revenue.toFixed(2)}</td>
-                                        <td>${monthData.expenses.toFixed(2)}</td>
-                                        <td>${monthData.profit.toFixed(2)}</td>
+                                        <td>₹{monthData.revenue.toFixed(2)}</td>
+                                        <td>₹{monthData.expenses.toFixed(2)}</td>
+                                        <td>₹{monthData.profit.toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 </tbody>

@@ -16,6 +16,8 @@ const PartList = ({onViewDetails, onEdit, onCreate}) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [partToDelete, setPartToDelete] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
         loadParts();

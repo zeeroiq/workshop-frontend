@@ -99,6 +99,32 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                 </div>
 
                 <div className="payment-details">
+                    <h2>Work Details</h2>
+                    {invoice?.items?.length > 0 ? (
+                        <div className="payments-table">
+                            <div className="table-header">
+                                <div className="table-cell">Description</div>
+                                <div className="table-cell">Quantity</div>
+                                <div className="table-cell">Unit Price</div>
+                                <div className="table-cell">Total</div>
+                            </div>
+                            {invoice.items.map(item => (
+                                <div key={item.id} className="table-row">
+                                    <div className="table-cell">{item.description}</div>
+                                    <div className="table-cell">{item.quantity}</div>
+                                    <div className="table-cell">₹ {item.unitPrice}</div>
+                                    <div className="table-cell">₹ {item.totalPrice}</div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="no-payments">
+                            <p>No payments recorded for this invoice.</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="payment-details">
                     <h2>Payment Details</h2>
                     {invoice?.payments?.length > 0 ? (
                         <div className="payments-table">

@@ -18,6 +18,8 @@ const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
         fetchPurchaseOrders();

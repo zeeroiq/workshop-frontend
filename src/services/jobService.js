@@ -1,7 +1,7 @@
 import api from './api';
 
 export const jobService = {
-    getAllJobs: (page = 0, size = 10, search = '') => {
+    getAllJobs: (page = 0, size = 5, search = '') => {
         const params = { page, size };
         if (search) params.search = search;
         return api.get('/jobs', { params })
