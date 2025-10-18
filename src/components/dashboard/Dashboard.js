@@ -8,9 +8,7 @@ import {
     FaChartLine,
     FaExclamationTriangle,
     FaCalendarAlt,
-    FaClock,
-    // FaArrowUp,
-    // FaArrowDown
+    FaClock
 } from 'react-icons/fa';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
