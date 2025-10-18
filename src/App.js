@@ -29,9 +29,9 @@ function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [theme, setTheme] = useState('light');
 
-    // useEffect(() => {
-    //     setSidebarOpen(false);
-    // }, [location]);
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [location]);
 
     useEffect(() => {
         // Check if user is logged in on app load
