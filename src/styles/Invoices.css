@@ -574,3 +574,31 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Payment Method Buttons */
+.payment-method-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.payment-method-btn {
+    padding: 10px 15px;
+    border: 1px solid #d1d9e6;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.payment-method-btn:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.payment-method-btn.active {
+    background-color: #3f51b5;
+    color: white;
+    border-color: #3f51b5;
+}

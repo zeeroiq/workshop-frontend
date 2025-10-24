@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { invoiceService } from '../../services/invoiceService';
-import { PAYMENT_METHODS } from './constants/invoiceConstants';
+import { paymentService } from '../../services/paymentService'; // Import payment service for UPI
+import { PAYMENT_METHODS } from './constants/invoiceConstants'; // Assuming 'UPI' is in this array
 import './../../styles/invoices.css';
 import {todayDate} from "../helper/utils";
+import QRDisplay from "../payment/QRDisplay"; // Import the QRDisplay component
 
 const PaymentForm = ({ invoice, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
@@ -16,6 +18,9 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
     });
 
     const [errors, setErrors] = useState({});
+    const [showUpiPayment, setShowUpiPayment] = useState(false);
+    const [upiPaymentData, setUpiPaymentData] = useState(null);
+    const [loadingUpi, setLoadingUpi] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -33,6 +38,13 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
         }
     };
 
+    const handlePaymentMethodSelect = (method) => {
+        setFormData(prev => ({
+            ...prev,
+            paymentMethod: method
+        }));
+    };
+
     const validateForm = () => {
         const newErrors = {};
         const outstandingBalance = invoice.totalAmount - (invoice.amountPaid || 0);
@@ -40,7 +52,7 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
         if (!formData.amount || formData.amount <= 0) {
             newErrors.amount = 'Valid payment amount is required';
         } else if (formData.amount > outstandingBalance) {
-            newErrors.amount = `Payment cannot exceed outstanding balance of $${outstandingBalance.toFixed(2)}`;
+            newErrors.amount = `Payment cannot exceed outstanding balance of ₹${outstandingBalance.toFixed(2)}`;
         }
 
         if (!formData.paymentDate) newErrors.paymentDate = 'Payment date is required';
@@ -55,6 +67,11 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
 
         if (!validateForm()) return;
 
+        if (formData.paymentMethod === 'UPI') {
+            handleUpiPayment();
+            return;
+        }
+
         try {
             await invoiceService.addPaymentToInvoice(invoice.id, formData);
             onSave();
@@ -63,7 +80,48 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
         }
     };
 
+    const handleUpiPayment = async () => {
+        setLoadingUpi(true);
+        setErrors({});
+        try {
+            const upiOrderData = {
+                amount: formData.amount,
+                customerName: invoice.customerName,
+                customerPhone: invoice.customerPhone || '9999999999', // A phone number is required
+                description: `Payment for Invoice #${invoice.invoiceNumber}`
+            };
+            const response = await paymentService.createUPIPayment(upiOrderData);
+
+            if (response.success && response.data) {
+                setUpiPaymentData(response.data);
+                setShowUpiPayment(true);
+            } else {
+                setErrors({ api: response.message || 'Failed to generate UPI QR code.' });
+            }
+        } catch (error) {
+            console.error('Error creating UPI payment:', error);
+            setErrors({ api: error.message || 'An unexpected error occurred.' });
+        } finally {
+            setLoadingUpi(false);
+        }
+    };
+
     const outstandingBalance = invoice ? invoice.totalAmount - (invoice.amountPaid || 0) : 0;
+
+    if (showUpiPayment && upiPaymentData) {
+        return (
+            <div className="payment-form-container">
+                <div className="payment-form-header">
+                    <button className="back-button" onClick={() => setShowUpiPayment(false)}>
+                        <FaArrowLeft /> Back to Payment Details
+                    </button>
+                    <h2>Pay with UPI</h2>
+                </div>
+                <QRDisplay qrData={upiPaymentData.qrCode} upiString={upiPaymentData.upiIntentUrl} orderId={upiPaymentData.orderId} amount={formData.amount} />
+                {/* You can add the PaymentStatus component here to poll for success */}
+            </div>
+        );
+    }
 
     return (
         <div className="payment-form-container">
@@ -127,30 +185,30 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Payment Method *</label>
-                            <select
-                                name="paymentMethod"
-                                value={formData.paymentMethod}
-                                onChange={handleChange}
-                                className={errors.paymentMethod ? 'error' : ''}
-                            >
+                            <div className="payment-method-selector">
                                 {PAYMENT_METHODS.map(method => (
-                                    <option key={method} value={method}>
+                                    <button
+                                        type="button"
+                                        key={method}
+                                        className={`payment-method-btn ${formData.paymentMethod === method ? 'active' : ''}`}
+                                        onClick={() => handlePaymentMethodSelect(method)}
+                                    >
                                         {method.replace('_', ' ')}
-                                    </option>
+                                    </button>
                                 ))}
-                            </select>
+                            </div>
                             {errors.paymentMethod && <span className="error-text">{errors.paymentMethod}</span>}
                         </div>
-                        <div className="form-group">
-                            <label>Reference Number</label>
-                            <input
-                                type="text"
-                                name="reference"
-                                value={formData.reference}
-                                onChange={handleChange}
-                                placeholder="Check #, Transaction ID, etc."
-                            />
-                        </div>
+                        {/*<div className="form-group">*/}
+                        {/*    <label>Reference Number</label>*/}
+                        {/*    <input*/}
+                        {/*        type="text"*/}
+                        {/*        name="reference"*/}
+                        {/*        value={formData.reference}*/}
+                        {/*        onChange={handleChange}*/}
+                        {/*        placeholder="Check #, Transaction ID, etc."*/}
+                        {/*    />*/}
+                        {/*</div>*/}
                     </div>
 
                     <div className="form-group">
@@ -169,8 +227,9 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                     <button type="button" className="cancel-btn" onClick={onCancel}>
                         <FaTimes /> Cancel
                     </button>
-                    <button type="submit" className="save-btn">
-                        <FaSave /> Add Payment
+                    <button type="submit" className="save-btn" disabled={loadingUpi}>
+                        {loadingUpi ? 'Generating QR...' : <><FaSave /> Add Payment</>}
+                        {/* <FaSave /> Add Payment */}
                     </button>
                 </div>
             </form>

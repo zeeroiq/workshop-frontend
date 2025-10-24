@@ -12,8 +12,8 @@ export const PAYMENT_METHODS = [
     'CREDIT_CARD',
     'DEBIT_CARD',
     'BANK_TRANSFER',
-    'CHECK',
-    'ONLINE'
+    'CHEQUE',
+    'UPI'
 ];
 
 export const INVOICE_STATUS_OPTIONS = [
