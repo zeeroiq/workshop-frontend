@@ -159,19 +159,16 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                             </select>
                             {errors.paymentMethod && <span className="error-text">{errors.paymentMethod}</span>}
                         </div>
-                        {upiPaymentFlow && (
-                            <ProcessUPI amount={formData?.amount} customerId={formData.customerId} transactionNote="transaction note"/>
-                        )}
-                        {/*<div className="form-group">*/}
-                        {/*    <label>Reference Number</label>*/}
-                        {/*    <input*/}
-                        {/*        type="text"*/}
-                        {/*        name="reference"*/}
-                        {/*        value={formData.reference}*/}
-                        {/*        onChange={handleChange}*/}
-                        {/*        placeholder="Check #, Transaction ID, etc."*/}
-                        {/*    />*/}
-                        {/*</div>*/}
+                        <div className="form-group">
+                            <label>Reference Number</label>
+                            <input
+                                type="text"
+                                name="reference"
+                                value={formData.reference}
+                                onChange={handleChange}
+                                placeholder="Check #, Transaction ID, etc."
+                            />
+                        </div>
                     </div>
 
                     <div className="form-group">
@@ -184,6 +181,9 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                             placeholder="Additional payment notes"
                         />
                     </div>
+                    {upiPaymentFlow && (
+                        <ProcessUPI amount={formData?.amount} customerId={formData.customerId} transactionNote="transaction note"/>
+                    )}
                 </div>
 
                 <div className="form-actions">
