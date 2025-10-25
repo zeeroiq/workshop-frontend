@@ -4,11 +4,15 @@ import { invoiceService } from '../../services/invoiceService';
 import { PAYMENT_METHODS } from './constants/invoiceConstants';
 import './../../styles/invoices.css';
 import {todayDate} from "../helper/utils";
+import ProcessUPI from "../payment/ProcessUPI";
 
 const PaymentForm = ({ invoice, onSave, onCancel }) => {
+    const [upiPaymentFlow, setUpiPaymentFlow] = useState(false);
+    const [QRData, setQRData] = useState();
     const [formData, setFormData] = useState({
+        customerId: invoice?.customerId || '',
         invoiceNumber: invoice?.invoiceNumber || '',
-        amount: invoice?.totalAmount - (invoice?.amountPaid || 0) || 0,
+        amount: (invoice?.totalAmount - (invoice?.amountPaid || 0)).toFixed(2) || 0,
         paymentDate: todayDate(),
         paymentMethod: PAYMENT_METHODS[0],
         reference: '',
@@ -19,9 +23,15 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        let processedValue = value;
+
+        if (name === 'amount') {
+            processedValue = value === '' ? '' : Number.parseFloat(value).toFixed(2);
+        }
+
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: processedValue
         }));
 
         // Clear error when field is changed
@@ -31,16 +41,24 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                 [name]: ''
             }));
         }
+
+        // depending on the option selected, enable rendering of respective payment option fields
+        // for now we keep it simple, we'll just support cash/UPI
+        if (name === 'paymentMethod' && value === 'UPI') {
+            setUpiPaymentFlow(true);
+        } else {
+            setUpiPaymentFlow(false);
+        }
     };
 
     const validateForm = () => {
         const newErrors = {};
         const outstandingBalance = invoice.totalAmount - (invoice.amountPaid || 0);
 
-        if (!formData.amount || formData.amount <= 0) {
+        if (!formData?.amount || formData?.amount <= 0) {
             newErrors.amount = 'Valid payment amount is required';
-        } else if (formData.amount > outstandingBalance) {
-            newErrors.amount = `Payment cannot exceed outstanding balance of $${outstandingBalance.toFixed(2)}`;
+        } else if (formData?.amount > outstandingBalance) {
+            newErrors.amount = `Payment cannot exceed outstanding balance of ₹ ${outstandingBalance.toFixed(2)}`;
         }
 
         if (!formData.paymentDate) newErrors.paymentDate = 'Payment date is required';
@@ -141,16 +159,19 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                             </select>
                             {errors.paymentMethod && <span className="error-text">{errors.paymentMethod}</span>}
                         </div>
-                        <div className="form-group">
-                            <label>Reference Number</label>
-                            <input
-                                type="text"
-                                name="reference"
-                                value={formData.reference}
-                                onChange={handleChange}
-                                placeholder="Check #, Transaction ID, etc."
-                            />
-                        </div>
+                        {upiPaymentFlow && (
+                            <ProcessUPI amount={formData?.amount} customerId={formData.customerId} transactionNote="transaction note"/>
+                        )}
+                        {/*<div className="form-group">*/}
+                        {/*    <label>Reference Number</label>*/}
+                        {/*    <input*/}
+                        {/*        type="text"*/}
+                        {/*        name="reference"*/}
+                        {/*        value={formData.reference}*/}
+                        {/*        onChange={handleChange}*/}
+                        {/*        placeholder="Check #, Transaction ID, etc."*/}
+                        {/*    />*/}
+                        {/*</div>*/}
                     </div>
 
                     <div className="form-group">
