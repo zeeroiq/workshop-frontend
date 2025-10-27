@@ -9,10 +9,10 @@ export const INVOICE_STATUS = {
 
 export const PAYMENT_METHODS = [
     'CASH',
-    'CREDIT_CARD',
-    'DEBIT_CARD',
-    'BANK_TRANSFER',
-    'CHECK',
+    // 'CREDIT_CARD',
+    // 'DEBIT_CARD',
+    // 'BANK_TRANSFER',
+    // 'CHECK',
     'UPI'
 ];
 
