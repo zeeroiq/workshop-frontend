@@ -1,40 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {QRCodeCanvas, QRCodeSVG} from "qrcode.react";
+import {QRCodeSVG} from "qrcode.react";
 import {paymentService} from "../../services/paymentService";
 import {toast} from "react-toastify";
-//
-//         if (!validateForm()) return;
-//
-//         // If UPI is selected, generate QR code data
-//         if (formData.paymentMethod === 'UPI') {
-//             const upiData = `upi://pay?pa=merchant@upi&pn=MerchantName&am=${formData.amount}&cu=INR&tn=Payment for Invoice ${formData.invoiceNumber}`;
-//             setQRData(upiData);
-//         } else {
-//             // For other payment methods, directly save the payment
-//             onSave(formData);
-//         }
-//     };
-//
-//     return (
-//         <form onSubmit={handleSubmit}>
-//             {/* Form fields for invoiceNumber, amount, paymentDate, paymentMethod, reference, notes */}
-//
-//             {upiPaymentFlow && QRData && (
-//                 <div>
-//                     <h3>Scan this UPI QR Code to Pay</h3>
-//                     <QRCodeSVG value={QRData} size={200} />
-//                 </div>
-//             )}
-//
-//             <button type="submit">Submit Payment</button>
-//             <button type="button" onClick={onCancel}>Cancel</button>
-//         </form>
-//     );
-// };
-//
-// export default PaymentForm;import { QRCodeSVG } from 'qrcode.react';
 
-// Component to process UPI payments
 const ProcessUPI = ({customerId, amount, merchantVPA, merchantName, transactionNote}) => {
     //
     const [orderData, setOrderData] = useState(null);
