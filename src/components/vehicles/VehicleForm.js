@@ -4,7 +4,7 @@ import { vehicleService } from '../../services/vehicleService';
 import { customerService } from '../../services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import './../../styles/Vehicles.css';
+import '../../styles/Vehicles.css';
 
 const VehicleForm = () => {
     const { id } = useParams();

@@ -8,7 +8,7 @@ import {
     FaRupeeSign
 } from 'react-icons/fa';
 import {inventoryService} from "../../../services/inventoryService";
-import './../../../styles/inventory/order/PurchaseOrderForm.css';
+import '../../../styles/inventory/order/PurchaseOrderForm.css';
 import {toast} from "react-toastify";
 import api from "../../../services/api";
 import {formatDateForInput, isOrderEditable} from "../Utils";

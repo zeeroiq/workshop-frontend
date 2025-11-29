@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa';
 import {reportsService} from '../../services/reportsService';
 import {TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES} from './constants/reportsConstants';
-import './../../styles/Reports.css';
+import '../../styles/Reports.css';
 import { customerService } from "../../services/customerService";
 import { userService } from "../../services/userService";
 import {toast} from "react-toastify";

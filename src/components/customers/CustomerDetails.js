@@ -4,7 +4,7 @@ import { FaEdit, FaTrash, FaPlus, FaArrowLeft, FaCar } from 'react-icons/fa';
 import { customerService } from '../../services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import './../../styles/Customer.css';
+import '../../styles/Customer.css';
 
 const CustomerDetails = () => {
     const { id } = useParams();

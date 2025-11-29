@@ -11,7 +11,7 @@ import {
     FaFileInvoiceDollar
 } from 'react-icons/fa';
 import { inventoryService } from '../../../services/inventoryService';
-import './../../../styles/inventory/supplier/SupplierForm.css';
+import '../../../styles/inventory/supplier/SupplierForm.css';
 import {toast} from "react-toastify";
 
 const SupplierForm = ({ supplier, onSave, onCancel }) => {

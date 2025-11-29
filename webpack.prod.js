@@ -42,6 +42,6 @@ module.exports = merge(common, {
         ],
     },
     output: {
-        publicPath: 'https://prod-workshop.example.com/',
+        publicPath: 'https://workshop-qglp.onrender.com/workshop-management',
     },
 });

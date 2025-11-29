@@ -10,7 +10,7 @@ import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsC
 import ExportControls from './ExportControls';
 import DataVisualizer from './DataVisualizer';
 import TimePeriodFilter from './TimePeriodFilter';
-import './../../styles/Reports.css';
+import '../../styles/Reports.css';
 
 const InventoryReports = () => {
     const [criteria, setCriteria] = useState({

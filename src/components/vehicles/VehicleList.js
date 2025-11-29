@@ -4,7 +4,7 @@ import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaCar, FaUser } from 'react-i
 import { vehicleService } from '../../services/vehicleService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import './../../styles/Vehicles.css';
+import '../../styles/Vehicles.css';
 
 const VehicleList = () => {
     const [vehicles, setVehicles] = useState([]);

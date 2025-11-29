@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaTable, FaChartPie, FaChartBar } from 'react-icons/fa';
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { CHART_COLORS } from './constants/reportsConstants';
-import './../../styles/Reports.css';
+import '../../styles/Reports.css';
 
 /**
  * A reusable component to visualize data in a table, pie chart, or bar chart.

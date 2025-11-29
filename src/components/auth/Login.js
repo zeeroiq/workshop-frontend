@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { toast } from 'react-toastify';
-import './../../styles/Auth.css';
+import '../../styles/Auth.css';
 
 const Login = () => {
     const [formData, setFormData] = useState({

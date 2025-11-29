@@ -14,7 +14,7 @@ import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import { dashboardService } from '../../services/dashboardService';
 import LoadingSpinner from '../common/LoadingSpinner';
-import './../../styles/Dashboard.css';
+import '../../styles/Dashboard.css';
 import {toast} from "react-toastify";
 
 const Dashboard = () => {

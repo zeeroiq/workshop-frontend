@@ -12,7 +12,7 @@ import {
     FaCog,
     FaTimes
 } from 'react-icons/fa';
-import './../../styles/Sidebar.css';
+import '../../styles/Sidebar.css';
 
 const Sidebar = ({ isOpen, onClose }) => {
     const location = useLocation();
