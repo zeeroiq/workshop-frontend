@@ -4,7 +4,7 @@ import {
     FaEdit
 } from 'react-icons/fa';
 import {PAYMENT_METHODS} from './constants/invoiceConstants';
-import '../../styles/invoices.css';
+import '../../styles/Invoices.css';
 import './InvoiceDetails.css';
 import {formatDateForInput} from "../helper/utils";
 
