@@ -42,6 +42,6 @@ module.exports = merge(common, {
         ],
     },
     output: {
-        publicPath: '/workshop-management/',
+        publicPath: '/',
     },
 });
