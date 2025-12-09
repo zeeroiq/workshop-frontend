@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { customerService } from '../../services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import './../../styles/Customer.css';
+import '../../styles/Customer.css';
 
 const CustomerForm = () => {
     const { id } = useParams();

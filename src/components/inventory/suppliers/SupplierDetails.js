@@ -11,7 +11,7 @@ import {
     FaBuilding,
     FaStickyNote
 } from 'react-icons/fa';
-import './../../../styles/inventory/supplier/SupplierDetails.css';
+import '../../../styles/inventory/supplier/SupplierDetails.css';
 
 const SupplierDetails = ({supplier, onBack, onEdit}) => {
     if (!supplier) {

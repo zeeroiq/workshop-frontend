@@ -3,7 +3,7 @@ import { FaBell, FaUserCircle, FaSignOutAlt, FaBars } from 'react-icons/fa';
 import { authService } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import './../../styles/Header.css';
+import '../../styles/Header.css';
 
 const Header = ({ onToggleSidebar, theme, toggleTheme }) => {
     const navigate = useNavigate();

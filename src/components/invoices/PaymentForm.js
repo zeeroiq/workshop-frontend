@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { invoiceService } from '../../services/invoiceService';
 import { PAYMENT_METHODS } from './constants/invoiceConstants';
-import './../../styles/invoices.css';
+import '../../styles/Invoices.css';
 import {todayDate} from "../helper/utils";
 import ProcessUPI from "../payment/ProcessUPI";
 

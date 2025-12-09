@@ -4,7 +4,7 @@ import { FaEdit, FaTrash, FaArrowLeft, FaCar, FaUser, FaHistory, FaStickyNote, F
 import { vehicleService } from '../../services/vehicleService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import './../../styles/Vehicles.css';
+import '../../styles/Vehicles.css';
 
 const VehicleDetails = () => {
     const { id } = useParams();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaMoon, FaSun } from 'react-icons/fa';
-import './../../styles/ThemeToggle.css';
+import '../../styles/ThemeToggle.css';
 
 const ThemeToggle = ({ theme, toggleTheme }) => {
     return (

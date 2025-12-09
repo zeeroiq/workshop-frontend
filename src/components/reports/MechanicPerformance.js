@@ -7,7 +7,7 @@ import {
 import { reportsService } from '../../services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import ExportControls from './ExportControls';
-import './../../styles/Reports.css';
+import '../../styles/Reports.css';
 import DataVisualizer from './DataVisualizer';
 import TimePeriodFilter from "./TimePeriodFilter";
 import {userService} from "../../services/userService";

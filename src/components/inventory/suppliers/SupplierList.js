@@ -11,7 +11,7 @@ import {
     FaEllipsisV
 } from 'react-icons/fa';
 import {inventoryService} from '../../../services/inventoryService';
-import './../../../styles/inventory/supplier/SupplierList.css';
+import '../../../styles/inventory/supplier/SupplierList.css';
 
 const SupplierList = ({onViewDetails, onEdit, onCreate}) => {
     const [suppliers, setSuppliers] = useState([]);

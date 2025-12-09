@@ -3,7 +3,7 @@ import FinancialReports from './FinancialReports';
 import InventoryReports from './InventoryReports';
 import MechanicPerformance from './MechanicPerformance';
 import { FaChartLine, FaChartBar, FaChartPie, FaUserCog } from 'react-icons/fa';
-import './../../styles/Reports.css';
+import '../../styles/Reports.css';
 
 const Reports = () => {
     const [activeTab, setActiveTab] = useState('financial');

@@ -8,7 +8,7 @@ import {
 } from 'react-icons/fa';
 import { invoiceService } from '../../services/invoiceService';
 import { INVOICE_STATUS } from './constants/invoiceConstants';
-import './../../styles/invoices.css';
+import '../../styles/Invoices.css';
 import {customerService} from "../../services/customerService";
 import {toast} from "react-toastify";
 
