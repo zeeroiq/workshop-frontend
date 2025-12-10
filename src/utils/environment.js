@@ -1,15 +1,15 @@
-export const isDevelopment = process.env.REACT_APP_ENV === 'development';
-export const isIntegration = process.env.REACT_APP_ENV === 'integration';
-export const isCertification = process.env.REACT_APP_ENV === 'certification';
-export const isProduction = process.env.REACT_APP_ENV === 'production';
+export const isDevelopment = import.meta.env.VITE_APP_ENV === 'development';
+export const isIntegration = import.meta.env.VITE_APP_ENV === 'integration';
+export const isCertification = import.meta.env.VITE_APP_ENV === 'certification';
+export const isProduction = import.meta.env.VITE_APP_ENV === 'production';
 
-export const getEnvironment = () => process.env.REACT_APP_ENV || 'development';
-export const getApiUrl = () => process.env.REACT_APP_API_URL;
-export const getVersion = () => process.env.REACT_APP_VERSION;
+export const getEnvironment = () => import.meta.env.VITE_APP_ENV || 'development';
+export const getApiUrl = () => import.meta.env.VITE_APP_API_URL;
+export const getVersion = () => import.meta.env.VITE_APP_VERSION;
 
 // Debug logging only in development
 export const debugLog = (...args) => {
-    if (process.env.REACT_APP_DEBUG === 'true') {
+    if (import.meta.env.VITE_APP_DEBUG === 'true') {
         console.log(...args);
     }
 };
