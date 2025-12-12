@@ -161,7 +161,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         }
     };
 
-    const filteredInvoices = invoices.filter(invoice =>
+    const filteredAndSearchedInvoices = invoices.filter(invoice =>
         invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -194,7 +194,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                 </CardHeader>
                 <CardContent>
                     <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-                        <TabsList className="grid w-full grid-cols-6">
+                        <TabsList>
                             <TabsTrigger value="all">All</TabsTrigger>
                             {INVOICE_STATUS_OPTIONS.map(status => (
                                 <TabsTrigger key={status.value} value={status.value}>
@@ -222,14 +222,14 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
                                             </TableCell>
                                         </TableRow>
-                                    ) : filteredInvoices.length === 0 ? (
+                                    ) : filteredAndSearchedInvoices.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan="7" className="h-24 text-center">
                                                 No invoices found.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredInvoices.map(invoice => (
+                                        filteredAndSearchedInvoices.map(invoice => (
                                             <TableRow key={invoice.id}>
                                                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                                                 <TableCell>{invoice.customerName}</TableCell>
