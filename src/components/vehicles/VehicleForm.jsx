@@ -4,7 +4,12 @@ import { vehicleService } from '@/services/vehicleService';
 import { customerService } from '@/services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import '../../styles/Vehicles.css';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FaSave, FaTimes } from 'react-icons/fa';
 
 const VehicleForm = () => {
     const { id } = useParams();
@@ -17,11 +22,11 @@ const VehicleForm = () => {
     const [vehicle, setVehicle] = useState({
         make: '',
         model: '',
-        year: new Date().getFullYear(),
+        year: new Date().getFullYear().toString(),
         vin: '',
         licensePlate: '',
         color: '',
-        currentMileage: 0,
+        currentMileage: '',
         engineType: '',
         customerId: ''
     });
@@ -46,10 +51,13 @@ const VehicleForm = () => {
         try {
             setLoading(true);
             const response = await vehicleService.getById(id);
-            setVehicle(response.data);
+            setVehicle({
+                ...response.data,
+                year: response.data.year.toString(),
+                customerId: response.data.customerId?.toString() || ''
+            });
         } catch (error) {
             toast.error('Failed to fetch vehicle details');
-            console.error('Error fetching vehicle:', error);
         } finally {
             setLoading(false);
         }
@@ -57,195 +65,130 @@ const VehicleForm = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setVehicle(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setVehicle(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectChange = (name, value) => {
+        setVehicle(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
-
         try {
+            const payload = {
+                ...vehicle,
+                year: parseInt(vehicle.year),
+                currentMileage: vehicle.currentMileage ? parseInt(vehicle.currentMileage) : null,
+                customerId: vehicle.customerId && vehicle.customerId !== 'none' ? parseInt(vehicle.customerId) : null
+            };
+            console.log('Submitting payload:', payload);
+
             if (isEdit) {
-                await vehicleService.update(id, vehicle);
+                await vehicleService.update(id, payload);
                 toast.success('Vehicle updated successfully');
             } else {
-                await vehicleService.create(vehicle);
+                await vehicleService.create(payload);
                 toast.success('Vehicle created successfully');
             }
             navigate('/vehicles');
         } catch (error) {
-            const message = error.response?.data?.message || 'Failed to save vehicle';
-            toast.error(message);
-            console.error('Save error:', error);
+            console.error('Failed to save vehicle:', error);
+            toast.error(error.response?.data?.message || 'Failed to save vehicle');
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) {
-        return <LoadingSpinner />;
-    }
+    if (loading) return <LoadingSpinner />;
 
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
+    const years = Array.from({ length: 50 }, (_, i) => (currentYear - i).toString());
 
     return (
-        <div className="vehicle-form">
-            <div className="page-header">
-                <h1>{isEdit ? 'Edit Vehicle' : 'Add New Vehicle'}</h1>
-            </div>
+        <div className="container mx-auto py-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{isEdit ? 'Edit Vehicle' : 'Add New Vehicle'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="make">Make *</Label>
+                                <Input id="make" name="make" value={vehicle.make} onChange={handleChange} required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="model">Model *</Label>
+                                <Input id="model" name="model" value={vehicle.model} onChange={handleChange} required />
+                            </div>
+                        </div>
 
-            <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="make">Make *</label>
-                        <input
-                            type="text"
-                            id="make"
-                            name="make"
-                            value={vehicle.make}
-                            onChange={handleChange}
-                            required
-                            className="form-control"
-                        />
-                    </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="year">Year *</Label>
+                                <Select name="year" value={vehicle.year} onValueChange={(value) => handleSelectChange('year', value)}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {years.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="color">Color</Label>
+                                <Input id="color" name="color" value={vehicle.color} onChange={handleChange} />
+                            </div>
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="model">Model *</label>
-                        <input
-                            type="text"
-                            id="model"
-                            name="model"
-                            value={vehicle.model}
-                            onChange={handleChange}
-                            required
-                            className="form-control"
-                        />
-                    </div>
-                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="vin">VIN</Label>
+                                <Input id="vin" name="vin" value={vehicle.vin} onChange={handleChange} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="licensePlate">License Plate *</Label>
+                                <Input id="licensePlate" name="licensePlate" value={vehicle.licensePlate} onChange={handleChange} required />
+                            </div>
+                        </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="year">Year *</label>
-                        <select
-                            id="year"
-                            name="year"
-                            value={vehicle.year}
-                            onChange={handleChange}
-                            required
-                            className="form-control"
-                        >
-                            {years.map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                    </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="currentMileage">Current Mileage</Label>
+                                <Input id="currentMileage" name="currentMileage" type="number" value={vehicle.currentMileage} onChange={handleChange} min="0" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="engineType">Engine Type</Label>
+                                <Input id="engineType" name="engineType" value={vehicle.engineType} onChange={handleChange} />
+                            </div>
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="color">Color</label>
-                        <input
-                            type="text"
-                            id="color"
-                            name="color"
-                            value={vehicle.color}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
-                    </div>
-                </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="customerId">Owner (Customer)</Label>
+                            <Select name="customerId" value={vehicle.customerId} onValueChange={(value) => handleSelectChange('customerId', value)}>
+                                <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">None</SelectItem>
+                                    {customers.map(customer => (
+                                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                                            {customer.firstName} {customer.lastName} - {customer.phone}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="vin">VIN</label>
-                        <input
-                            type="text"
-                            id="vin"
-                            name="vin"
-                            value={vehicle.vin}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="licensePlate">License Plate *</label>
-                        <input
-                            type="text"
-                            id="licensePlate"
-                            name="licensePlate"
-                            value={vehicle.licensePlate}
-                            onChange={handleChange}
-                            required
-                            className="form-control"
-                        />
-                    </div>
-                </div>
-
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="currentMileage">Current Mileage</label>
-                        <input
-                            type="number"
-                            id="currentMileage"
-                            name="currentMileage"
-                            value={vehicle.currentMileage}
-                            onChange={handleChange}
-                            min="0"
-                            className="form-control"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="engineType">Engine Type</label>
-                        <input
-                            type="text"
-                            id="engineType"
-                            name="engineType"
-                            value={vehicle.engineType}
-                            onChange={handleChange}
-                            className="form-control"
-                        />
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="customerId">Owner (Customer)</label>
-                    <select
-                        id="customerId"
-                        name="customerId"
-                        value={vehicle.customerId || ''}
-                        onChange={handleChange}
-                        className="form-control"
-                    >
-                        <option value="">Select a customer...</option>
-                        {customers.map(customer => (
-                            <option key={customer.id} value={customer.id}>
-                                {customer.firstName} {customer.lastName} - {customer.phone}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="form-actions">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/vehicles')}
-                        className="btn btn-secondary"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="btn btn-primary"
-                    >
-                        {saving ? 'Saving...' : (isEdit ? 'Update Vehicle' : 'Create Vehicle')}
-                    </button>
-                </div>
-            </form>
+                        <div className="flex justify-end space-x-4">
+                            <Button type="button" variant="outline" onClick={() => navigate('/vehicles')}>
+                                <FaTimes className="mr-2" /> Cancel
+                            </Button>
+                            <Button type="submit" disabled={saving}>
+                                <FaSave className="mr-2" />
+                                {saving ? 'Saving...' : (isEdit ? 'Update Vehicle' : 'Create Vehicle')}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 };

@@ -1,10 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaCar, FaUser } from 'react-icons/fa';
+import { Edit, Trash, Eye, Plus, Search, Car, User } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
-import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import '../../styles/Vehicles.css';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 
 const VehicleList = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -12,19 +35,17 @@ const VehicleList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
 
     useEffect(() => {
         fetchVehicles();
     }, [currentPage]);
 
     const fetchVehicles = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             const response = await vehicleService.getAll(currentPage, 10, searchTerm);
             setVehicles(response.data.content);
             setTotalPages(response.data.totalPages);
-            setTotalElements(response.data.totalElements);
         } catch (error) {
             toast.error('Failed to fetch vehicles');
             console.error('Error fetching vehicles:', error);
@@ -55,154 +76,134 @@ const VehicleList = () => {
     };
 
     if (loading) {
-        return <LoadingSpinner />;
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
     }
 
     return (
-        <div className="vehicle-list">
-            <div className="page-header">
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1>Vehicles</h1>
-                    <p>Manage your workshop vehicles</p>
+                    <h1 className="text-2xl font-bold">Vehicles</h1>
+                    <p className="text-muted-foreground">Manage your workshop vehicles</p>
                 </div>
-                <Link to="/vehicles/new" className="btn btn-primary">
-                    <FaPlus /> Add New Vehicle
-                </Link>
+                <Button asChild>
+                    <Link to="/vehicles/new"><Plus className="mr-2 h-4 w-4" /> Add New Vehicle</Link>
+                </Button>
             </div>
 
-            <div className="card">
-                <div className="card-header">
-                    <h2 className="card-title">All Vehicles</h2>
-                    <div className="d-flex align-items-center gap-2">
-                        <span className="text-muted">{totalElements} vehicles found</span>
-                    </div>
-                </div>
-                <div className="card-body">
-                    <form onSubmit={handleSearch} className="search-form">
-                        <div className="input-group">
-                            <input
-                                type="text"
-                                placeholder="Search vehicles by make, model, license plate, or VIN..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="form-control"
-                            />
-                            <button type="submit" className="btn btn-primary">
-                                <FaSearch /> Search
-                            </button>
-                        </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>All Vehicles</CardTitle>
+                    <form onSubmit={handleSearch} className="flex items-center gap-2">
+                        <Input
+                            type="text"
+                            placeholder="Search vehicles..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="max-w-sm"
+                        />
+                        <Button type="submit" variant="outline" size="icon">
+                            <Search className="h-4 w-4" />
+                        </Button>
                     </form>
-
-                    <div className="table-responsive">
-                        <table className="data-table">
-                            <thead>
-                            <tr>
-                                <th>Vehicle</th>
-                                <th>Owner</th>
-                                <th>VIN</th>
-                                <th>License Plate</th>
-                                <th>Mileage</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Vehicle</TableHead>
+                                <TableHead>Owner</TableHead>
+                                <TableHead>VIN</TableHead>
+                                <TableHead>License Plate</TableHead>
+                                <TableHead>Mileage</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {vehicles.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-4">
-                                        <div className="empty-state">
-                                            <FaCar size={48} className="empty-icon" />
-                                            <h3>No vehicles found</h3>
-                                            <p>Try adjusting your search or add a new vehicle</p>
-                                            <Link to="/vehicles/new" className="btn btn-primary">
-                                                Add Vehicle
-                                            </Link>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <TableRow>
+                                    <TableCell colSpan="6" className="h-24 text-center">
+                                        No vehicles found.
+                                    </TableCell>
+                                </TableRow>
                             ) : (
                                 vehicles.map((vehicle) => (
-                                    <tr key={vehicle.id}>
-                                        <td>
-                                            <div className="vehicle-info">
-                                                <div className="vehicle-make-model">
-                                                    <strong>{vehicle.make} {vehicle.model}</strong>
-                                                    <span>{vehicle.year}</span>
-                                                </div>
-                                                <div className="vehicle-color">
-                                                    <span className="color-badge" style={{ backgroundColor: vehicle.color?.toLowerCase() || '#ccc' }}></span>
-                                                    {vehicle.color}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
+                                    <TableRow key={vehicle.id}>
+                                        <TableCell>
+                                            <div className="font-medium">{vehicle.make} {vehicle.model}</div>
+                                            <div className="text-sm text-muted-foreground">{vehicle.year}</div>
+                                        </TableCell>
+                                        <TableCell>
                                             {vehicle.customerName ? (
-                                                <Link to={`/customers/${vehicle.customerId}`} className="customer-link">
-                                                    <FaUser /> {vehicle.customerName}
+                                                <Link to={`/customers/${vehicle.customerId}`} className="flex items-center gap-2 hover:underline">
+                                                    <User className="h-4 w-4" />
+                                                    {vehicle.customerName}
                                                 </Link>
                                             ) : (
                                                 'No owner'
                                             )}
-                                        </td>
-                                        <td>{vehicle.vin || '-'}</td>
-                                        <td>
-                                            <span className="license-plate">{vehicle.licensePlate}</span>
-                                        </td>
-                                        <td>
-                                            <span className="mileage">{vehicle.currentMileage?.toLocaleString() || '0'} miles</span>
-                                        </td>
-                                        <td>
-                                            <div className="action-buttons">
-                                                <Link
-                                                    to={`/vehicles/${vehicle.id}`}
-                                                    className="btn btn-sm btn-info"
-                                                    title="View Details"
-                                                >
-                                                    <FaEye />
-                                                </Link>
-                                                <Link
-                                                    to={`/vehicles/edit/${vehicle.id}`}
-                                                    className="btn btn-sm btn-warning"
-                                                    title="Edit"
-                                                >
-                                                    <FaEdit />
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(vehicle.id)}
-                                                    className="btn btn-sm btn-danger"
-                                                    title="Delete"
-                                                >
-                                                    <FaTrash />
-                                                </button>
+                                        </TableCell>
+                                        <TableCell>{vehicle.vin || '-'}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline">{vehicle.licensePlate}</Badge>
+                                        </TableCell>
+                                        <TableCell>{vehicle.currentMileage?.toLocaleString() || '0'} miles</TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button variant="outline" size="icon" asChild>
+                                                    <Link to={`/vehicles/${vehicle.id}`}><Eye className="h-4 w-4" /></Link>
+                                                </Button>
+                                                <Button variant="outline" size="icon" asChild>
+                                                    <Link to={`/vehicles/edit/${vehicle.id}`}><Edit className="h-4 w-4" /></Link>
+                                                </Button>
+                                                <Button variant="destructive" size="icon" onClick={() => handleDelete(vehicle.id)}>
+                                                    <Trash className="h-4 w-4" />
+                                                </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))
                             )}
-                            </tbody>
-                        </table>
-                    </div>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
-                    {totalPages > 1 && (
-                        <div className="pagination">
-                            <button
+            {totalPages > 1 && (
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage - 1); }}
                                 disabled={currentPage === 0}
-                                onClick={() => setCurrentPage(currentPage - 1)}
-                                className="btn btn-secondary"
-                            >
-                                Previous
-                            </button>
-                            <span>Page {currentPage + 1} of {totalPages}</span>
-                            <button
+                            />
+                        </PaginationItem>
+                        {[...Array(totalPages).keys()].map(page => (
+                            <PaginationItem key={page}>
+                                <PaginationLink
+                                    href="#"
+                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
+                                    isActive={currentPage === page}
+                                >
+                                    {page + 1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage + 1); }}
                                 disabled={currentPage === totalPages - 1}
-                                onClick={() => setCurrentPage(currentPage + 1)}
-                                className="btn btn-secondary"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            )}
         </div>
     );
 };

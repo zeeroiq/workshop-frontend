@@ -3,7 +3,7 @@ import InvoiceList from './InvoiceList';
 import InvoiceForm from './InvoiceForm';
 import PaymentForm from './PaymentForm';
 import { FaFileInvoiceDollar } from 'react-icons/fa';
-import '../../styles/Invoices.css';
+
 import InvoiceDetails from "./InvoiceDetails";
 
 const Invoice = () => {

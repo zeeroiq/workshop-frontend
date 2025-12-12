@@ -1,17 +1,12 @@
-import React, {useState} from 'react';
-import {FaDownload} from 'react-icons/fa';
-import {EXPORT_FORMATS} from './constants/reportsConstants';
-import {reportsService} from '@/services/reportsService';
-import {toast} from 'react-toastify';
+import React, { useState } from 'react';
+import { FaDownload } from 'react-icons/fa';
+import { EXPORT_FORMATS } from './constants/reportsConstants';
+import { reportsService } from '@/services/reportsService';
+import { toast } from 'react-toastify';
+import { Button } from '@/components/ui/button';
 
-/**
- * A reusable component for report export buttons and logic.
- * @param {object} props
- * @param {function(): object} props.getCriteria - A function that returns the current report criteria object.
- * @param {Array<'PDF'|'EXCEL'|'CSV'>} [props.formats=['PDF', 'EXCEL', 'CSV']] - The export formats to display.
- */
-const ExportControls = ({getCriteria, formats = ['PDF', 'EXCEL', 'CSV']}) => {
-    const [exporting, setExporting] = useState(null); // null, 'PDF', 'EXCEL', 'CSV'
+const ExportControls = ({ getCriteria, formats = ['PDF', 'EXCEL', 'CSV'] }) => {
+    const [exporting, setExporting] = useState(null);
 
     const handleExport = async (format) => {
         if (exporting) return;
@@ -19,11 +14,10 @@ const ExportControls = ({getCriteria, formats = ['PDF', 'EXCEL', 'CSV']}) => {
         setExporting(format);
         try {
             const criteria = getCriteria();
-            const exportRequest = {...criteria, format};
+            const exportRequest = { ...criteria, format };
 
-            const {blob, filename} = await reportsService.exportReport(exportRequest);
+            const { blob, filename } = await reportsService.exportReport(exportRequest);
 
-            // Create a download link
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -47,24 +41,25 @@ const ExportControls = ({getCriteria, formats = ['PDF', 'EXCEL', 'CSV']}) => {
     };
 
     return (
-        <div className="export-buttons">
-            {
-                formats.map(format => {
-                    const formatKey = format.toUpperCase();
-                    const formatValue = EXPORT_FORMATS[formatKey];
-                    if (!formatValue) return null;
+        <div className="flex space-x-2">
+            {formats.map(format => {
+                const formatKey = format.toUpperCase();
+                const formatValue = EXPORT_FORMATS[formatKey];
+                if (!formatValue) return null;
 
-                    return (
-                        <button
-                            key={formatValue}
-                            onClick={() => handleExport(formatValue)}
-                            disabled={!!exporting}
-                        >
-                            <FaDownload/> {exporting === formatValue ? 'Exporting...' : format}
-                        </button>
-                    );
-                })
-            }
+                return (
+                    <Button
+                        key={formatValue}
+                        onClick={() => handleExport(formatValue)}
+                        disabled={!!exporting}
+                        variant="outline"
+                        size="sm"
+                    >
+                        <FaDownload className="mr-2" />
+                        {exporting === formatValue ? 'Exporting...' : format}
+                    </Button>
+                );
+            })}
         </div>
     );
 };

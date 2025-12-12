@@ -1,25 +1,14 @@
-import React, {useState, useEffect} from 'react';
-import {
-    FaEye,
-    FaEdit,
-    FaPlus,
-    FaSearch,
-    FaFilter
-} from 'react-icons/fa';
-import {inventoryService} from "@/services/inventoryService";
-import {toast} from "react-toastify";
+import React, { useState, useEffect } from 'react';
+import { FaEye, FaEdit, FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
+import { inventoryService } from "@/services/inventoryService";
+import { toast } from "react-toastify";
+import { handleOrderEditClick } from "../Utils";
 
-import '../../../styles/workshop.css'
-import '../../../styles/inventory/order/PurchaseOrder.css';
-import {handleOrderEditClick} from "../Utils";
-
-const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {
+const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
         fetchPurchaseOrders();
@@ -29,18 +18,14 @@ const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {
         try {
             setLoading(true);
             const response = await inventoryService.getPurchaseOrders();
-
             if (response?.data?.success) {
                 setOrders(response.data.data);
             } else {
-                console.error('Failed to fetch purchase orders:', response.data.data.message);
                 toast.warn('Failed to fetch purchase orders');
             }
         } catch (error) {
             console.error('Error fetching purchase orders:', error);
-            if (error.response?.data?.error) {
-                toast.error('Failed to fetch purchase orders');
-            }
+            toast.error('Failed to fetch purchase orders');
         } finally {
             setLoading(false);
         }
@@ -55,16 +40,11 @@ const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {
 
     const getStatusClass = (status) => {
         switch (status) {
-            case 'PENDING':
-                return 'status-pending';
-            case 'ORDERED':
-                return 'status-ordered';
-            case 'COMPLETED':
-                return 'status-completed';
-            case 'CANCELLED':
-                return 'status-cancelled';
-            default:
-                return 'status-pending';
+            case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+            case 'ORDERED': return 'bg-blue-100 text-blue-800';
+            case 'COMPLETED': return 'bg-green-100 text-green-800';
+            case 'CANCELLED': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
         }
     };
 
@@ -74,50 +54,35 @@ const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {
     };
 
     if (loading) {
-        return <div className="loading">Loading purchase orders...</div>;
+        return <div className="flex justify-center items-center h-64">Loading purchase orders...</div>;
     }
-
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-    }
-
-    const handleStatusFilter = (e) => {
-        setStatusFilter(e.target.value);
-    }
-
-    // const handleOrderEditClick = (order) => {
-    //     if (order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED') {
-    //         toast.warn(`Cannot edit ${order.status.toLowerCase()} order`);
-    //         return;
-    //     }
-    //     onEdit(order);
-    // };
-
 
     return (
-        <div className="purchase-order-list">
-            <div className="list-header">
-                <h2>Purchase Orders</h2>
-                <button className="btn-primary" onClick={onCreate}>
-                    <FaPlus/> New Purchase Order
+        <div className="bg-card p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Purchase Orders</h2>
+                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
+                    <FaPlus className="mr-2" /> New Purchase Order
                 </button>
             </div>
 
-            <div className="list-controls">
-                <div className="search-box">
-                    <FaSearch className="search-icon"/>
+            <div className="flex justify-between items-center mb-4">
+                <div className="relative w-full md:w-1/2">
+                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search by order number or supplier"
                         value={searchTerm}
-                        onChange={handleSearch}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
                     />
                 </div>
-                <div className="filter-box">
-                    <FaFilter className="filter-icon"/>
+                <div className="relative">
+                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
                     <select
                         value={statusFilter}
-                        onChange={handleStatusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
                     >
                         <option value="all">All Statuses</option>
                         <option value="PENDING">Pending</option>
@@ -128,56 +93,59 @@ const PurchaseOrderList = ({onViewDetails, onEdit, onCreate}) => {
                 </div>
             </div>
 
-            <div className="orders-table">
-                <div className="table-header">
-                    <div>Order #</div>
-                    <div>Supplier</div>
-                    <div>Order Date</div>
-                    <div>Expected Date</div>
-                    <div>Total Amount</div>
-                    <div>Status</div>
-                    <div>Actions</div>
-                </div>
-                <div className="table-body">
-                    {filteredOrders.length > 0 ? (
-                        filteredOrders.map(order => {
-                            const isDisabled = order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED' && order.status.toUpperCase() !== 'PENDING';
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                    <thead className="bg-muted text-muted-foreground uppercase">
+                        <tr>
+                            <th className="px-6 py-3">Order #</th>
+                            <th className="px-6 py-3">Supplier</th>
+                            <th className="px-6 py-3">Order Date</th>
+                            <th className="px-6 py-3">Expected Date</th>
+                            <th className="px-6 py-3">Total</th>
+                            <th className="px-6 py-3">Status</th>
+                            <th className="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredOrders.map(order => {
+                            const isDisabled = order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED';
                             return (
-                                <div key={order.id} className="table-row">
-                                    <div>{order.orderNumber}</div>
-                                    <div>{order.supplierName}</div>
-                                    <div>{formatDate(order.orderDate)}</div>
-                                    <div>{formatDate(order.expectedDeliveryDate)}</div>
-                                    <div>₹ {order.totalAmount.toFixed(2)}</div>
-                                    <div>
-                                      <span className={`status-badge ${getStatusClass(order.status)}`}>
-                                        {order.status}
-                                      </span>
-                                    </div>
-                                    <div className="action-buttons">
-                                        <button
-                                            className="btn-icon"
-                                            onClick={() => onViewDetails(order)}
-                                            title="View Details"
-                                        >
-                                            <FaEye/>
-                                        </button>
-                                        <button
-                                            className="btn-icon"
-                                            onClick={() => handleOrderEditClick(order, onEdit)}
-                                            // disabled={isDisabled}
-                                            title={isDisabled ? `Cannot edit ${order.status.toLowerCase()} order` : "Edit Order"}
-                                        >
-                                            <FaEdit/>
-                                        </button>
-                                    </div>
-                                </div>
+                                <tr key={order.id} className="border-b border-border hover:bg-muted/50">
+                                    <td className="px-6 py-4 font-medium">{order.orderNumber}</td>
+                                    <td className="px-6 py-4">{order.supplierName}</td>
+                                    <td className="px-6 py-4">{formatDate(order.orderDate)}</td>
+                                    <td className="px-6 py-4">{formatDate(order.expectedDeliveryDate)}</td>
+                                    <td className="px-6 py-4">₹{order.totalAmount.toFixed(2)}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}`}>
+                                            {order.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center space-x-2">
+                                            <button className="text-primary hover:text-primary/80" onClick={() => onViewDetails(order)}>
+                                                <FaEye />
+                                            </button>
+                                            <button
+                                                className={`text-blue-500 hover:text-blue-700 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                onClick={() => !isDisabled && onEdit(order)}
+                                                disabled={isDisabled}
+                                                title={isDisabled ? `Cannot edit ${order.status.toLowerCase()} order` : "Edit Order"}
+                                            >
+                                                <FaEdit />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                             );
-                        })
-                    ) : (
-                        <div className="no-orders">No orders found</div>
-                    )}
-                </div>
+                        })}
+                    </tbody>
+                </table>
+                {filteredOrders.length === 0 && (
+                    <div className="text-center py-8">
+                        <p className="text-muted-foreground">No orders found</p>
+                    </div>
+                )}
             </div>
         </div>
     );

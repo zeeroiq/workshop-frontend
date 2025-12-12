@@ -7,141 +7,173 @@ import {
     FaPrint,
     FaTimesCircle
 } from 'react-icons/fa';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 import {formatDate, handleOrderEditClick} from "../Utils";
 
-import '../../../styles/inventory/order/PurchaseOrder.css';
+
 
 const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
 
     if (!order) {
         return (
-            <div className="purchase-order-details">
-                <div className="details-header">
-                    <button className="back-button" onClick={onBack}>
-                        <FaArrowLeft/> Back to Orders
-                    </button>
-                    <h2>Orders Details</h2>
-                    <div className="order-summary">
-                        No Order Selected
-                    </div>
+            <div className="container mx-auto py-6">
+                <div className="flex items-center justify-between mb-6">
+                    <Button onClick={onBack} variant="outline">
+                        <FaArrowLeft className="mr-2" /> Back to Orders
+                    </Button>
+                    <h2 className="text-2xl font-bold">Orders Details</h2>
                 </div>
+                <Card>
+                    <CardContent className="p-4 text-center">
+                        No Order Selected
+                    </CardContent>
+                </Card>
             </div>
         );
     }
 
-    const getStatusIcon = (status) => {
+    const getStatusBadge = (status) => {
+        let variant;
+        let icon;
         switch (status) {
             case 'COMPLETED':
-                return <FaCheckCircle className="status-icon completed"/>;
+                variant = 'success';
+                icon = <FaCheckCircle className="mr-1" />;
+                break;
             case 'ORDERED':
-                return <FaBoxOpen className="status-icon ordered"/>;
+                variant = 'info';
+                icon = <FaBoxOpen className="mr-1" />;
+                break;
             case 'CANCELLED':
-                return <FaTimesCircle className="status-icon cancelled"/>;
+                variant = 'destructive';
+                icon = <FaTimesCircle className="mr-1" />;
+                break;
             default:
-                return null;
+                variant = 'secondary';
+                icon = null;
         }
+        return (
+            <Badge variant={variant} className="flex items-center">
+                {icon} {status}
+            </Badge>
+        );
     };
 
     return (
-        <div className="purchase-order-details">
-            <div className="details-header">
-                <button className="back-button" onClick={onBack}>
-                    <FaArrowLeft/> Back to List
-                </button>
-                <h2>Purchase Order Details</h2>
-                <div className="header-actions">
-                    <button className="edit-button" onClick={() => handleOrderEditClick(order, onEdit)}>
-                        <FaEdit/> Edit
-                    </button>
-                    <button className="edit-button">
-                        <FaPrint/> Print
-                    </button>
+        <div className="container mx-auto py-6">
+            <div className="flex items-center justify-between mb-6">
+                <Button onClick={onBack} variant="outline">
+                    <FaArrowLeft className="mr-2" /> Back to List
+                </Button>
+                <h2 className="text-2xl font-bold">Purchase Order Details</h2>
+                <div className="flex space-x-2">
+                    <Button onClick={() => handleOrderEditClick(order, onEdit)} variant="outline">
+                        <FaEdit className="mr-2" /> Edit
+                    </Button>
+                    <Button variant="outline">
+                        <FaPrint className="mr-2" /> Print
+                    </Button>
                 </div>
             </div>
 
-            <div className="order-summary">
-                <div className="summary-card">
-                    <h3>Order Information</h3>
-                    <div className="summary-grid">
-                        <div className="summary-item">
-                            <span className="label">Order Number:</span>
-                            <span className="value">{order.orderNumber}</span>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Order Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-2">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Order Number:</span>
+                            <span>{order.orderNumber}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Order Date:</span>
-                            <span className="value">{formatDate(order.orderDate)}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Order Date:</span>
+                            <span>{formatDate(order.orderDate)}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Expected Delivery Date:</span>
-                            <span className="value">{formatDate(order.expectedDeliveryDate)}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Expected Delivery Date:</span>
+                            <span>{formatDate(order.expectedDeliveryDate)}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Received Date:</span>
-                            <span className="value">{formatDate(order.receivedDate)}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Received Date:</span>
+                            <span>{formatDate(order.receivedDate)}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Status:</span>
-                            <span className={`value status ${order.status.toLowerCase()}`}>
-                            {getStatusIcon(order.status)}
-                                            {order.status}
-                          </span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Status:</span>
+                            <span>{getStatusBadge(order.status)}</span>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
-                <div className="summary-card">
-                    <h3>Supplier Information</h3>
-                    <div className="summary-grid">
-                        <div className="summary-item">
-                            <span className="label">Supplier:</span>
-                            <span className="value">{order.supplierName}</span>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Supplier Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-2">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Supplier:</span>
+                            <span>{order.supplierName}</span>
                         </div>
-                        <div className="summary-item">
-                            <span className="label">Supplier ID:</span>
-                            <span className="value">{order.supplierId}</span>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Supplier ID:</span>
+                            <span>{order.supplierId}</span>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
-                <div className="summary-card">
-                    <h3>Financial Summary</h3>
-                    <div className="summary-grid">
-                        <div className="summary-item">
-                            <span className="label">Total Amount:</span>
-                            <span className="value">₹ {order.totalAmount.toFixed(2)}</span>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Financial Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-2">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total Amount:</span>
+                            <span>₹ {order.totalAmount.toFixed(2)}</span>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            <div className="order-items">
-                <h3>Order Items ({order.items?.length || 0})</h3>
-                <div className="items-table">
-                    <div className="table-header">
-                        <div>Part Name</div>
-                        <div>Part Number</div>
-                        <div>Quantity</div>
-                        <div>Unit Price</div>
-                        <div>Total Price</div>
-                    </div>
-                    <div className="table-body">
-                        {order.items && order.items.length > 0 ? (
-                            order.items.map(item => (
-                                <div key={item.id} className="table-row">
-                                    <div>{item.partName}</div>
-                                    <div>{item.partNumber}</div>
-                                    <div>{item.quantity}</div>
-                                    <div>₹{item.unitPrice.toFixed(2)}</div>
-                                    <div>₹{item.totalPrice.toFixed(2)}</div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="no-items">No items in this order</div>
-                        )}
-                    </div>
-                </div>
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Order Items ({order.items?.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Part Name</TableHead>
+                                <TableHead>Part Number</TableHead>
+                                <TableHead>Quantity</TableHead>
+                                <TableHead>Unit Price</TableHead>
+                                <TableHead>Total Price</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {order.items && order.items.length > 0 ? (
+                                order.items.map(item => (
+                                    <TableRow key={item.id}>
+                                        <TableCell>{item.partName}</TableCell>
+                                        <TableCell>{item.partNumber}</TableCell>
+                                        <TableCell>{item.quantity}</TableCell>
+                                        <TableCell>₹{item.unitPrice.toFixed(2)}</TableCell>
+                                        <TableCell>₹{item.totalPrice.toFixed(2)}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center">No items in this order</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     );
 };

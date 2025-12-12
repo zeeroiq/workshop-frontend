@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { customerService } from '@/services/customerService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
-import '../../styles/Customer.css';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { FaSave, FaTimes } from 'react-icons/fa';
 
 const CustomerForm = () => {
     const { id } = useParams();
@@ -30,7 +35,6 @@ const CustomerForm = () => {
         try {
             setLoading(true);
             const response = await customerService.getById(id);
-            // The service now handles the response structure
             setCustomer(response.data);
         } catch (error) {
             toast.error('Failed to fetch customer details');
@@ -75,91 +79,90 @@ const CustomerForm = () => {
     }
 
     return (
-        <div className="customer-form">
-            <div className="page-header">
-                <h1>{isEdit ? 'Edit Customer' : 'Add New Customer'}</h1>
-            </div>
+        <div className="container mx-auto py-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{isEdit ? 'Edit Customer' : 'Add New Customer'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="firstName">First Name *</Label>
+                                <Input
+                                    id="firstName"
+                                    name="firstName"
+                                    value={customer.firstName}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="lastName">Last Name *</Label>
+                                <Input
+                                    id="lastName"
+                                    name="lastName"
+                                    value={customer.lastName}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </div>
 
-            <form onSubmit={handleSubmit} className="form-container">
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="firstName">First Name *</label>
-                        <input
-                            type="text"
-                            id="firstName"
-                            name="firstName"
-                            value={customer.firstName}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="phone">Phone *</Label>
+                                <Input
+                                    id="phone"
+                                    name="phone"
+                                    type="tel"
+                                    value={customer.phone}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    value={customer.email}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="lastName">Last Name *</label>
-                        <input
-                            type="text"
-                            id="lastName"
-                            name="lastName"
-                            value={customer.lastName}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-                </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Textarea
+                                id="address"
+                                name="address"
+                                value={customer.address}
+                                onChange={handleChange}
+                                rows="3"
+                            />
+                        </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label htmlFor="phone">Phone *</label>
-                        <input
-                            type="tel"
-                            id="phone"
-                            name="phone"
-                            value={customer.phone}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={customer.email}
-                            onChange={handleChange}
-                        />
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="address">Address</label>
-                    <textarea
-                        id="address"
-                        name="address"
-                        value={customer.address}
-                        onChange={handleChange}
-                        rows="3"
-                    />
-                </div>
-
-                <div className="form-actions">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/customers')}
-                        className="btn btn-secondary"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="btn btn-primary"
-                    >
-                        {saving ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
-                    </button>
-                </div>
-            </form>
+                        <div className="flex justify-end space-x-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => navigate('/customers')}
+                            >
+                                <FaTimes className="mr-2" /> Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={saving}
+                            >
+                                <FaSave className="mr-2" />
+                                {saving ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 };

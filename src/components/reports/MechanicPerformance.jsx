@@ -7,11 +7,17 @@ import {
 import { reportsService } from '@/services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import ExportControls from './ExportControls';
-import '../../styles/Reports.css';
 import DataVisualizer from './DataVisualizer';
 import TimePeriodFilter from "./TimePeriodFilter";
 import {userService} from "@/services/userService";
 import {toast} from "react-toastify";
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 const MechanicPerformance = () => {
     const [criteria, setCriteria] = useState({
@@ -79,7 +85,7 @@ const MechanicPerformance = () => {
                 timePeriod: criteria.timePeriod,
                 startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
                 endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
-                mechanicId: criteria.mechanicId ? parseInt(criteria.mechanicId) : undefined,
+                mechanicId: criteria.mechanicId && criteria.mechanicId !== 'all' ? parseInt(criteria.mechanicId) : undefined,
                 format: criteria.format
             };
 
@@ -121,112 +127,126 @@ const MechanicPerformance = () => {
     };
 
     return (
-        <div className="mechanic-performance">
-            <div className="report-header">
-                <h3>Mechanic Performance Report</h3>
+        <div className="container mx-auto py-6">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold">Mechanic Performance Report</h3>
                 <ExportControls getCriteria={getExportCriteria} />
             </div>
 
-            <div className="report-filters">
-                <div className="filter-row">
+            <Card className="mb-6">
+                <CardHeader>
+                    <CardTitle>Report Filters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                     <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
-                </div>
 
-                <div className="filter-row">
-                    <div className="filter-group">
-                        <label>
-                            <FaUserCog /> Mechanic
-                        </label>
-                        <select
+                    <div className="space-y-2">
+                        <Label>
+                            <FaUserCog className="inline-block mr-2" /> Mechanic
+                        </Label>
+                        <Select
                             value={criteria.mechanicId}
-                            onChange={(e) => handleCriteriaChange('mechanicId', e.target.value)}
+                            onValueChange={(value) => handleCriteriaChange('mechanicId', value)}
                         >
-                            <option value="">All Mechanics</option>
-                            {mechanics.map(mechanic => (
-                                <option key={mechanic.id} value={mechanic.id}>
-                                    {mechanic.firstName} {mechanic.lastName}
-                                </option>
-                            ))}
-                        </select>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Mechanic" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Mechanics</SelectItem>
+                                {mechanics.map(mechanic => (
+                                    <SelectItem key={mechanic.id} value={mechanic.id.toString()}>
+                                        {mechanic.firstName} {mechanic.lastName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                </div>
 
-                <button
-                    className="generate-btn"
-                    onClick={generateReport}
-                    disabled={loading}
-                >
-                    {loading ? 'Generating...' : 'Generate Report'}
-                </button>
-            </div>
+                    <Button
+                        className="w-full"
+                        onClick={generateReport}
+                        disabled={loading}
+                    >
+                        {loading ? 'Generating...' : 'Generate Report'}
+                    </Button>
+                </CardContent>
+            </Card>
 
             {reportData && (
-                <div className="report-results">
-                    <div className="performance-summary">
-                        <h4>Performance Summary</h4>
-                        <div className="summary-cards">
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaUserCog />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Total Mechanics</h5>
-                                    <p>{summary.totalMechanics || 0}</p>
-                                </div>
-                            </div>
+                <div className="report-results space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Performance Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Mechanics</CardTitle>
+                                        <FaUserCog className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{summary.totalMechanics || 0}</div>
+                                    </CardContent>
+                                </Card>
 
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaWrench />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Jobs Completed</h5>
-                                    <p>{summary.totalJobs || 0}</p>
-                                </div>
-                            </div>
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Jobs Completed</CardTitle>
+                                        <FaWrench className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{summary.totalJobs || 0}</div>
+                                    </CardContent>
+                                </Card>
 
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaRupeeSign />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Total Revenue</h5>
-                                    <p>₹{summary.totalRevenue?.toFixed(2) || '0.00'}</p>
-                                </div>
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                                        <FaRupeeSign className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">₹{summary.totalRevenue?.toFixed(2) || '0.00'}</div>
+                                    </CardContent>
+                                </Card>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     {reportData.performances && (
-                        <div className="mechanic-details">
-                            <h4>Mechanic Details</h4>
-                            <table className="report-table">
-                                <thead>
-                                <tr>
-                                    <th>Mechanic Name</th>
-                                    <th>Completed Jobs</th>
-                                    <th>In-Progress Jobs</th>
-                                    <th>Total Revenue</th>
-                                    <th>Efficiency</th>
-                                    <th>Average Job Time</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {reportData.performances.map((mechanic, index) => (
-                                    <tr key={index}>
-                                        <td>{mechanic.mechanicName}</td>
-                                        <td>{mechanic.completedJobs}</td>
-                                        <td>{mechanic.inProgressJobs}</td>
-                                        <td>₹{mechanic.totalRevenue?.toFixed(2) || '0.00'}</td>
-                                        <td className={mechanic.efficiencyRating >= 100 ? 'positive' : 'negative'}>
-                                            {mechanic.efficiencyRating ? `${mechanic.efficiencyRating.toFixed(1)}%` : 'N/A'}
-                                        </td>
-                                        <td>{mechanic.averageJobTime ? `${mechanic.averageJobTime.toFixed(1)} hrs` : 'N/A'}</td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Mechanic Details</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Mechanic Name</TableHead>
+                                            <TableHead>Completed Jobs</TableHead>
+                                            <TableHead>In-Progress Jobs</TableHead>
+                                            <TableHead>Total Revenue</TableHead>
+                                            <TableHead>Efficiency</TableHead>
+                                            <TableHead>Average Job Time</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {reportData.performances.map((mechanic, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>{mechanic.mechanicName}</TableCell>
+                                                <TableCell>{mechanic.completedJobs}</TableCell>
+                                                <TableCell>{mechanic.inProgressJobs}</TableCell>
+                                                <TableCell>₹{mechanic.totalRevenue?.toFixed(2) || '0.00'}</TableCell>
+                                                <TableCell>
+                                                    {mechanic.efficiencyRating ? `${mechanic.efficiencyRating.toFixed(1)}%` : 'N/A'}
+                                                </TableCell>
+                                                <TableCell>{mechanic.averageJobTime ? `${mechanic.averageJobTime.toFixed(1)} hrs` : 'N/A'}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
                     )}
 
                     <DataVisualizer

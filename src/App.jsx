@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
@@ -23,195 +23,67 @@ import Reports from "./components/reports/Reports";
 import JobForm from "./components/jobs/JobForm";
 import InvoiceForm from "./components/invoices/InvoiceForm";
 
-function App() {
+import { ThemeProvider } from './components/common/ThemeProvider';
+
+function AppContent() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [theme, setTheme] = useState('light');
+    const [sidebarExpanded, setSidebarExpanded] = useState(true);
+    const location = useLocation();
 
     useEffect(() => {
-        setSidebarOpen(false);
+        // Removed: setSidebarExpanded(false) on location change to preserve sidebar state.
     }, [location]);
 
     useEffect(() => {
-        // Check if user is logged in on app load
         if (authService.isAuthenticated()) {
             const userData = authService.getUser();
             setUser(userData);
         }
-
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        }
-
         setLoading(false);
-        setSidebarOpen(false);
-    }, [location]);
+    }, []);
 
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-        document.documentElement.setAttribute('data-theme', newTheme);
-    };
-
-    const toggleSidebar = () => {
-        setSidebarOpen(!sidebarOpen);
+    const toggleSidebarExpansion = () => {
+        setSidebarExpanded(!sidebarExpanded);
     };
 
     const closeSidebar = () => {
-        setSidebarOpen(false);
+        setSidebarExpanded(false);
     };
 
     if (loading) {
         return (
-            <div className="loading-screen">
-                <div className="spinner"></div>
-                <p>Loading...</p>
+            <div className="fixed inset-0 flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
-        <Router>
-            <div className="app" data-theme={theme}>
-                {user && <Header onToggleSidebar={toggleSidebar} theme={theme} toggleTheme={toggleTheme} />}
-                <div className="app-body">
-                    {user && <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />}
-                    <main className="main-content">
+        <div className="flex h-screen bg-background">
+            {user && <Sidebar isExpanded={sidebarExpanded} onClose={closeSidebar} />}
+            <div className="flex flex-col flex-1">
+                {user && <Header onToggleSidebar={toggleSidebarExpansion} />}
+                <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${user && (sidebarExpanded ? 'md:ml-64' : 'md:ml-20')}`}>
+                    <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16">
                         <Routes>
-                            <Route
-                                path="/login"
-                                element={user ? <Navigate to="/" replace /> : <Login />}
-                            />
-                            <Route
-                                path="/register"
-                                element={user ? <Navigate to="/" replace /> : <Register />}
-                            />
-                            <Route
-                                path="/"
-                                element={
-                                    <ProtectedRoute>
-                                        <Dashboard />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/customers"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
-                                        <CustomerList />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/customers/new"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
-                                        <CustomerForm />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/customers/edit/:id"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
-                                        <CustomerForm />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/customers/:id"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
-                                        <CustomerDetails />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/vehicles"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <VehicleList />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/vehicles/new"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
-                                        <VehicleForm />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/vehicles/edit/:id"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST']}>
-                                        <VehicleForm />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/vehicles/:id"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <VehicleDetails />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/inventory"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <Inventory />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/jobs"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <Jobs />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/jobs/new"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <JobForm />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/invoices"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <Invoice />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/invoices/new"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <InvoiceForm />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route
-                                path="/reports"
-                                element={
-                                    <ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'RECEPTIONIST', 'MECHANIC']}>
-                                        <Reports />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            {/* Add more routes as needed */}
+                            <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+                            <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+                            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                            <Route path="/customers" element={<ProtectedRoute><CustomerList /></ProtectedRoute>} />
+                            <Route path="/customers/new" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
+                            <Route path="/customers/edit/:id" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
+                            <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetails /></ProtectedRoute>} />
+                            <Route path="/vehicles" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
+                            <Route path="/vehicles/new" element={<ProtectedRoute><VehicleForm /></ProtectedRoute>} />
+                            <Route path="/vehicles/edit/:id" element={<ProtectedRoute><VehicleForm /></ProtectedRoute>} />
+                            <Route path="/vehicles/:id" element={<ProtectedRoute><VehicleDetails /></ProtectedRoute>} />
+                            <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                            <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+                            <Route path="/jobs/new" element={<ProtectedRoute><JobForm /></ProtectedRoute>} />
+                            <Route path="/invoices" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
+                            <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
+                            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                     </main>
@@ -226,10 +98,20 @@ function App() {
                     pauseOnFocusLoss
                     draggable
                     pauseOnHover
-                    theme={theme}
+                    theme="dark"
                 />
             </div>
-        </Router>
+        </div>
+    );
+}
+
+function App() {
+    return (
+        <ThemeProvider>
+            <Router>
+                <AppContent />
+            </Router>
+        </ThemeProvider>
     );
 }
 

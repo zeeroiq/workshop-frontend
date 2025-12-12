@@ -9,13 +9,19 @@ import {
 } from 'react-icons/fa';
 import {reportsService} from '@/services/reportsService';
 import {TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES} from './constants/reportsConstants';
-import '../../styles/Reports.css';
 import { customerService } from "@/services/customerService";
 import { userService } from "@/services/userService";
 import {toast} from "react-toastify";
 import ExportControls from "./ExportControls";
 import DataVisualizer from "./DataVisualizer";
 import TimePeriodFilter from "./TimePeriodFilter";
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 const FinancialReports = () => {
     const [criteria, setCriteria] = useState({
@@ -82,8 +88,8 @@ const FinancialReports = () => {
                 timePeriod: criteria.timePeriod,
                 startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
                 endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
-                mechanicId: criteria.mechanicId ? parseInt(criteria.mechanicId) : undefined,
-                customerId: criteria.customerId ? parseInt(criteria.customerId) : undefined,
+                mechanicId: criteria.mechanicId && criteria.mechanicId !== 'all' ? parseInt(criteria.mechanicId) : undefined,
+                customerId: criteria.customerId && criteria.customerId !== 'all' ? parseInt(criteria.customerId) : undefined,
                 format: criteria.format
             };
 
@@ -118,7 +124,7 @@ const FinancialReports = () => {
             columns: [
                 { header: 'Service Category', accessor: 'serviceType' },
                 { header: 'Count', accessor: 'serviceCount' },
-                { header: 'Revenue', accessor: 'totalRevenue', render: (row) => `₹${row.totalRevenue.toFixed(2)}` },
+                { header: 'Revenue', accessor: 'totalRevenue', render: (row) => `₹${row.totalRevenue?.toFixed(2)}` },
                 { header: 'Percentage', render: (row, data) => {
                         const total = data.reduce((sum, item) => sum + item.totalRevenue, 0);
                         return `${((row.totalRevenue / total) * 100).toFixed(1)}%`;
@@ -135,125 +141,141 @@ const FinancialReports = () => {
 
 
     return (
-        <div className="financial-reports">
-            <div className="report-header">
-                <h3>Financial Summary Report</h3>
+        <div className="container mx-auto py-6">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold">Financial Summary Report</h3>
                 <ExportControls getCriteria={getExportCriteria} />
             </div>
 
-            <div className="report-filters">
-                <div className="filter-row">
+            <Card className="mb-6">
+                <CardHeader>
+                    <CardTitle>Report Filters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                     <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
-                </div>
 
-                <div className="filter-row">
-                    <div className="filter-group">
-                        <label>
-                            <FaUser/> Customer
-                        </label>
-                        <select
-                            value={criteria.customerId}
-                            onChange={(e) => handleCriteriaChange('customerId', e.target.value)}
-                        >
-                            <option value="">All Customers</option>
-                            {customers.map(customer => (
-                                <option key={customer.id} value={customer.id}>
-                                    {customer.firstName} {customer.lastName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>
+                                <FaUser className="inline-block mr-2" /> Customer
+                            </Label>
+                            <Select
+                                value={criteria.customerId}
+                                onValueChange={(value) => handleCriteriaChange('customerId', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Customer" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Customers</SelectItem>
+                                    {customers.map(customer => (
+                                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                                            {customer.firstName} {customer.lastName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    <div className="filter-group">
-                        <label>
-                            <FaUserCog/> Mechanic
-                        </label>
-                        <select
-                            value={criteria.mechanicId}
-                            onChange={(e) => handleCriteriaChange('mechanicId', e.target.value)}
-                        >
-                            <option value="">All Mechanics</option>
-                            {mechanics.map(mechanic => (
-                                <option key={mechanic.id} value={mechanic.id}>
-                                    {mechanic.firstName} {mechanic.lastName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <button
-                    className="generate-btn"
-                    onClick={generateReport}
-                    disabled={loading}
-                >
-                    {loading ? 'Generating...' : 'Generate Report'}
-                </button>
-            </div>
-
-            {reportData && (
-                <div className="report-results">
-                    <div className="financial-summary">
-                        <h4>Financial Summary</h4>
-                        <div className="summary-cards">
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaRupeeSign/>
-                                </div>
-                                <div className="card-content">
-                                    <h5>Total Revenue</h5>
-                                    <p>₹{reportData.totalRevenue?.toFixed(2) || '0.00'}</p>
-                                </div>
-                            </div>
-
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaMoneyBillWave/>
-                                </div>
-                                <div className="card-content">
-                                    <h5>Total Expenses</h5>
-                                    <p>₹{reportData.totalExpenses?.toFixed(2) || '0.00'}</p>
-                                </div>
-                            </div>
-
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaChartLine/>
-                                </div>
-                                <div className="card-content">
-                                    <h5>Net Profit</h5>
-                                    <p>₹{reportData.netProfit?.toFixed(2) || '0.00'}</p>
-                                </div>
-                            </div>
-
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaReceipt/>
-                                </div>
-                                <div className="card-content">
-                                    <h5>Invoices Processed</h5>
-                                    <table className="report-table">
-                                        <thead>
-                                        <tr>
-                                            <th>Total</th>
-                                            <th>Paid</th>
-                                            <th>Overdue</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td>{reportData.totalInvoices || 0}</td>
-                                            <td>{reportData.paidInvoices || 0}</td>
-                                            <td>{reportData.overdueInvoices || 0}</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    {/*<p>{reportData.totalInvoices || 0}</p>*/}
-                                </div>
-                            </div>
+                        <div className="space-y-2">
+                            <Label>
+                                <FaUserCog className="inline-block mr-2" /> Mechanic
+                            </Label>
+                            <Select
+                                value={criteria.mechanicId}
+                                onValueChange={(value) => handleCriteriaChange('mechanicId', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Mechanic" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Mechanics</SelectItem>
+                                    {mechanics.map(mechanic => (
+                                        <SelectItem key={mechanic.id} value={mechanic.id.toString()}>
+                                            {mechanic.firstName} {mechanic.lastName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
-                    {/*{reportData.revenueByCategory && (*/}
+
+                    <Button
+                        className="w-full"
+                        onClick={generateReport}
+                        disabled={loading}
+                    >
+                        {loading ? 'Generating...' : 'Generate Report'}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            {reportData && (
+                <div className="report-results space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Financial Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                                        <FaRupeeSign className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">₹{reportData.totalRevenue?.toFixed(2) || '0.00'}</div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                                        <FaMoneyBillWave className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">₹{reportData.totalExpenses?.toFixed(2) || '0.00'}</div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+                                        <FaChartLine className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">₹{reportData.netProfit?.toFixed(2) || '0.00'}</div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Invoices Processed</CardTitle>
+                                        <FaReceipt className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Total</TableHead>
+                                                    <TableHead>Paid</TableHead>
+                                                    <TableHead>Overdue</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell>{reportData.totalInvoices || 0}</TableCell>
+                                                    <TableCell>{reportData.paidInvoices || 0}</TableCell>
+                                                    <TableCell>{reportData.overdueInvoices || 0}</TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <DataVisualizer
                         title="Revenue by Category"
                         data={reportData.revenueByServices ? Object.values(reportData.revenueByServices) : []}
@@ -262,29 +284,33 @@ const FinancialReports = () => {
                     />
 
                     {reportData.monthlyTrends && (
-                        <div className="monthly-trends">
-                            <h4>Monthly Trends</h4>
-                            <table className="report-table">
-                                <thead>
-                                <tr>
-                                    <th>Month</th>
-                                    <th>Revenue</th>
-                                    <th>Expenses</th>
-                                    <th>Profit</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {reportData.monthlyTrends.map((monthData, index) => (
-                                    <tr key={index}>
-                                        <td>{monthData.month}</td>
-                                        <td>₹{monthData.revenue.toFixed(2)}</td>
-                                        <td>₹{monthData.expenses.toFixed(2)}</td>
-                                        <td>₹{monthData.profit.toFixed(2)}</td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Monthly Trends</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Month</TableHead>
+                                            <TableHead>Revenue</TableHead>
+                                            <TableHead>Expenses</TableHead>
+                                            <TableHead>Profit</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {reportData.monthlyTrends.map((monthData, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>{monthData.month}</TableCell>
+                                                <TableCell>₹{monthData.revenue.toFixed(2)}</TableCell>
+                                                <TableCell>₹{monthData.expenses.toFixed(2)}</TableCell>
+                                                <TableCell>₹{monthData.profit.toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
                     )}
                 </div>
             )}

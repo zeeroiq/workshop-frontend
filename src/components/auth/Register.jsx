@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
 import { toast } from 'react-toastify';
-import '../../styles/Auth.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -39,90 +42,106 @@ const Register = () => {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-form">
-                <h2>Create Account</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+        <div className="flex items-center justify-center min-h-screen bg-background p-4">
+            <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl text-center">Create an Account</CardTitle>
+                    <CardDescription className="text-center">
+                        Enter your details to register
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="username">Username</Label>
+                            <Input
+                                id="username"
+                                name="username"
+                                type="text"
+                                placeholder="john.doe"
+                                value={formData.username}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="john.doe@example.com"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="firstName">First Name</label>
-                        <input
-                            type="text"
-                            id="firstName"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                                id="firstName"
+                                name="firstName"
+                                type="text"
+                                placeholder="John"
+                                value={formData.firstName}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="lastName">Last Name</label>
-                        <input
-                            type="text"
-                            id="lastName"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                                id="lastName"
+                                name="lastName"
+                                type="text"
+                                placeholder="Doe"
+                                value={formData.lastName}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group">
-                        <label htmlFor="phone">Phone (Optional)</label>
-                        <input
-                            type="tel"
-                            id="phone"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="phone">Phone (Optional)</Label>
+                            <Input
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                placeholder="123-456-7890"
+                                value={formData.phone}
+                                onChange={handleChange}
+                            />
+                        </div>
 
-                    <button type="submit" disabled={loading} className="btn btn-primary">
-                        {loading ? 'Creating Account...' : 'Register'}
-                    </button>
-                </form>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? 'Creating Account...' : 'Register'}
+                        </Button>
+                    </form>
 
-                <p className="auth-link">
-                    Already have an account? <Link to="/login">Login here</Link>
-                </p>
-            </div>
+                    <p className="mt-4 text-center text-sm">
+                        Already have an account?{' '}
+                        <Link to="/login" className="text-primary hover:underline">
+                            Login here
+                        </Link>
+                    </p>
+                </CardContent>
+            </Card>
         </div>
     );
 };

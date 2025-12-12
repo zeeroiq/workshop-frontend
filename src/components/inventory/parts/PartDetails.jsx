@@ -1,24 +1,11 @@
 import React from 'react';
-import {
-    FaArrowLeft,
-    FaEdit,
-    FaBox,
-    FaTag,
-    FaIndustry,
-    FaRupeeSign,
-    FaMapMarkerAlt,
-    FaUserTie,
-    FaExclamationTriangle,
-    FaCalendarAlt,
-    FaFileAlt
-} from 'react-icons/fa';
-import '../../../styles/inventory/part/PartDetails.css';
+import { FaArrowLeft, FaEdit, FaBox, FaTag, FaIndustry, FaRupeeSign, FaMapMarkerAlt, FaUserTie, FaExclamationTriangle, FaCalendarAlt, FaFileAlt } from 'react-icons/fa';
 
-const PartDetails = ({part, onBack, onEdit}) => {
+const PartDetails = ({ part, onBack, onEdit }) => {
     const getStatusColor = (quantity, minStockLevel) => {
-        if (quantity === 0) return 'out-of-stock';
-        if (quantity <= minStockLevel) return 'low-stock';
-        return 'in-stock';
+        if (quantity === 0) return 'bg-red-100 text-red-800';
+        if (quantity <= minStockLevel) return 'bg-yellow-100 text-yellow-800';
+        return 'bg-green-100 text-green-800';
     };
 
     const getStatusText = (quantity, minStockLevel) => {
@@ -28,7 +15,8 @@ const PartDetails = ({part, onBack, onEdit}) => {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -39,153 +27,142 @@ const PartDetails = ({part, onBack, onEdit}) => {
 
     if (!part) {
         return (
-            <div className="part-details-container">
-                <div className="part-not-found">
-                    <button className="back-button" onClick={onBack}>
-                        <FaArrowLeft/> Back to Parts
-                    </button>
-                    <h2>Part not found</h2>
-                </div>
+            <div className="bg-card p-6 rounded-lg">
+                <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-4" onClick={onBack}>
+                    <FaArrowLeft className="mr-2" /> Back to Parts
+                </button>
+                <h2 className="text-xl font-semibold">Part not found</h2>
             </div>
         );
     }
 
     return (
-        <div className="part-details-container">
-            <div className="part-details-header">
-                <button className="back-button" onClick={onBack}>
-                    <FaArrowLeft/> Back to Parts
+        <div className="bg-card p-6 rounded-lg">
+            <div className="flex justify-between items-center mb-6">
+                <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary" onClick={onBack}>
+                    <FaArrowLeft className="mr-2" /> Back to Parts
                 </button>
-                <button className="edit-button" onClick={onEdit}>
-                    <FaEdit/> Edit Part
+                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onEdit}>
+                    <FaEdit className="mr-2" /> Edit Part
                 </button>
             </div>
 
-            <div className="part-details-content">
-                <div className="part-header">
-                    <h2>{part.name}</h2>
-                    <div className="part-id-status">
-                        <span className="part-number">{part.partNumber}</span>
-                        <span className={`status-badge ${getStatusColor(part.quantityInStock, part.minStockLevel)}`}>
-                          {getStatusText(part.quantityInStock, part.minStockLevel)}
-                            {part.quantityInStock <= part.minStockLevel &&
-                                <FaExclamationTriangle className="warning-icon"/>}
-                        </span>
+            <div className="border-b border-border pb-4 mb-6">
+                <h2 className="text-2xl font-bold">{part.name}</h2>
+                <div className="flex items-center space-x-4 mt-2">
+                    <span className="text-sm text-muted-foreground">{part.partNumber}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(part.quantityInStock, part.minStockLevel)}`}>
+                        {getStatusText(part.quantityInStock, part.minStockLevel)}
+                        {part.quantityInStock <= part.minStockLevel && <FaExclamationTriangle className="inline-block ml-1" />}
+                    </span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Basic Information</h3>
+                    <div className="flex items-start">
+                        <FaBox className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Name</label>
+                            <p>{part.name}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start">
+                        <FaTag className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Part Number</label>
+                            <p>{part.partNumber}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-sm text-muted-foreground">Category</label>
+                        <p>{part.category}</p>
+                    </div>
+                    {part.description && (
+                        <div className="flex items-start">
+                            <FaFileAlt className="text-muted-foreground mt-1 mr-3" />
+                            <div>
+                                <label className="text-sm text-muted-foreground">Description</label>
+                                <p className="whitespace-pre-wrap">{part.description}</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Pricing & Inventory */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Pricing & Inventory</h3>
+                    <div className="flex items-start">
+                        <FaRupeeSign className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Cost Price</label>
+                            <p>₹{part.costPrice?.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start">
+                        <FaRupeeSign className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Selling Price</label>
+                            <p>₹{part.sellingPrice?.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-sm text-muted-foreground">Current Stock</label>
+                        <p>{part.quantityInStock} units</p>
+                    </div>
+                    <div>
+                        <label className="text-sm text-muted-foreground">Minimum Stock Level</label>
+                        <p>{part.minStockLevel} units</p>
                     </div>
                 </div>
 
-                <div className="details-grid">
-                    <div className="detail-section">
-                        <h3>Basic Information</h3>
-                        <div className="detail-item">
-                            <FaBox className="detail-icon"/>
-                            <div>
-                                <label>Name</label>
-                                <p>{part.name}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <FaTag className="detail-icon"/>
-                            <div>
-                                <label>Part Number</label>
-                                <p>{part.partNumber}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <div>
-                                <label>Category</label>
-                                <p>{part.category}</p>
-                            </div>
-                        </div>
-                        {part.description && (
-                            <div className="detail-item">
-                                <FaFileAlt className="detail-icon"/>
-                                <div>
-                                    <label>Description</label>
-                                    <p>{part.description}</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="detail-section">
-                        <h3>Manufacturer & Supplier</h3>
-                        <div className="detail-item">
-                            <FaIndustry className="detail-icon"/>
-                            <div>
-                                <label>Manufacturer</label>
-                                <p>{part.manufacturer}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <FaUserTie className="detail-icon"/>
-                            <div>
-                                <label>Supplier</label>
-                                <p>{part.supplierName}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <div>
-                                <label>Supplier ID</label>
-                                <p>{part.supplierId}</p>
-                            </div>
+                {/* Supplier & Location */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2">Supplier & Location</h3>
+                    <div className="flex items-start">
+                        <FaIndustry className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Manufacturer</label>
+                            <p>{part.manufacturer}</p>
                         </div>
                     </div>
-
-                    <div className="detail-section">
-                        <h3>Pricing & Inventory</h3>
-                        <div className="detail-item">
-                            <FaRupeeSign className="detail-icon"/>
-                            <div>
-                                <label>Cost Price</label>
-                                <p>&#x20B9;{part.costPrice?.toFixed(2)}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <FaRupeeSign className="detail-icon"/>
-                            <div>
-                                <label>Selling Price</label>
-                                <p>&#x20B9;{part.sellingPrice?.toFixed(2)}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <div>
-                                <label>Current Stock</label>
-                                <p>{part.quantityInStock} units</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <div>
-                                <label>Minimum Stock Level</label>
-                                <p>{part.minStockLevel} units</p>
-                            </div>
+                    <div className="flex items-start">
+                        <FaUserTie className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Supplier</label>
+                            <p>{part.supplierName}</p>
                         </div>
                     </div>
-
-                    <div className="detail-section">
-                        <h3>Location & Dates</h3>
-                        <div className="detail-item">
-                            <FaMapMarkerAlt className="detail-icon"/>
-                            <div>
-                                <label>Location</label>
-                                <p>{part.location}</p>
-                            </div>
+                    <div className="flex items-start">
+                        <FaMapMarkerAlt className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Location</label>
+                            <p>{part.location}</p>
                         </div>
-                        <div className="detail-item">
-                            <FaCalendarAlt className="detail-icon"/>
+                    </div>
+                </div>
+
+                {/* Dates */}
+                <div className="space-y-4 col-span-full">
+                     <h3 className="text-lg font-semibold border-b border-border pb-2">Dates</h3>
+                     <div className="flex space-x-8">
+                        <div className="flex items-start">
+                            <FaCalendarAlt className="text-muted-foreground mt-1 mr-3" />
                             <div>
-                                <label>Created At</label>
+                                <label className="text-sm text-muted-foreground">Created At</label>
                                 <p>{formatDate(part.createdAt)}</p>
                             </div>
                         </div>
-                        <div className="detail-item">
-                            <FaCalendarAlt className="detail-icon"/>
+                        <div className="flex items-start">
+                            <FaCalendarAlt className="text-muted-foreground mt-1 mr-3" />
                             <div>
-                                <label>Last Updated</label>
+                                <label className="text-sm text-muted-foreground">Last Updated</label>
                                 <p>{formatDate(part.updatedAt)}</p>
                             </div>
                         </div>
-                    </div>
+                     </div>
                 </div>
             </div>
         </div>

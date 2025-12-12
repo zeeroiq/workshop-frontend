@@ -1,11 +1,19 @@
 import React from 'react';
-import { FaBell, FaUserCircle, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import { Bell, UserCircle, LogOut, Menu } from 'lucide-react';
 import { authService } from '@/services/authService';
 import { useNavigate } from 'react-router-dom';
-import ThemeToggle from './ThemeToggle';
-import '../../styles/Header.css';
+import { ThemeToggle } from "./ThemeToggle";
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const Header = ({ onToggleSidebar, theme, toggleTheme }) => {
+const Header = ({ onToggleSidebar }) => {
     const navigate = useNavigate();
     const user = authService.getUser();
 
@@ -15,41 +23,45 @@ const Header = ({ onToggleSidebar, theme, toggleTheme }) => {
     };
 
     return (
-        <header className="header">
-            <div className="header-left">
-                <button className="sidebar-toggle" onClick={onToggleSidebar}>
-                    <FaBars />
-                </button>
-                <h1>Workshop Management</h1>
+        <header className="sticky top-0 z-50 flex items-center justify-between p-4 border-b bg-card">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
+                    <Menu size={20} />
+                </Button>
+                <h1 className="text-lg font-semibold">Workshop Management</h1>
             </div>
 
-            <div className="header-right">
-                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+            <div className="flex items-center gap-4">
+                <ThemeToggle />
 
-                <button className="icon-btn notification-btn">
-                    <FaBell />
-                    <span className="badge">3</span>
-                </button>
+                <Button variant="ghost" size="icon">
+                    <Bell size={20} />
+                    <span className="sr-only">Notifications</span>
+                </Button>
 
-                <div className="user-menu">
-                    <button className="user-btn">
-                        <div className="user-avatar">
-                            <FaUserCircle />
-                        </div>
-                        <div className="user-info">
-                            <span className="user-name">{user?.firstName} {user?.lastName}</span>
-                            <span className="user-role">{user?.roles?.[0]?.replace('ROLE_', '')}</span>
-                        </div>
-                    </button>
-                    <div className="dropdown-menu">
-                        <button>
-                            <FaUserCircle /> Profile
-                        </button>
-                        <button onClick={handleLogout}>
-                            <FaSignOutAlt /> Logout
-                        </button>
-                    </div>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="flex items-center gap-2">
+                            <UserCircle size={24} />
+                            <div className="text-left">
+                                <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+                                <p className="text-xs text-muted-foreground">{user?.roles?.[0]?.replace('ROLE_', '')}</p>
+                            </div>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                            <UserCircle className="mr-2 h-4 w-4" />
+                            <span>Profile</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Logout</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );

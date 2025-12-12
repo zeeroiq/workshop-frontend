@@ -1,30 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { ArrowUp, ArrowDown } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
-const StatsCard = ({ title, value, icon, color, trend, link }) => {
+const StatsCard = ({ title, value, icon, trend, link }) => {
     const cardContent = (
-        <div className="stats-card" style={{ borderLeftColor: color }}>
-            <div className="stats-content">
-                <div className="stats-icon" style={{ color }}>
-                    {icon}
-                </div>
-                <div className="stats-info">
-                    <h3>{title}</h3>
-                    <p>{value}</p>
-                </div>
-            </div>
-            {trend && (
-                <div className={`stats-trend ${trend.isPositive ? 'trend-positive' : 'trend-negative'}`}>
-                    {trend.isPositive ? <FaArrowUp /> : <FaArrowDown />}
-                    <span>{trend.value}%</span>
-                </div>
-            )}
-        </div>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+                {icon}
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{value}</div>
+                {trend && (
+                    <p className={cn(
+                        "text-xs text-muted-foreground flex items-center",
+                        trend.isPositive ? "text-green-500" : "text-red-500"
+                    )}>
+                        {trend.isPositive ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                        {trend.value}% vs last month
+                    </p>
+                )}
+            </CardContent>
+        </Card>
     );
 
     if (link) {
-        return <Link to={link} style={{ textDecoration: 'none' }}>{cardContent}</Link>;
+        return <Link to={link}>{cardContent}</Link>;
     }
 
     return cardContent;

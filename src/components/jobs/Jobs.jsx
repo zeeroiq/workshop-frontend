@@ -3,7 +3,7 @@ import JobList from './JobList';
 import JobForm from './JobForm';
 import JobDetails from './JobDetails';
 import JobCalendar from './JobCalendar';
-import '../../styles/Jobs.css';
+
 import {jobService} from "@/services/jobService";
 import {toast} from "react-toastify";
 

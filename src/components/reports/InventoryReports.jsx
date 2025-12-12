@@ -10,7 +10,12 @@ import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsC
 import ExportControls from './ExportControls';
 import DataVisualizer from './DataVisualizer';
 import TimePeriodFilter from './TimePeriodFilter';
-import '../../styles/Reports.css';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
 
 const InventoryReports = () => {
     const [criteria, setCriteria] = useState({
@@ -63,22 +68,27 @@ const InventoryReports = () => {
         };
     };
 
-    const getStockStatus = (currentStock, minStockLevel) => {
-        if (currentStock === 0) return 'out-of-stock';
-        if (currentStock <= minStockLevel) return 'low-stock';
-        return 'in-stock';
+    const getStockStatusBadge = (currentStock, minStockLevel) => {
+        let variant;
+        let text;
+        if (currentStock === 0) {
+            variant = 'destructive';
+            text = 'Out of Stock';
+        } else if (currentStock <= minStockLevel) {
+            variant = 'warning'; // Assuming a warning variant exists or can be defined
+            text = 'Low Stock';
+        } else {
+            variant = 'success'; // Assuming a success variant exists
+            text = 'In Stock';
+        }
+        return <Badge variant={variant}>{text}</Badge>;
     };
 
-    const getStockStatusText = (currentStock, minStockLevel) => {
-        if (currentStock === 0) return 'Out of Stock';
-        if (currentStock <= minStockLevel) return 'Low Stock';
-        return 'In Stock';
-    };
 
     const inventoryByCategoryConfig = {
         table: {
             columns: [
-                { header: 'Category', accessor: 'category', render: (row) => <div className="category-info"><FaTools className="category-icon" />{row.category}</div> },
+                { header: 'Category', accessor: 'category', render: (row) => <div className="flex items-center"><FaTools className="mr-2" />{row.category}</div> },
                 { header: 'Item Count', accessor: 'itemCount' },
                 { header: 'Total Value', accessor: 'totalValue', render: (row) => `₹ ${row.totalValue?.toFixed(2) || '0.00'}` },
                 { header: 'Percentage of Total', render: (row, data) => {
@@ -94,95 +104,104 @@ const InventoryReports = () => {
 
 
     return (
-        <div className="inventory-reports">
-            <div className="report-header">
-                <h3>Inventory Status Report</h3>
+        <div className="container mx-auto py-6">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold">Inventory Status Report</h3>
                 <ExportControls getCriteria={getExportCriteria} />
             </div>
 
-            <div className="report-filters">
-                <div className="filter-row">
+            <Card className="mb-6">
+                <CardHeader>
+                    <CardTitle>Report Filters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                     <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
-                </div>
 
-                <button
-                    className="generate-btn"
-                    onClick={generateReport}
-                    disabled={loading}
-                >
-                    {loading ? 'Generating...' : 'Generate Report'}
-                </button>
-            </div>
+                    <Button
+                        className="w-full"
+                        onClick={generateReport}
+                        disabled={loading}
+                    >
+                        {loading ? 'Generating...' : 'Generate Report'}
+                    </Button>
+                </CardContent>
+            </Card>
 
             {reportData && reportData.data && (
-                <div className="report-results">
-                    <div className="inventory-summary">
-                        <h4>Inventory Summary</h4>
-                        <div className="summary-cards">
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaBox />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Total Parts</h5>
-                                    <p>{reportData.data.totalParts || 0}</p>
-                                </div>
-                            </div>
+                <div className="report-results space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Inventory Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Parts</CardTitle>
+                                        <FaBox className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{reportData.data.totalParts || 0}</div>
+                                    </CardContent>
+                                </Card>
 
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaExclamationTriangle />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Low Stock Parts</h5>
-                                    <p>{reportData.data.lowStockParts || 0}</p>
-                                </div>
-                            </div>
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Low Stock Parts</CardTitle>
+                                        <FaExclamationTriangle className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{reportData.data.lowStockParts || 0}</div>
+                                    </CardContent>
+                                </Card>
 
-                            <div className="summary-card">
-                                <div className="card-icon">
-                                    <FaArrowUp />
-                                </div>
-                                <div className="card-content">
-                                    <h5>Total Inventory Value</h5>
-                                    <p>₹ {reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</p>
-                                </div>
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
+                                        <FaArrowUp className="text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">₹ {reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</div>
+                                    </CardContent>
+                                </Card>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     {reportData.data.lowStockItems && reportData.data.lowStockItems.length > 0 && (
-                        <div className="low-stock-items">
-                            <h4>Low Stock Items</h4>
-                            <table className="report-table">
-                                <thead>
-                                <tr>
-                                    <th>Part Name</th>
-                                    <th>Part Number</th>
-                                    <th>Current Stock</th>
-                                    <th>Minimum Stock Level</th>
-                                    <th>Value</th>
-                                    <th>Status</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {reportData.data.lowStockItems.map((item, index) => (
-                                    <tr key={index} className={getStockStatus(item.currentStock, item.minStockLevel)}>
-                                        <td>{item.partName}</td>
-                                        <td>{item.partNumber}</td>
-                                        <td>{item.currentStock}</td>
-                                        <td>{item.minStockLevel}</td>
-                                        <td>₹ {item.value?.toFixed(2) || '0.00'}</td>
-                                        <td>
-                        <span className={`status-badge ${getStockStatus(item.currentStock, item.minStockLevel)}`}>
-                          {getStockStatusText(item.currentStock, item.minStockLevel)}
-                        </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Low Stock Items</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Part Name</TableHead>
+                                            <TableHead>Part Number</TableHead>
+                                            <TableHead>Current Stock</TableHead>
+                                            <TableHead>Minimum Stock Level</TableHead>
+                                            <TableHead>Value</TableHead>
+                                            <TableHead>Status</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {reportData.data.lowStockItems.map((item, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>{item.partName}</TableCell>
+                                                <TableCell>{item.partNumber}</TableCell>
+                                                <TableCell>{item.currentStock}</TableCell>
+                                                <TableCell>{item.minStockLevel}</TableCell>
+                                                <TableCell>₹ {item.value?.toFixed(2) || '0.00'}</TableCell>
+                                                <TableCell>
+                                                    {getStockStatusBadge(item.currentStock, item.minStockLevel)}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
                     )}
 
                     <DataVisualizer
@@ -196,7 +215,7 @@ const InventoryReports = () => {
             )}
 
             {reportData && !reportData.success && (
-                <div className="error-message">
+                <div className="text-red-500 p-4">
                     <p>{reportData.message || 'Failed to generate report'}</p>
                 </div>
             )}

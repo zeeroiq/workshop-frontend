@@ -1,210 +1,130 @@
 import React from 'react';
-import {
-    FaArrowLeft,
-    FaCalendar,
-    FaCar,
-    FaClock,
-    FaEdit,
-    FaFileAlt,
-    FaRupeeSign,
-    FaUser,
-    FaUserCog,
-    FaWrench
-} from 'react-icons/fa';
-import {getStatusBadge} from "./helper/utils";
-import '../../styles/Jobs.css';
+import { FaArrowLeft, FaEdit, FaUser, FaCar, FaWrench, FaUserCog, FaFileAlt, FaCalendar, FaClock, FaRupeeSign } from 'react-icons/fa';
+import { getStatusBadge } from "./helper/utils";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const JobDetails = ({job, onBack, onEdit}) => {
+const JobDetails = ({ job, onBack, onEdit }) => {
     const formatDate = (dateString) => {
-        const options = {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
+        if (!dateString) return 'N/A';
+        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         return new Date(dateString).toLocaleDateString('en-US', options);
     };
 
     if (!job) {
         return (
-            <div className="job-details-container">
-                <div className="job-not-found">
-                    <button className="back-button" onClick={onBack}>
-                        <FaArrowLeft/> Back to Jobs
-                    </button>
-                    <h2>Job not found</h2>
-                </div>
+            <div className="container mx-auto py-6">
+                <Button onClick={onBack} variant="outline"><FaArrowLeft className="mr-2" /> Back to Jobs</Button>
+                <Card className="mt-4">
+                    <CardContent className="p-6 text-center">
+                        <h2 className="text-xl font-semibold">Job not found</h2>
+                    </CardContent>
+                </Card>
             </div>
         );
     }
 
     return (
-        <div className="job-details-container">
-            <div className="job-details-header">
-                <button className="back-button" onClick={onBack}>
-                    <FaArrowLeft/> Back to Jobs
-                </button>
-                <button className="edit-button" onClick={onEdit}>
-                    <FaEdit/> Edit Job
-                </button>
+        <div className="container mx-auto py-6 space-y-6">
+            <div className="flex justify-between items-center">
+                <Button onClick={onBack} variant="outline"><FaArrowLeft className="mr-2" /> Back to Jobs</Button>
+                <Button onClick={onEdit}><FaEdit className="mr-2" /> Edit Job</Button>
             </div>
 
-            <div className="job-details-content">
-                <div className="job-header">
-                    <h2>{job.service}</h2>
-                    <div className="job-id-status">
-                        <span className="job-id">{job.jobNumber}</span>
+            <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle className="text-2xl font-bold">{job.service}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{job.jobNumber}</p>
+                        </div>
                         {getStatusBadge(job.status)}
                     </div>
-                </div>
-
-                <div className="details-grid">
-                    <div className="detail-section">
-                        <h3>Customer Information</h3>
-                        <div className="detail-item">
-                            <FaUser className="detail-icon"/>
-                            <div>
-                                <label>Customer</label>
-                                <p>{job.customer}</p>
-                            </div>
-                        </div>
-                        {job.customerId && (
-                            <div className="detail-item">
-                                <div>
-                                    <label>Customer ID</label>
-                                    <p>{job.customerId}</p>
-                                </div>
-                            </div>
-                        )}
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6">
+                    {/* Customer & Vehicle */}
+                    <div className="space-y-4">
+                        <h3 className="font-semibold text-lg border-b pb-2">Customer & Vehicle</h3>
+                        <InfoItem icon={<FaUser />} label="Customer" value={job.customer} />
+                        <InfoItem icon={<FaCar />} label="Vehicle" value={job.vehicle} />
+                        {job.license && <InfoItem label="License Plate" value={job.license} />}
                     </div>
 
-                    <div className="detail-section">
-                        <h3>Vehicle Information</h3>
-                        <div className="detail-item">
-                            <FaCar className="detail-icon"/>
-                            <div>
-                                <label>Vehicle</label>
-                                <p>{job.vehicle}</p>
-                            </div>
-                        </div>
-                        {job.license && (
-                            <div className="detail-item">
-                                <div>
-                                    <label>License Plate</label>
-                                    <p>{job.license}</p>
-                                </div>
-                            </div>
-                        )}
+                    {/* Service Details */}
+                    <div className="space-y-4">
+                        <h3 className="font-semibold text-lg border-b pb-2">Service Details</h3>
+                        <InfoItem icon={<FaWrench />} label="Service" value={job.service} />
+                        <InfoItem icon={<FaUserCog />} label="Technician" value={job.technician} />
+                        {job.description && <InfoItem icon={<FaFileAlt />} label="Description" value={job.description} />}
                     </div>
 
-                    <div className="detail-section">
-                        <h3>Service Details</h3>
-                        <div className="detail-item">
-                            <FaWrench className="detail-icon"/>
-                            <div>
-                                <label>Service</label>
-                                <p>{job.service}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <FaUserCog className="detail-icon"/>
-                            <div>
-                                <label>Technician</label>
-                                <p>{job.technician}</p>
-                            </div>
-                        </div>
-                        {job.description && (
-                            <div className="detail-item">
-                                <FaFileAlt className="detail-icon"/>
-                                <div>
-                                    <label>Description</label>
-                                    <p>{job.description}</p>
-                                </div>
-                            </div>
-                        )}
+                    {/* Schedule & Pricing */}
+                    <div className="space-y-4">
+                        <h3 className="font-semibold text-lg border-b pb-2">Schedule & Pricing</h3>
+                        <InfoItem icon={<FaCalendar />} label="Created" value={formatDate(job.createdAt)} />
+                        <InfoItem icon={<FaClock />} label="Estimated Completion" value={formatDate(job.estimatedCompletion)} />
+                        <InfoItem icon={<FaRupeeSign />} label="Cost" value={`₹ ${job.cost.toFixed(2)}`} />
                     </div>
+                </CardContent>
+            </Card>
 
-                    <div className="detail-section">
-                        <h3>Schedule & Pricing</h3>
-                        <div className="detail-item">
-                            <FaCalendar className="detail-icon"/>
-                            <div>
-                                <label>Created</label>
-                                <p>{formatDate(job.createdAt)}</p>
-                            </div>
+            {/* Parts Used */}
+            {job?.items?.length > 0 && (
+                <Card>
+                    <CardHeader><CardTitle>Parts & Labor</CardTitle></CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-muted">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left">Item</th>
+                                        <th className="px-4 py-2 text-right">Quantity</th>
+                                        <th className="px-4 py-2 text-right">Unit Price</th>
+                                        <th className="px-4 py-2 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {job.items.map((item, index) => (
+                                        <tr key={index} className="border-b">
+                                            <td className="px-4 py-2">{item.partName || item.description}</td>
+                                            <td className="px-4 py-2 text-right">{item.quantity}</td>
+                                            <td className="px-4 py-2 text-right">₹ {item.rate.toFixed(2)}</td>
+                                            <td className="px-4 py-2 text-right font-semibold">₹ {(item.quantity * item.rate).toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        <div className="detail-item">
-                            <FaClock className="detail-icon"/>
-                            <div>
-                                <label>Estimated Completion</label>
-                                <p>{formatDate(job.estimatedCompletion)}</p>
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <FaRupeeSign className="detail-icon"/>
-                            <div>
-                                <label>Cost</label>
-                                <p>₹ {job.cost.toFixed(2)}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
+            )}
 
-                {job.notes && (
-                    <>
-                        {/*<div className="detail-section">*/}
-                        {/*    <h3>Additional Notes</h3>*/}
-                        {/*    {job.notes?.map((note) => (*/}
-                        {/*        <div className="notes-content">*/}
-                        {/*        <p>{note.content}</p>*/}
-                        {/*    </div>*/}
-                        {/*    ))}*/}
-                        {/*</div>*/}
-                        <div className="detail-section">
-                            <h3>Additional Notes</h3>
-                            <div className="notes-list">
-                                {job.notes?.map((note) => (
-                                    <div key={note.id} className="note-item">
-                                        <p className="note-content">{note.content}</p>
-                                        <p className="note-meta">
-                                            — {note.authorName} on {formatDate(note.createdAt)}
-                                        </p>
-                                    </div>
-                                ))}
+            {/* Notes */}
+            {job.notes && job.notes.length > 0 && (
+                <Card>
+                    <CardHeader><CardTitle>Additional Notes</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                        {job.notes.map((note) => (
+                            <div key={note.id} className="p-3 bg-muted/50 rounded-lg">
+                                <p className="text-sm">{note.content}</p>
+                                <p className="text-xs text-muted-foreground mt-1">— {note.authorName} on {formatDate(note.createdAt)}</p>
                             </div>
-                        </div>
-                    </>
-                )}
-
-                {job?.items?.length > 0 && (
-                    <div className="detail-section">
-                        <h3>Parts Used</h3>
-                        <table className="parts-table">
-                            <thead>
-                            <tr>
-                                <th>Part Name</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {job.items.map((item, index) => (
-                                <tr key={index}>
-                                    <td>{item.partName || item.description}</td>
-                                    <td>{item.quantity}</td>
-                                    <td>₹ {item.rate.toFixed(2)}</td>
-                                    <td>₹ {(item.quantity * item.rate).toFixed(2)}</td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
         </div>
     );
 };
+
+const InfoItem = ({ icon, label, value }) => (
+    <div className="flex items-start">
+        <div className="text-muted-foreground mr-3 mt-1">{icon}</div>
+        <div>
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p>{value}</p>
+        </div>
+    </div>
+);
 
 export default JobDetails;

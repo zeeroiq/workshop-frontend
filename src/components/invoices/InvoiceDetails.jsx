@@ -4,9 +4,13 @@ import {
     FaEdit
 } from 'react-icons/fa';
 import {PAYMENT_METHODS} from './constants/invoiceConstants';
-import '../../styles/Invoices.css';
-import './InvoiceDetails.css';
 import {formatDateForInput} from "../helper/utils";
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
     const [currentInvoice] = useState({
@@ -19,138 +23,173 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
         referenceNumber: invoice?.referenceNumber || 'NA',
         notes: invoice?.notes || 'NA'
     });
-    // const amount = invoice?.totalAmount - (invoice?.paidAmount || 0) || 0;
-    // const paymentDate = new Date().toISOString().split('T')[0];
-    // const paymentMethod = PAYMENT_METHODS[0];
-    // const reference = invoice?refernceNumber || 'NA';
-    // const notes = invoice?notes || 'NA';
-    // const outstandingBalance = invoice ? invoice.totalAmount - (invoice.paidAmount || 0) : 0;
+
+    const getStatusVariant = (status) => {
+        switch (status) {
+            case 'PAID':
+                return 'success';
+            case 'PENDING':
+                return 'warning';
+            case 'OVERDUE':
+                return 'destructive';
+            default:
+                return 'secondary';
+        }
+    };
 
     return (
-        <div className="payment-form-container">
-            <div className="payment-form-header">
-                <button className="back-button" onClick={onCancel}>
-                    <FaArrowLeft/> Back to Invoices
-                </button>
-                <h2>Invoice #{invoice?.invoiceNumber}</h2>
-                <button className="edit-button" onClick={() => onEditInvoice(invoice)}>
-                    <FaEdit/> Edit
-                </button>
+        <div className="container mx-auto py-6">
+            <div className="flex items-center justify-between mb-6">
+                <Button onClick={onCancel} variant="outline">
+                    <FaArrowLeft className="mr-2" /> Back to Invoices
+                </Button>
+                <h2 className="text-2xl font-bold">Invoice #{invoice?.invoiceNumber}</h2>
+                <Button onClick={() => onEditInvoice(invoice)} variant="outline">
+                    <FaEdit className="mr-2" /> Edit
+                </Button>
             </div>
 
-            <div className="payment-info">
-                <div className="info-item">
-                    <label>Invoice Total</label>
-                    <span className="value total">₹ {(invoice?.totalAmount || 0).toFixed(2)}</span>
-                </div>
-                <div className="info-item">
-                    <label>Amount Paid</label>
-                    <span className="value paid">₹{(invoice?.amountPaid || 0).toFixed(2)}</span>
-                </div>
-                <div className="info-item">
-                    <label>Outstanding Balance</label>
-                    <span className="value balance">₹{(invoice?.balanceDue || 0).toFixed(2)}</span>
-                </div>
-                <div className="info-item">
-                    <span className="label">Status</span>
-                    <span className={`status ${invoice?.status?.toLowerCase().replace(' ', '-')}`}>
-                                {invoice?.status}
-                        </span>
-                </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Invoice Total</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">₹ {(invoice?.totalAmount || 0).toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Amount Paid</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">₹{(invoice?.amountPaid || 0).toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Outstanding Balance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">₹{(invoice?.balanceDue || 0).toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Badge variant={getStatusVariant(invoice?.status)}>{invoice?.status}</Badge>
+                    </CardContent>
+                </Card>
             </div>
 
-            <div className="invoice-content">
-                <div className="invoice-info">
-                    <div className="info-section">
-                        <h2>Invoice Information</h2>
-                        <div className="info-grid">
-                            <div className="info-item">
-                                <span className="info-label">Invoice Number:</span>
-                                <span className="info-value">{invoice?.invoiceNumber || 'NA'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Invoice Date:</span>
-                                <span className="info-value">{invoice?.invoiceDate || 'NA'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Due Date:</span>
-                                <span className="info-value">{invoice?.dueDate || 'NA'}</span>
-                            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Invoice Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Invoice Number:</span>
+                            <span>{invoice?.invoiceNumber || 'NA'}</span>
                         </div>
-                    </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Invoice Date:</span>
+                            <span>{invoice?.invoiceDate || 'NA'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Due Date:</span>
+                            <span>{invoice?.dueDate || 'NA'}</span>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                    <div className="info-section">
-                        <h2>Customer Information</h2>
-                        <div className="info-grid">
-                            <div className="info-item">
-                                <span className="info-label">Customer Name:</span>
-                                <span className="info-value">{invoice?.customerName || 'NA'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Email:</span>
-                                <span className="info-value">{invoice?.email || 'NA'}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Phone:</span>
-                                <span className="info-value">{invoice?.phone || 'NA'}</span>
-                            </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Customer Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Customer Name:</span>
+                            <span>{invoice?.customerName || 'NA'}</span>
                         </div>
-                    </div>
-                </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Email:</span>
+                            <span>{invoice?.email || 'NA'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Phone:</span>
+                            <span>{invoice?.phone || 'NA'}</span>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                <div className="payment-details">
-                    <h2>Work Details</h2>
-                    {invoice?.items?.length > 0 ? (
-                        <div className="payments-table">
-                            <div className="table-header">
-                                <div className="table-cell">Description</div>
-                                <div className="table-cell">Quantity</div>
-                                <div className="table-cell">Unit Price</div>
-                                <div className="table-cell">Total</div>
-                            </div>
-                            {invoice.items.map(item => (
-                                <div key={item.id} className="table-row">
-                                    <div className="table-cell">{item.description}</div>
-                                    <div className="table-cell">{item.quantity}</div>
-                                    <div className="table-cell">₹ {item.unitPrice}</div>
-                                    <div className="table-cell">₹ {item.totalPrice}</div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="no-payments">
-                            <p>No payments recorded for this invoice.</p>
-                        </div>
-                    )}
-                </div>
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Work Details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {invoice?.items?.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead>Quantity</TableHead>
+                                        <TableHead>Unit Price</TableHead>
+                                        <TableHead>Total</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {invoice.items.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{item.description}</TableCell>
+                                            <TableCell>{item.quantity}</TableCell>
+                                            <TableCell>₹ {item.unitPrice}</TableCell>
+                                            <TableCell>₹ {item.totalPrice}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <p className="text-muted-foreground">No work items recorded for this invoice.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
-                <div className="payment-details">
-                    <h2>Payment Details</h2>
-                    {invoice?.payments?.length > 0 ? (
-                        <div className="payments-table">
-                            <div className="table-header">
-                                <div className="table-cell">Amount</div>
-                                <div className="table-cell">Payment Date</div>
-                                <div className="table-cell">Payment Method</div>
-                                <div className="table-cell">Reference Number</div>
-                                <div className="table-cell">Notes</div>
-                            </div>
-                            {invoice.payments.map(payment => (
-                                <div key={invoice.id} className="table-row">
-                                    <div className="table-cell amount">₹{payment.amount}</div>
-                                    <div className="table-cell">{formatDateForInput(payment.paymentDate) || 'NA'}</div>
-                                    <div className="table-cell method">{payment.paymentMethod}</div>
-                                    <div className="table-cell reference">{payment?.paymentReference || 'NA'}</div>
-                                    <div className="table-cell notes">{payment?.notes}</div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="no-payments">
-                            <p>No payments recorded for this invoice.</p>
-                        </div>
-                    )}
-                </div>
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Payment Details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {invoice?.payments?.length > 0 ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Amount</TableHead>
+                                        <TableHead>Payment Date</TableHead>
+                                        <TableHead>Payment Method</TableHead>
+                                        <TableHead>Reference Number</TableHead>
+                                        <TableHead>Notes</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {invoice.payments.map((payment, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>₹{payment.amount}</TableCell>
+                                            <TableCell>{formatDateForInput(payment.paymentDate) || 'NA'}</TableCell>
+                                            <TableCell>{payment.paymentMethod}</TableCell>
+                                            <TableCell>{payment?.paymentReference || 'NA'}</TableCell>
+                                            <TableCell>{payment?.notes}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <p className="text-muted-foreground">No payments recorded for this invoice.</p>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
