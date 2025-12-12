@@ -151,57 +151,57 @@ const FinancialReports = () => {
                 <CardHeader>
                     <CardTitle>Report Filters</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
+                <CardContent className="flex flex-wrap items-end gap-4">
+                    <div className="flex-1 min-w-[180px]">
+                        <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>
-                                <FaUser className="inline-block mr-2" /> Customer
-                            </Label>
-                            <Select
-                                value={criteria.customerId}
-                                onValueChange={(value) => handleCriteriaChange('customerId', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Customer" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Customers</SelectItem>
-                                    {customers.map(customer => (
-                                        <SelectItem key={customer.id} value={customer.id.toString()}>
-                                            {customer.firstName} {customer.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="flex-1 min-w-[180px] space-y-2">
+                        <Label>
+                            <FaUser className="inline-block mr-2" /> Customer
+                        </Label>
+                        <Select
+                            value={criteria.customerId}
+                            onValueChange={(value) => handleCriteriaChange('customerId', value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Customer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Customers</SelectItem>
+                                {customers.map(customer => (
+                                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                                        {customer.firstName} {customer.lastName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-                        <div className="space-y-2">
-                            <Label>
-                                <FaUserCog className="inline-block mr-2" /> Mechanic
-                            </Label>
-                            <Select
-                                value={criteria.mechanicId}
-                                onValueChange={(value) => handleCriteriaChange('mechanicId', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Mechanic" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Mechanics</SelectItem>
-                                    {mechanics.map(mechanic => (
-                                        <SelectItem key={mechanic.id} value={mechanic.id.toString()}>
-                                            {mechanic.firstName} {mechanic.lastName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="flex-1 min-w-[180px] space-y-2">
+                        <Label>
+                            <FaUserCog className="inline-block mr-2" /> Mechanic
+                        </Label>
+                        <Select
+                            value={criteria.mechanicId}
+                            onValueChange={(value) => handleCriteriaChange('mechanicId', value)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Mechanic" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Mechanics</SelectItem>
+                                {mechanics.map(mechanic => (
+                                    <SelectItem key={mechanic.id} value={mechanic.id.toString()}>
+                                        {mechanic.firstName} {mechanic.lastName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <Button
-                        className="w-full"
+                        className="w-full md:w-auto flex-shrink-0"
                         onClick={generateReport}
                         disabled={loading}
                     >

@@ -137,10 +137,12 @@ const MechanicPerformance = () => {
                 <CardHeader>
                     <CardTitle>Report Filters</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
+                <CardContent className="flex flex-wrap items-end gap-4">
+                    <div className="flex-1 min-w-[180px]">
+                        <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
+                    </div>
 
-                    <div className="space-y-2">
+                    <div className="flex-1 min-w-[180px] space-y-2">
                         <Label>
                             <FaUserCog className="inline-block mr-2" /> Mechanic
                         </Label>
@@ -163,7 +165,7 @@ const MechanicPerformance = () => {
                     </div>
 
                     <Button
-                        className="w-full"
+                        className="w-full md:w-auto flex-shrink-0"
                         onClick={generateReport}
                         disabled={loading}
                     >

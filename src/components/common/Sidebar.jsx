@@ -68,7 +68,7 @@ const Sidebar = ({ isExpanded, onClose }) => {
                                                         : 'hover:bg-muted',
                                                     !isExpanded && 'justify-center'
                                                 )}
-                                                onClick={onClose}
+                                                // Removed onClick={onClose} to prevent sidebar from closing on item click
                                             >
                                                 {item.icon}
                                                 {isExpanded && <span>{item.label}</span>}
