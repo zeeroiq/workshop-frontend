@@ -4,6 +4,19 @@ import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import { formatDateForInput, isOrderEditable } from "../Utils";
 
+const Input = ({ label, children, ...props }) => (
+    <div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">{label}</label>
+        {children ? 
+            React.cloneElement(children, {
+                className: "w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50",
+                ...props
+            }) :
+            <input className="w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50" {...props} />
+        }
+    </div>
+);
+
 const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
         orderNumber: '',
@@ -21,6 +34,30 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     const canEditOrder = isEditMode ? isOrderEditable(order) : true;
 
     useEffect(() => {
+        const fetchInitialData = async () => {
+            setLoading(true);
+            try {
+                const [suppliersRes, partsRes] = await Promise.all([
+                    inventoryService.getSuppliers(),
+                    inventoryService.getParts()
+                ]);
+                if (suppliersRes?.data?.success) {
+                    setSuppliers(suppliersRes.data.data.content || suppliersRes.data.data);
+                }
+                if (partsRes?.data?.success) {
+                    setParts(partsRes.data.data.content || partsRes.data.data);
+                }
+            } catch (error) {
+                toast.error("Failed to load necessary data.");
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchInitialData();
+    }, []); // Run only once
+
+    useEffect(() => {
         if (order) {
             setFormData({
                 ...order,
@@ -28,30 +65,18 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                 expectedDeliveryDate: formatDateForInput(order.expectedDeliveryDate),
                 items: order.items || []
             });
+        } else {
+            // Reset form for new order
+            setFormData({
+                orderNumber: '',
+                supplierId: '',
+                orderDate: new Date().toISOString().split('T')[0],
+                expectedDeliveryDate: '',
+                items: [],
+                status: 'PENDING'
+            });
         }
-        fetchInitialData();
     }, [order]);
-
-    const fetchInitialData = async () => {
-        setLoading(true);
-        try {
-            const [suppliersRes, partsRes] = await Promise.all([
-                inventoryService.getSuppliers(),
-                inventoryService.getParts()
-            ]);
-            if (suppliersRes?.data?.success) {
-                setSuppliers(suppliersRes.data.data.content || suppliersRes.data.data);
-            }
-            if (partsRes?.data?.success) {
-                setParts(partsRes.data.data.content || partsRes.data.data);
-            }
-        } catch (error) {
-            toast.error("Failed to load necessary data.");
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -74,19 +99,19 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     };
 
     const handleItemChange = (index, field, value) => {
-        const updatedItems = [...formData.items];
-        const currentItem = updatedItems[index];
-        
-        currentItem[field] = value;
-
-        if (field === 'partId') {
-            const selectedPart = parts.find(p => p.id.toString() === value);
-            if (selectedPart) {
-                currentItem.unitPrice = selectedPart.costPrice;
+        const updatedItems = formData.items.map((item, i) => {
+            if (i === index) {
+                const newItem = { ...item, [field]: value };
+                if (field === 'partId') {
+                    const selectedPart = parts.find(p => p.id.toString() === value);
+                    if (selectedPart) {
+                        newItem.unitPrice = selectedPart.costPrice;
+                    }
+                }
+                return newItem;
             }
-        }
-        
-        updatedItems[index] = currentItem;
+            return item;
+        });
         setFormData(prev => ({ ...prev, items: updatedItems }));
     };
 
@@ -219,18 +244,5 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
         </div>
     );
 };
-
-const Input = ({ label, children, ...props }) => (
-    <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1">{label}</label>
-        {children ? 
-            React.cloneElement(children, {
-                className: "w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50",
-                ...props
-            }) :
-            <input className="w-full bg-input border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50" {...props} />
-        }
-    </div>
-);
 
 export default PurchaseOrderForm;

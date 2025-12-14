@@ -3,6 +3,33 @@ import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 
+const Input = ({ name, label, value, onChange, error, type = "text", children, ...props }) => (
+    <div className="flex flex-col">
+        <label htmlFor={name} className="mb-1 text-sm font-medium text-muted-foreground">{label}</label>
+        {children ? (
+            React.cloneElement(children, {
+                id: name,
+                name,
+                value,
+                onChange,
+                className: `bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`,
+                ...props
+            })
+        ) : (
+            <input
+                id={name}
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                className={`bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`}
+                {...props}
+            />
+        )}
+        {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
+    </div>
+);
+
 const PartForm = ({ part, onSave, onCancel }) => {
     const isEdit = Boolean(part && part.id);
 
@@ -26,6 +53,30 @@ const PartForm = ({ part, onSave, onCancel }) => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        const loadInitialData = async () => {
+            setLoading(true);
+            try {
+                const [suppliersRes, categoriesRes] = await Promise.all([
+                    inventoryService.getSuppliers(),
+                    // Mock categories for now
+                    Promise.resolve(['Fluids', 'Filters', 'Brakes', 'Ignition', 'Electrical', 'Engine', 'Transmission', 'Suspension', 'Exhaust', 'Body', 'Interior'])
+                ]);
+
+                if (suppliersRes.data.success) {
+                    setSuppliers(suppliersRes.data.data.content || suppliersRes.data.data);
+                }
+                setCategories(categoriesRes);
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                toast.error('Failed to load necessary data.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadInitialData();
+    }, []); // Run only once
+
+    useEffect(() => {
         if (part) {
             setFormData({
                 name: part.name || '',
@@ -40,30 +91,22 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 location: part.location || '',
                 supplierId: part.supplierId || ''
             });
+        } else {
+            setFormData({
+                name: '',
+                description: '',
+                partNumber: '',
+                category: '',
+                manufacturer: '',
+                costPrice: '',
+                sellingPrice: '',
+                quantityInStock: '',
+                minStockLevel: '',
+                location: '',
+                supplierId: ''
+            });
         }
-        loadInitialData();
     }, [part]);
-
-    const loadInitialData = async () => {
-        setLoading(true);
-        try {
-            const [suppliersRes, categoriesRes] = await Promise.all([
-                inventoryService.getSuppliers(),
-                // Mock categories for now
-                Promise.resolve(['Fluids', 'Filters', 'Brakes', 'Ignition', 'Electrical', 'Engine', 'Transmission', 'Suspension', 'Exhaust', 'Body', 'Interior'])
-            ]);
-
-            if (suppliersRes.data.success) {
-                setSuppliers(suppliersRes.data.data.content || suppliersRes.data.data);
-            }
-            setCategories(categoriesRes);
-        } catch (error) {
-            console.error('Error loading initial data:', error);
-            toast.error('Failed to load necessary data.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -118,33 +161,6 @@ const PartForm = ({ part, onSave, onCancel }) => {
             setLoading(false);
         }
     };
-
-    const Input = ({ name, label, value, onChange, error, type = "text", children, ...props }) => (
-        <div className="flex flex-col">
-            <label htmlFor={name} className="mb-1 text-sm font-medium text-muted-foreground">{label}</label>
-            {children ? (
-                React.cloneElement(children, {
-                    id: name,
-                    name,
-                    value,
-                    onChange,
-                    className: `bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`,
-                    ...props
-                })
-            ) : (
-                <input
-                    id={name}
-                    type={type}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    className={`bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`}
-                    {...props}
-                />
-            )}
-            {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
-        </div>
-    );
 
     return (
         <div className="bg-card p-6 rounded-lg">

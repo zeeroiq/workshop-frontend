@@ -3,6 +3,33 @@ import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from "react-toastify";
 
+const Input = ({ name, label, value, onChange, error, type = "text", children, ...props }) => (
+    <div className="flex flex-col">
+        <label htmlFor={name} className="mb-1 text-sm font-medium text-muted-foreground">{label}</label>
+        {children ? (
+            React.cloneElement(children, {
+                id: name,
+                name,
+                value,
+                onChange,
+                className: `bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`,
+                ...props
+            })
+        ) : (
+            <input
+                id={name}
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                className={`bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`}
+                {...props}
+            />
+        )}
+        {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
+    </div>
+);
+
 const SupplierForm = ({ supplier, onSave, onCancel }) => {
     const isEdit = Boolean(supplier && supplier.id);
 
@@ -86,33 +113,6 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
         { value: 'ACTIVE', label: 'Active' },
         { value: 'INACTIVE', label: 'Inactive' }
     ];
-
-    const Input = ({ name, label, value, onChange, error, type = "text", children, ...props }) => (
-        <div className="flex flex-col">
-            <label htmlFor={name} className="mb-1 text-sm font-medium text-muted-foreground">{label}</label>
-            {children ? (
-                React.cloneElement(children, {
-                    id: name,
-                    name,
-                    value,
-                    onChange,
-                    className: `bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`,
-                    ...props
-                })
-            ) : (
-                <input
-                    id={name}
-                    type={type}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    className={`bg-input border ${error ? 'border-red-500' : 'border-border'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary`}
-                    {...props}
-                />
-            )}
-            {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
-        </div>
-    );
 
     return (
         <div className="bg-card p-6 rounded-lg">

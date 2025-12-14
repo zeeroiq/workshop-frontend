@@ -45,6 +45,13 @@ const Inventory = () => {
         setEditItem(null);
     };
 
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setCurrentView('list');
+        setSelectedItem(null);
+        setEditItem(null);
+    };
+
     const renderContent = (tab) => {
         switch (tab) {
             case 'parts':
@@ -106,7 +113,7 @@ const Inventory = () => {
                 </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="parts"><List className="mr-2 h-4 w-4" /> Parts</TabsTrigger>
                     <TabsTrigger value="suppliers"><Users className="mr-2 h-4 w-4" /> Suppliers</TabsTrigger>
