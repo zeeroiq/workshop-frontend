@@ -44,7 +44,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
         quantityInStock: '',
         minStockLevel: '',
         location: '',
-        supplierId: ''
+        supplierId: '',
+        supplierName: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -89,7 +90,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 quantityInStock: part.quantityInStock || '',
                 minStockLevel: part.minStockLevel || '',
                 location: part.location || '',
-                supplierId: part.supplierId || ''
+                supplierId: part.supplierId || '',
+                supplierName: part.supplierName || ''
             });
         } else {
             setFormData({
@@ -103,7 +105,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 quantityInStock: '',
                 minStockLevel: '',
                 location: '',
-                supplierId: ''
+                supplierId: '',
+                supplierName: ''
             });
         }
     }, [part]);
@@ -122,10 +125,10 @@ const PartForm = ({ part, onSave, onCancel }) => {
         if (!formData.partNumber.trim()) newErrors.partNumber = 'Part number is required';
         if (!formData.category) newErrors.category = 'Category is required';
         if (!formData.manufacturer.trim()) newErrors.manufacturer = 'Manufacturer is required';
-        if (!formData.costPrice || parseFloat(formData.costPrice) <= 0) newErrors.costPrice = 'Valid cost price is required';
-        if (!formData.sellingPrice || parseFloat(formData.sellingPrice) <= 0) newErrors.sellingPrice = 'Valid selling price is required';
-        if (formData.quantityInStock === '' || parseInt(formData.quantityInStock) < 0) newErrors.quantityInStock = 'Valid quantity is required';
-        if (formData.minStockLevel === '' || parseInt(formData.minStockLevel) < 0) newErrors.minStockLevel = 'Valid minimum stock is required';
+        if (!formData.costPrice || Number.parseFloat(formData.costPrice) <= 0) newErrors.costPrice = 'Valid cost price is required';
+        if (!formData.sellingPrice || Number.parseFloat(formData.sellingPrice) <= 0) newErrors.sellingPrice = 'Valid selling price is required';
+        if (formData.quantityInStock === '' || Number.parseInt(formData.quantityInStock) < 0) newErrors.quantityInStock = 'Valid quantity is required';
+        if (formData.minStockLevel === '' || Number.parseInt(formData.minStockLevel) < 0) newErrors.minStockLevel = 'Valid minimum stock is required';
         if (!formData.supplierId) newErrors.supplierId = 'Supplier is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -139,11 +142,11 @@ const PartForm = ({ part, onSave, onCancel }) => {
         try {
             const partData = {
                 ...formData,
-                costPrice: parseFloat(formData.costPrice),
-                sellingPrice: parseFloat(formData.sellingPrice),
-                quantityInStock: parseInt(formData.quantityInStock),
-                minStockLevel: parseInt(formData.minStockLevel),
-                supplierId: parseInt(formData.supplierId)
+                costPrice: Number.parseFloat(formData.costPrice),
+                sellingPrice: Number.parseFloat(formData.sellingPrice),
+                quantityInStock: Number.parseInt(formData.quantityInStock),
+                minStockLevel: Number.parseInt(formData.minStockLevel),
+                supplierId: formData.supplierId
             };
 
             if (isEdit) {

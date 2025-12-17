@@ -63,7 +63,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
     const filteredParts = parts.filter(part =>
         part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        part.sku.toLowerCase().includes(searchTerm.toLowerCase())
+        // part.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        part.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (loading) {
