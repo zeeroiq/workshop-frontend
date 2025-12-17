@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
@@ -9,16 +17,19 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [partToDelete, setPartToDelete] = useState(null);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
         loadParts();
-    }, []);
+    }, [currentPage]);
 
     const loadParts = async () => {
         try {
             setLoading(true);
-            const response = await inventoryService.getParts();
-            setParts(response.data.data.content);
+            const response = await inventoryService.getParts({ page: currentPage, size: 10 });
+            setParts(response.data.data.content || []);
+            setTotalPages(response.data.data.totalPages || 1);
         } catch (error) {
             console.error('Error loading parts:', error);
             toast.error('Failed to load parts.');
@@ -61,9 +72,9 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         return 'In Stock';
     };
 
-    const filteredParts = parts.filter(part =>
-        part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        // part.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const filteredParts = (parts || []).filter(part =>
+        part.name.toLowerCase().includes(searchTerm.toLowerCase())||
+        // (part.sku && part.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
         part.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -140,6 +151,38 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                     </div>
                 )}
             </div>
+
+            {totalPages > 1 && (
+                <Pagination className="mt-4">
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage - 1); }}
+                                disabled={currentPage === 0}
+                            />
+                        </PaginationItem>
+                        {[...Array(totalPages).keys()].map(page => (
+                            <PaginationItem key={page}>
+                                <PaginationLink
+                                    href="#"
+                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
+                                    isActive={currentPage === page}
+                                >
+                                    {page + 1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage + 1); }}
+                                disabled={currentPage === totalPages - 1}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            )}
 
             {deleteDialogOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
