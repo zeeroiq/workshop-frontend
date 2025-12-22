@@ -2,25 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { FaEye, FaEdit, FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
 import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
-import { handleOrderEditClick } from "../Utils";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         fetchPurchaseOrders();
-    }, []);
+    }, [currentPage, searchTerm, statusFilter]);
 
     const fetchPurchaseOrders = async () => {
         try {
             setLoading(true);
-            const response = await inventoryService.getPurchaseOrders();
-            if (response?.data?.success) {
-                setOrders(response.data.data);
+            const params = {
+                page: currentPage,
+                size: pageSize,
+                sort: 'orderDate,desc',
+            };
+            if (searchTerm) {
+                params.search = searchTerm;
+            }
+            if (statusFilter !== 'all') {
+                params.status = statusFilter;
+            }
+            const response = await inventoryService.getPurchaseOrders(params);
+            if (response?.data?.success && response.data.data) {
+                setOrders(response.data.data.content || []);
+                setTotalPages(response.data.data.totalPages || 0);
             } else {
+                setOrders([]);
+                setTotalPages(0);
                 toast.warn('Failed to fetch purchase orders');
             }
         } catch (error) {
@@ -30,13 +53,6 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
             setLoading(false);
         }
     };
-
-    const filteredOrders = orders.filter(order => {
-        const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
 
     const getStatusClass = (status) => {
         switch (status) {
@@ -107,7 +123,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredOrders.map(order => {
+                        {orders.map(order => {
                             const isDisabled = order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED';
                             return (
                                 <tr key={order.id} className="border-b border-border hover:bg-muted/50">
@@ -141,12 +157,47 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                         })}
                     </tbody>
                 </table>
-                {filteredOrders.length === 0 && (
+                {orders.length === 0 && (
                     <div className="text-center py-8">
                         <p className="text-muted-foreground">No orders found</p>
                     </div>
                 )}
             </div>
+            {totalPages > 1  && (
+                <div className="mt-4 flex justify-center">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
+                                }}
+                                disabled={currentPage === 0}
+                                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                        <PaginationItem>
+                            <span className="px-4 py-2">
+                                Page {currentPage + 1} of {totalPages}
+                            </span>
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+                                }}
+                                disabled={currentPage >= totalPages - 1}
+                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
+                )}
         </div>
     );
 };

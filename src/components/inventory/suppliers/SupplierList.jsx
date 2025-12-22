@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
@@ -10,17 +17,33 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [supplierToDelete, setSupplierToDelete] = useState(null);
     const [expandedRow, setExpandedRow] = useState(null);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         loadSuppliers();
-    }, []);
+    }, [currentPage, searchTerm]);
 
     const loadSuppliers = async () => {
         try {
             setLoading(true);
-            const response = await inventoryService.getSuppliers();
-            if (response.data.success) {
-                setSuppliers(response.data.data.content || response.data.data);
+            const params = {
+                page: currentPage,
+                size: pageSize,
+                sort: 'name,asc',
+            };
+            if (searchTerm) {
+                params.search = searchTerm;
+            }
+            const response = await inventoryService.getSuppliers(params);
+            if (response?.data?.success && response.data.data) {
+                setSuppliers(response.data.data.content || []);
+                setTotalPages(response.data.data.totalPages || 0);
+            } else {
+                setSuppliers([]);
+                setTotalPages(0);
+                toast.warn('Failed to load suppliers.');
             }
         } catch (error) {
             console.error('Error loading suppliers:', error);
@@ -65,12 +88,6 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         );
     };
 
-    const filteredSuppliers = suppliers.filter(supplier =>
-        supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supplier.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supplier.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     if (loading) {
         return <div className="flex justify-center items-center h-64">Loading suppliers...</div>;
     }
@@ -109,7 +126,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredSuppliers.map((supplier) => (
+                        {suppliers.map((supplier) => (
                             <React.Fragment key={supplier.id}>
                                 <tr className="border-b border-border hover:bg-muted/50">
                                     <td className="px-6 py-4">
@@ -165,7 +182,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                     </tbody>
                 </table>
 
-                {filteredSuppliers.length === 0 && (
+                {suppliers.length === 0 && (
                     <div className="text-center py-16">
                         <h3 className="text-lg font-semibold">No suppliers found</h3>
                         <p className="text-muted-foreground mb-4">Try adjusting your search or add a new supplier.</p>
@@ -175,7 +192,41 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                     </div>
                 )}
             </div>
-
+            {totalPages > 1  && (
+            <div className="mt-4 flex justify-center">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
+                                }}
+                                disabled={currentPage === 0}
+                                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                        <PaginationItem>
+                            <span className="px-4 py-2">
+                                Page {currentPage + 1} of {totalPages}
+                            </span>
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+                                }}
+                                disabled={currentPage >= totalPages - 1}
+                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
+            )}
             {deleteDialogOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <div className="bg-card p-6 rounded-lg shadow-lg">

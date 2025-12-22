@@ -3,6 +3,7 @@ import { FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import { formatDateForInput, isOrderEditable } from "../Utils";
+import api from "@/services/api";
 
 const Input = ({ label, children, ...props }) => (
     <div>
@@ -133,21 +134,40 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                     ...item,
                     partId: parseInt(item.partId),
                     quantity: parseInt(item.quantity),
-                    unitPrice: parseFloat(item.unitPrice)
+                    unitPrice: parseFloat(item.unitPrice),
+                    totalPrice: parseFloat(item.quantity * item.unitPrice)
                 }))
             };
-
-            if (isEditMode) {
-                await inventoryService.updatePurchaseOrder(order.id, apiData);
-                toast.success("Purchase order updated successfully!");
+            const method = formData.id ? 'PUT' : 'POST';
+            const url = formData.id
+                ? `/inventory/purchase-orders/${formData.id}/items`
+                : '/inventory/purchase-orders';
+            // if (isEditMode) {
+            //     await inventoryService.updatePurchaseOrder(order.id, apiData);
+            //     toast.success("Purchase order updated successfully!");
+            // } else {
+            //     await inventoryService.createPurchaseOrder(apiData);
+            //     toast.success("Purchase order created successfully!");
+            // }
+            // onSave();
+            const response = await api[method.toLowerCase()](url, apiData);
+            if (response?.data?.success) {
+                // todo: update it so that post update/create it should opens up detail page instead of going back to list
+                // const submittedOrder = response.data.data;
+                // setFormData({
+                //     ...submittedOrder,
+                //     orderDate: formatDateForInput(submittedOrder.orderDate),
+                //     expectedDeliveryDate: formatDateForInput(submittedOrder.expectedDeliveryDate)
+                // });
+                toast.success('Order ' + formData.orderNumber + ' saved successfully!');
+                onSave();
             } else {
-                await inventoryService.createPurchaseOrder(apiData);
-                toast.success("Purchase order created successfully!");
+                console.error('Failed to save purchase order:', response?.data?.message);
+                toast.error('Failed to save purchase order - ' + response?.data?.message);
             }
-            onSave();
         } catch (error) {
             console.error('Error saving purchase order:', error);
-            toast.error(error.response?.data?.message || "Failed to save purchase order.");
+            toast.error(error.response?.data?.message || "Failed to save order.");
         } finally {
             setLoading(false);
         }
@@ -241,6 +261,18 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                     </div>
                 </div>
             </form>
+
+
+            <div className="flex justify-end items-center mb-6">
+                <div className="flex space-x-2">
+                    <button className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md flex items-center" onClick={onCancel}>
+                        <FaTimes className="mr-2" /> Cancel
+                    </button>
+                    <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={handleSubmit} disabled={loading}>
+                        <FaSave className="mr-2" /> {loading ? 'Saving...' : 'Save Order'}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };

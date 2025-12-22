@@ -158,8 +158,12 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         <PaginationItem>
                             <PaginationPrevious
                                 href="#"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage - 1); }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
+                                }}
                                 disabled={currentPage === 0}
+                                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
                             />
                         </PaginationItem>
                         {[...Array(totalPages).keys()].map(page => (
@@ -176,8 +180,12 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         <PaginationItem>
                             <PaginationNext
                                 href="#"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage + 1); }}
-                                disabled={currentPage === totalPages - 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+                                }}
+                                disabled={currentPage >= totalPages - 1}
+                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
                             />
                         </PaginationItem>
                     </PaginationContent>

@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 
 const PartCatalog = ({ onPartSelect }) => {
-  const [showModels, setShowModels] = useState([]);
+  const [showModels, setShowModels] = useState(false);
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState('');
   const [modelName, setModelName] = useState('');
