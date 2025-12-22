@@ -28,7 +28,7 @@ const Header = ({ onToggleSidebar }) => {
                 <Button variant="ghost" size="icon" onClick={onToggleSidebar}>
                     <Menu size={20} />
                 </Button>
-                <h1 className="text-lg font-semibold">Workshop Management</h1>
+                <h1 className="text-lg font-semibold hidden sm:block">Workshop Management</h1>
             </div>
 
             <div className="flex items-center gap-4">
@@ -43,7 +43,7 @@ const Header = ({ onToggleSidebar }) => {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="flex items-center gap-2">
                             <UserCircle size={24} />
-                            <div className="text-left">
+                            <div className="text-left hidden md:block">
                                 <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
                                 <p className="text-xs text-muted-foreground">{user?.roles?.[0]?.replace('ROLE_', '')}</p>
                             </div>

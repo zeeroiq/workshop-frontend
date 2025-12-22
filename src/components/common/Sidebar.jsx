@@ -42,8 +42,8 @@ const Sidebar = ({ isExpanded, onClose }) => {
             ></div>
             <aside
                 className={cn(
-                    'fixed top-0 left-0 h-full bg-card border-r z-40 transform transition-all duration-300 ease-in-out',
-                    isExpanded ? 'w-64' : 'w-20',
+                    'fixed top-0 left-0 h-full bg-card border-r z-40 transform transition-all duration-300 ease-in-out overflow-hidden',
+                    isExpanded ? 'w-64' : 'w-0 md:w-20',
                 )}
             >
                 <div className="flex items-center justify-between p-4 border-b h-16">

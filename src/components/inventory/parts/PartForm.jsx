@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
+import PartCatalog from './PartCatalog';
 
 const Input = ({ name, label, value, onChange, error, type = "text", children, ...props }) => (
     <div className="flex flex-col">
@@ -119,6 +120,15 @@ const PartForm = ({ part, onSave, onCancel }) => {
         }
     };
 
+    const handlePartSelect = (selectedPart) => {
+        setFormData(prev => ({
+            ...prev,
+            partNumber: selectedPart.partNo,
+            name: selectedPart.name,
+            description: selectedPart.description,
+        }));
+    };
+
     const validateForm = () => {
         const newErrors = {};
         if (!formData.name.trim()) newErrors.name = 'Name is required';
@@ -173,6 +183,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 </button>
                 <h2 className="text-xl font-semibold">{isEdit ? 'Edit Part' : 'Create New Part'}</h2>
             </div>
+
+            {!isEdit && <PartCatalog onPartSelect={handlePartSelect} />}
 
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Information */}

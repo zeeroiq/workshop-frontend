@@ -64,7 +64,7 @@ function AppContent() {
             {user && <Sidebar isExpanded={sidebarExpanded} onClose={closeSidebar} />}
             <div className="flex flex-col flex-1">
                 {user && <Header onToggleSidebar={toggleSidebarExpansion} />}
-                <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${user && (sidebarExpanded ? 'md:ml-64' : 'md:ml-20')}`}>
+                <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${user && (sidebarExpanded ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20')}`}>
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16">
                         <Routes>
                             <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />

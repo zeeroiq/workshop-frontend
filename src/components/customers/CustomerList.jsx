@@ -118,7 +118,8 @@ const CustomerList = () => {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="overflow-x-auto">
+                    {/* Desktop View: Table */}
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -163,6 +164,37 @@ const CustomerList = () => {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Mobile View: Cards */}
+                    <div className="block md:hidden space-y-4">
+                        {customers.length === 0 ? (
+                            <p className="text-center text-muted-foreground py-8">No customers found.</p>
+                        ) : (
+                            customers.map((customer) => (
+                                <Card key={customer.id}>
+                                    <CardHeader>
+                                        <CardTitle>{customer.firstName} {customer.lastName}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2">
+                                        <p className="text-sm text-muted-foreground"><strong>Phone:</strong> {customer.phone}</p>
+                                        <p className="text-sm text-muted-foreground"><strong>Email:</strong> {customer.email || '-'}</p>
+                                        <p className="text-sm text-muted-foreground"><strong>Vehicles:</strong> <Badge variant="secondary">{customer.vehicleCount || 0}</Badge></p>
+                                        <div className="flex items-center justify-end gap-2 pt-4">
+                                            <Button variant="outline" size="icon" asChild>
+                                                <Link to={`/customers/${customer.id}`}><Eye className="h-4 w-4" /></Link>
+                                            </Button>
+                                            <Button variant="outline" size="icon" asChild>
+                                                <Link to={`/customers/edit/${customer.id}`}><Edit className="h-4 w-4" /></Link>
+                                            </Button>
+                                            <Button variant="destructive" size="icon" onClick={() => handleDelete(customer.id)}>
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                     </div>
                 </CardContent>
             </Card>
