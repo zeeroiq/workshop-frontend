@@ -18,9 +18,20 @@ import LoadingSpinner from '../common/LoadingSpinner';
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job?.id);
     const [formData, setFormData] = useState({
-        customerName: '', customerId: '', vehicle: '', vehicleId: '', license: '',
-        service: '', technicianId: '', technician: '', status: 'estimate-pending',
-        estimatedCompletion: '', cost: 0, description: '', notes: [], items: []
+        customerName: '',
+        customerId: '',
+        vehicle: '',
+        selectedVehicleLicense: '', // Changed from vehicleId
+        license: '',
+        service: '',
+        technicianId: '',
+        technician: '',
+        status: 'estimate-pending',
+        estimatedCompletion: '',
+        cost: 0,
+        description: '',
+        notes: [],
+        items: []
     });
     const [errors, setErrors] = useState({});
     const [customers, setCustomers] = useState([]);
@@ -29,73 +40,139 @@ const JobForm = ({ job, onSave, onCancel }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState(null);
+    const [isInitializingForm, setIsInitializingForm] = useState(true); // New state
 
     useEffect(() => {
-        const userInfo = authService.getUserInfo();
-        setCurrentUser(userInfo);
-        fetchInitialData();
-    }, []);
+        const loadJobData = async () => {
+            setLoading(true);
+            try {
+                const userInfo = authService.getUserInfo();
+                setCurrentUser(userInfo);
 
-    useEffect(() => {
-        if (job) {
-            setFormData({
-                ...job,
-                estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '',
-                items: job.items || [],
-                notes: job.notes || []
-            });
-        }
+                const [techRes, partsRes, custRes] = await Promise.all([
+                    userService.getByRole("MECHANIC"),
+                    inventoryService.getParts(),
+                    customerService.getAll(0, 1000)
+                ]);
+
+                const technicians = techRes?.data || [];
+                const parts = partsRes?.data?.data?.content || [];
+                let customers = custRes?.data?.content || [];
+
+                if (isEdit && job.customerId) {
+                    const detailedCustomerRes = await customerService.getWithVehicles(job.customerId);
+                    const detailedCustomer = detailedCustomerRes.data;
+                    if (detailedCustomer) {
+                        const customerExists = customers.some(c => c.id === detailedCustomer.id);
+                        if (customerExists) {
+                            customers = customers.map(c => c.id === detailedCustomer.id ? detailedCustomer : c);
+                        } else {
+                            customers = [...customers, detailedCustomer];
+                        }
+                    }
+                }
+
+                setTechnicians(technicians);
+                setParts(parts);
+                setCustomers(customers);
+
+                if (isEdit) {
+                    console.log("Job data for initialization:", job); // Debugging
+                    const customerForVehicles = customers.find(c => c.id.toString() === job.customerId?.toString());
+                    setSelectedCustomerVehicles(customerForVehicles);
+
+                    // Find the vehicle using job.vehicleId, then get its licensePlate
+                    const vehicleFromJob = customerForVehicles?.vehicles?.find(v => v.licensePlate === job.license || v.id.toString() === job.vehicleId?.toString());
+
+                    setFormData({
+                        ...job,
+                        customerId: job.customerId?.toString(),
+                        technicianId: job.technicianId?.toString(),
+                        // Set selectedVehicleLicense based on the found vehicle's licensePlate
+                        selectedVehicleLicense: vehicleFromJob ? vehicleFromJob.licensePlate : '',
+                        customerName: customerForVehicles ? `${customerForVehicles.firstName} ${customerForVehicles.lastName}` : '',
+                        vehicle: vehicleFromJob ? `${vehicleFromJob.year} ${vehicleFromJob.make} ${vehicleFromJob.model}` : '',
+                        license: vehicleFromJob ? vehicleFromJob.licensePlate : '',
+                        technician: technicians.find(t => t.id.toString() === job.technicianId?.toString())?.firstName || job.technician,
+                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '',
+                        items: job.items?.map(item => {
+                            if (item.type === 'PART') {
+                                const partDetails = parts.find(p => p.id.toString() === item.partId?.toString());
+                                return {
+                                    ...item,
+                                    partId: item.partId ? item.partId.toString() : '', // Explicitly handle null/undefined
+                                    description: partDetails?.name || item.description,
+                                    rate: partDetails?.sellingPrice || item.rate,
+                                };
+                            }
+                            return item;
+                        }) || [],
+                        notes: job.notes || []
+                    });
+                    console.log("formData.selectedVehicleLicense after setFormData in loadJobData:", vehicleFromJob ? vehicleFromJob.licensePlate : ''); // Debugging
+                }
+            } catch (error) {
+                toast.error("Failed to load job data. Please try again.");
+            } finally {
+                setLoading(false);
+                setIsInitializingForm(false); // Set to false after initial load
+            }
+        };
+
+        loadJobData();
     }, [job]);
-    
+
     useEffect(() => {
         const totalItemsCost = formData.items.reduce((total, item) => total + ((item.quantity || 0) * (item.rate || 0)), 0);
         setFormData(prev => ({ ...prev, cost: totalItemsCost }));
     }, [formData.items]);
-
-    const fetchInitialData = async () => {
-        try {
-            const [techRes, partsRes, custRes] = await Promise.all([
-                userService.getByRole("MECHANIC"),
-                inventoryService.getParts(),
-                customerService.getAll(0, 1000) // Fetch customers for dropdown
-            ]);
-            setTechnicians(techRes?.data || []);
-            setParts(partsRes?.data?.data?.content || []);
-            setCustomers(custRes?.data?.content || []);
-        } catch (error) {
-            toast.error('Failed to load necessary data.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
-    
+
     const handleSelectChange = (name, value) => {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'customerId') {
             const selectedCustomer = customers.find(c => c.id.toString() === value);
-            if (selectedCustomer && selectedCustomer.vehicles?.length === 1) {
-                const vehicle = selectedCustomer.vehicles[0];
-                setFormData(prev => ({
-                    ...prev,
-                    vehicleId: vehicle.id.toString(),
-                    vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-                    license: vehicle.licensePlate
-                }));
+            setSelectedCustomerVehicles(selectedCustomer);
+
+            if (!isInitializingForm) { // Only modify vehicle selection if not initializing
+                if (selectedCustomer) {
+                    setFormData(prev => ({
+                        ...prev,
+                        customerName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`,
+                        selectedVehicleLicense: selectedCustomer.vehicles?.length === 1 ? selectedCustomer.vehicles[0].licensePlate : '', // Use license
+                        vehicle: selectedCustomer.vehicles?.length === 1 ? `${selectedCustomer.vehicles[0].year} ${selectedCustomer.vehicles[0].make} ${selectedCustomer.vehicles[0].model}` : '',
+                        license: selectedCustomer.vehicles?.length === 1 ? selectedCustomer.vehicles[0].licensePlate : ''
+                    }));
+                } else {
+                     setFormData(prev => ({ ...prev, selectedVehicleLicense: '', vehicle: '', license: '' }));
+                }
             } else {
-                 setFormData(prev => ({ ...prev, vehicleId: '', vehicle: '', license: '' }));
+                // If initializing, ensure customerName is set even if vehicle selection isn't touched
+                if (selectedCustomer) {
+                    setFormData(prev => ({
+                        ...prev,
+                        customerName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`,
+                    }));
+                }
             }
         }
-        if (name === 'vehicleId') {
+        if (name === 'selectedVehicleLicense') { // Handle change for the new vehicle select
             const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
-            const vehicle = selectedCustomer?.vehicles.find(v => v.id.toString() === value);
+            const vehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === value); // Match by licensePlate
             if(vehicle) {
                 setFormData(prev => ({ ...prev, vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, license: vehicle.licensePlate }));
+            }
+        }
+        if (name === 'technicianId') {
+            const selectedTechnician = technicians.find(t => t.id.toString() === value);
+            if (selectedTechnician) {
+                setFormData(prev => ({ ...prev, technician: `${selectedTechnician.firstName} ${selectedTechnician.lastName}` }));
             }
         }
     };
@@ -130,8 +207,14 @@ const JobForm = ({ job, onSave, onCancel }) => {
         e.preventDefault();
         setSaving(true);
         try {
+            // Find the vehicleId from the selectedVehicleLicense for the payload
+            const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
+            const selectedVehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === formData.selectedVehicleLicense);
+
             const payload = {
                 ...formData,
+                vehicleId: selectedVehicle?.id?.toString(), // Send vehicleId to backend
+                license: formData.selectedVehicleLicense, // Also send license if needed
                 cost: parseFloat(formData.cost),
                 technician: technicians.find(t => t.id.toString() === formData.technicianId)?.firstName || formData.technician,
                 customerName: customers.find(c => c.id.toString() === formData.customerId)?.firstName || formData.customerName,
@@ -150,8 +233,9 @@ const JobForm = ({ job, onSave, onCancel }) => {
     };
 
     if (loading) return <LoadingSpinner />;
-    
-    const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
+
+    // This line is no longer needed for the vehicle dropdown options
+    // const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
 
     return (
         <div className="container mx-auto py-6">
@@ -172,16 +256,22 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 <Select name="customerId" value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)} required>
                                     <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
                                     <SelectContent>
-                                        {customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)}
+                                        {
+                                            customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)
+                                        }
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
                                 <Label>Vehicle *</Label>
-                                <Select name="vehicleId" value={formData.vehicleId} onValueChange={val => handleSelectChange('vehicleId', val)} required disabled={!formData.customerId}>
-                                    <SelectTrigger><SelectValue placeholder="Select a vehicle..." /></SelectTrigger>
+                                <Select name="selectedVehicleLicense" value={formData.selectedVehicleLicense} onValueChange={val => handleSelectChange('selectedVehicleLicense', val)} required disabled={!formData.customerId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a vehicle..." />
+                                    </SelectTrigger>
                                     <SelectContent>
-                                        {selectedCustomer?.vehicles?.map(v => <SelectItem key={v.id} value={v.id.toString()}>{v.year} {v.make} {v.model}</SelectItem>)}
+                                        {
+                                            selectedCustomerVehicles?.vehicles?.map(v => <SelectItem key={v.licensePlate} value={v.licensePlate}>{v.year} {v.make} {v.model} ({v.licensePlate})</SelectItem>)
+                                        }
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -195,9 +285,13 @@ const JobForm = ({ job, onSave, onCancel }) => {
                             <div className="space-y-2">
                                 <Label>Technician *</Label>
                                 <Select name="technicianId" value={formData.technicianId} onValueChange={val => handleSelectChange('technicianId', val)} required>
-                                    <SelectTrigger><SelectValue placeholder="Assign a technician..." /></SelectTrigger>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Assign a technician..." />
+                                    </SelectTrigger>
                                     <SelectContent>
-                                        {technicians.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.firstName} {t.lastName}</SelectItem>)}
+                                        {
+                                            technicians.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.firstName} {t.lastName}</SelectItem>)
+                                        }
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -218,26 +312,34 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {formData.items.map((item, index) => (
+                        {
+                            formData.items.map((item, index) => (
                             <div key={index} className="grid grid-cols-12 gap-4 items-center">
                                 <div className="col-span-5 space-y-2">
-                                    {item.type === 'PART' ? (
+                                    {
+                                        item.type === 'PART' ? (
                                         <Select name="partId" value={item.partId} onValueChange={val => handleItemChange(index, 'partId', val)}>
-                                            <SelectTrigger><SelectValue placeholder="Select part..." /></SelectTrigger>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select part..." />
+                                            </SelectTrigger>
                                             <SelectContent>
-                                                {parts.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
+                                                {
+                                                    parts.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)
+                                                }
                                             </SelectContent>
                                         </Select>
                                     ) : (
                                         <Input name="description" value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} placeholder="Labor description" />
-                                    )}
+                                    )
+                                    }
                                 </div>
                                 <div className="col-span-2 space-y-2"><Input name="quantity" type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} placeholder="Qty" /></div>
                                 <div className="col-span-2 space-y-2"><Input name="rate" type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} placeholder="Rate" disabled={item.type === 'PART'} /></div>
                                 <div className="col-span-2 self-center pt-3">₹{((item.quantity || 0) * (item.rate || 0)).toFixed(2)}</div>
                                 <div className="col-span-1 self-center pt-3"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}><FaTrash /></Button></div>
                             </div>
-                        ))}
+                                ))
+                        }
                     </CardContent>
                 </Card>
 

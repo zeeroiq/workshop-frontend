@@ -14,36 +14,84 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const isEdit = Boolean(invoice && invoice.id);
     const [formData, setFormData] = useState({
-        invoiceNumber: '', customerId: '', customerName: '', customerEmail: '', customerAddress: '',
+        invoiceNumber: '',
+        customerId: '',
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        customerAddress: '',
         invoiceDate: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        items: [], notes: '', terms: '', status: INVOICE_STATUS.DRAFT
+        items: [],
+        notes: '',
+        terms: '',
+        status: INVOICE_STATUS.DRAFT
     });
     const [newItem, setNewItem] = useState({ description: '', quantity: 1, unitPrice: 0, taxRate: 0 });
     const [errors, setErrors] = useState({});
     const [customers, setCustomers] = useState([]);
+    const [selectedCustomer, setSelectedCustomer] = useState(null); // Re-introduced
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
+        const loadCustomers = async () => {
+            try {
+                const response = await customerService.listAll();
+                setCustomers(response?.data?.content || []);
+            } catch (error) {
+                toast.error('Failed to fetch customers');
+            }
+        };
+        loadCustomers();
+    }, []); // Fetch customers only once on mount
+
+    useEffect(() => {
         if (invoice) {
-            setFormData({
+            // Initialize formData with invoice details
+            const initialFormData = {
                 ...invoice,
                 invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
                 dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
                 items: invoice.items || [],
-            });
-        }
-        loadCustomers();
-    }, [invoice]);
+            };
 
-    const loadCustomers = async () => {
-        try {
-            const response = await customerService.listAll();
-            setCustomers(response?.data?.content || []);
-        } catch (error) {
-            toast.error('Failed to fetch customers');
+            // Find the customer in the fetched list
+            const customerFromList = customers.find(c => c.id === invoice.customerId);
+
+            if (customerFromList) {
+                setSelectedCustomer(customerFromList);
+                // Update formData with customer details from the found customer
+                initialFormData.customerId = customerFromList.id;
+                initialFormData.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
+                initialFormData.customerEmail = customerFromList.email;
+                initialFormData.customerPhone = customerFromList.phone;
+                initialFormData.customerAddress = customerFromList.address;
+            } else {
+                // If customer not found in list, ensure selectedCustomer is null
+                setSelectedCustomer(null);
+                // Keep customer details from invoice if customerFromList is not found
+            }
+
+            setFormData(initialFormData);
+
+        } else { // For new invoice
+            setFormData({
+                invoiceNumber: '',
+                customerId: '',
+                customerName: '',
+                customerEmail: '',
+                customerPhone: '',
+                customerAddress: '',
+                invoiceDate: new Date().toISOString().split('T')[0],
+                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                items: [],
+                notes: '',
+                terms: '',
+                status: INVOICE_STATUS.DRAFT
+            });
+            setSelectedCustomer(null);
         }
-    };
+    }, [invoice, customers]); // Depend on invoice and customers
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -54,13 +102,23 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const handleSelectChange = (name, value) => {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'customerId') {
-            const selectedCustomer = customers.find(c => c.id.toString() === value);
-            if (selectedCustomer) {
+            const customer = customers.find(c => c.id.toString() === value);
+            setSelectedCustomer(customer); // Set selectedCustomer here
+            if (customer) {
                 setFormData(prev => ({
                     ...prev,
-                    customerName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`,
-                    customerEmail: selectedCustomer.email,
-                    customerAddress: selectedCustomer.address
+                    customerName: `${customer.firstName} ${customer.lastName}`,
+                    customerEmail: customer.email,
+                    customerPhone: customer.phone,
+                    customerAddress: customer.address
+                }));
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    customerName: '',
+                    customerEmail: '',
+                    customerPhone: '',
+                    customerAddress: ''
                 }));
             }
         }
@@ -136,15 +194,20 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                         <div className="space-y-2">
                             <Label>Customer *</Label>
                             <Select name="customerId" value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)} required>
-                                <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a customer..." />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    {customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)}
+                                    {
+                                        customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)
+                                    }
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="grid md:grid-cols-3 gap-6">
                             <div className="space-y-2"><Label>Email</Label><Input name="customerEmail" value={formData.customerEmail} disabled /></div>
-                            <div className="space-y-2"><Label>Address</Label><Input name="customerAddress" value={formData.customerAddress} disabled /></div>
+                            <div className="space-y-2"><Label>Phone</Label><Input name="customerPhone" value={formData.customerPhone} disabled /></div>
+                            <div className="space-y-2"><Label>Address</Label><Textarea name="customerAddress" value={formData.customerAddress} disabled rows={3} /></div>
                         </div>
                     </CardContent>
                 </Card>

@@ -47,7 +47,7 @@ const Jobs = () => {
             const response = await jobService.updateJobBuNumber(payload.jobNumber, payload);
             if (response.status === 200 && response.data) {
                 // On successful update, reload all jobs to ensure data consistency
-                await loadJobs();
+                await jobService.getAllJobs();
                 toast.success("Job updated successfully!");
             } else {
                 toast.error(`Error while updating job: ${response.message}`);
@@ -57,7 +57,7 @@ const Jobs = () => {
             // Create new job
             const response = await jobService.createJob(payload);
             if (response.status === 201 && response.data) {
-                await loadJobs(); // Reload to get the new job with all server-generated data
+                await jobService.getAllJobs(); // Reload to get the new job with all server-generated data
                 toast.success("Job created successfully!");
             } else {
                 toast.error(`Error while creating job: ${response.message}`);

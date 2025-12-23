@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle, FaFilter } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import {
@@ -15,6 +15,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [partToDelete, setPartToDelete] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
@@ -22,12 +23,22 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
     useEffect(() => {
         loadParts();
-    }, [currentPage]);
+    }, [currentPage, searchTerm, statusFilter]);
 
     const loadParts = async () => {
         try {
             setLoading(true);
-            const response = await inventoryService.getParts({ page: currentPage, size: 10 });
+            const params = {
+                page: currentPage,
+                size: 10,
+            };
+            if (searchTerm) {
+                params.search = searchTerm;
+            }
+            if (statusFilter !== 'all') {
+                params.status = statusFilter;
+            }
+            const response = await inventoryService.getParts(params);
             setParts(response.data.data.content || []);
             setTotalPages(response.data.data.totalPages || 1);
         } catch (error) {
@@ -38,8 +49,14 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
-    const handleSearch = (e) => {
+    const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
+        setCurrentPage(0);
+    };
+
+    const handleStatusFilterChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(0);
     };
 
     const handleDeleteClick = (part) => {
@@ -54,6 +71,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
             setDeleteDialogOpen(false);
             setPartToDelete(null);
             toast.success('Part deleted successfully.');
+            loadParts(); // Refresh the list
         } catch (error) {
             console.error('Error deleting part:', error);
             toast.error('Failed to delete part.');
@@ -72,12 +90,6 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         return 'In Stock';
     };
 
-    const filteredParts = (parts || []).filter(part =>
-        part.name.toLowerCase().includes(searchTerm.toLowerCase())||
-        // (part.sku && part.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        part.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     if (loading) {
         return <div className="flex justify-center items-center h-64">Loading parts...</div>;
     }
@@ -91,15 +103,30 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 </button>
             </div>
 
-            <div className="relative mb-4">
-                <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
-                <input
-                    type="text"
-                    placeholder="Search parts by name or SKU..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
-                />
+            <div className="flex justify-between items-center mb-4">
+                <div className="relative w-full md:w-1/2">
+                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
+                    <input
+                        type="text"
+                        placeholder="Search parts by name or SKU..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
+                    />
+                </div>
+                <div className="relative">
+                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
+                    <select
+                        value={statusFilter}
+                        onChange={handleStatusFilterChange}
+                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="IN_STOCK">In Stock</option>
+                        <option value="LOW_STOCK">Low Stock</option>
+                        <option value="OUT_OF_STOCK">Out of Stock</option>
+                    </select>
+                </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -115,7 +142,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredParts.map((part) => (
+                        {
+                            parts.map((part) => (
                             <tr key={part.id} className="border-b border-border hover:bg-muted/50">
                                 <td className="px-6 py-4 font-medium">{part.name}</td>
                                 <td className="px-6 py-4">{part.category}</td>
@@ -141,18 +169,22 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                                     </div>
                                 </td>
                             </tr>
-                        ))}
+                            ))
+                        }
                     </tbody>
                 </table>
 
-                {filteredParts.length === 0 && (
+                {
+                    parts.length === 0 && (
                     <div className="text-center py-8">
-                        <p className="text-muted-foreground">No parts found matching your criteria</p>
+                        <p className="text-muted-foreground">No parts found</p>
                     </div>
-                )}
+                    )
+                }
             </div>
 
-            {totalPages > 1 && (
+            {
+                totalPages > 1 && (
                 <Pagination className="mt-4">
                     <PaginationContent>
                         <PaginationItem>
@@ -190,7 +222,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         </PaginationItem>
                     </PaginationContent>
                 </Pagination>
-            )}
+                )
+            }
 
             {deleteDialogOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

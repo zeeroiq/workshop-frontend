@@ -1,28 +1,23 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     FaArrowLeft,
     FaEdit
 } from 'react-icons/fa';
 import {PAYMENT_METHODS} from './constants/invoiceConstants';
 import {formatDateForInput} from "../helper/utils";
+import { customerService } from '@/services/customerService';
+import { toast } from 'react-toastify';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {Card, CardContent, CardFooter, CardHeader, CardTitle} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
-    const [currentInvoice] = useState({
-        email: invoice?.customerEmail || 'NA',
-        phone: invoice?.customerPhone || 'NA',
-        amount: invoice?.totalAmount - (invoice?.paidAmount || 0) || 0,
-        outstandingBalance: invoice ? invoice.totalAmount - (invoice.amountPaid || 0) : 0,
-        paymentDate: new Date().toISOString().split('T')[0],
-        paymentMethod: PAYMENT_METHODS[0],
-        referenceNumber: invoice?.referenceNumber || 'NA',
-        notes: invoice?.notes || 'NA'
-    });
+    const [showCustomerDetails, setShowCustomerDetails] = useState(false);
+    const [fetchedCustomerDetails, setFetchedCustomerDetails] = useState(null);
+    const [loadingCustomerDetails, setLoadingCustomerDetails] = useState(false);
 
     const getStatusVariant = (status) => {
         switch (status) {
@@ -35,6 +30,26 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
             default:
                 return 'secondary';
         }
+    };
+
+    const toggleCustomerDetails = async () => {
+        if (!showCustomerDetails && !fetchedCustomerDetails && invoice?.customerId) {
+            setLoadingCustomerDetails(true);
+            try {
+                const response = await customerService.getById(invoice.customerId);
+                if (response?.data) {
+                    setFetchedCustomerDetails(response.data);
+                } else {
+                    toast.error('Failed to fetch customer details.');
+                }
+            } catch (error) {
+                console.error('Error fetching customer details:', error);
+                toast.error('Failed to fetch customer details.');
+            } finally {
+                setLoadingCustomerDetails(false);
+            }
+        }
+        setShowCustomerDetails(prev => !prev);
     };
 
     return (
@@ -105,24 +120,39 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="flex flex-col">
                     <CardHeader>
                         <CardTitle>Customer Information</CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-4">
+                    <CardContent className="grid gap-4 flex-grow">
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Customer Name:</span>
                             <span>{invoice?.customerName || 'NA'}</span>
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Email:</span>
-                            <span>{invoice?.email || 'NA'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Phone:</span>
-                            <span>{invoice?.phone || 'NA'}</span>
-                        </div>
+                        {loadingCustomerDetails ? (
+                            <div className="text-center">Loading customer details...</div>
+                        ) : showCustomerDetails && fetchedCustomerDetails ? (
+                            <>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Email:</span>
+                                    <span>{fetchedCustomerDetails.email || 'NA'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Phone:</span>
+                                    <span>{fetchedCustomerDetails.phone || 'NA'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Address:</span>
+                                    <span>{fetchedCustomerDetails.address || 'NA'}</span>
+                                </div>
+                            </>
+                        ) : null}
                     </CardContent>
+                    <CardFooter className="flex justify-end pt-4">
+                        <Button variant="outline" size="sm" onClick={toggleCustomerDetails}>
+                            {showCustomerDetails ? 'Hide Details' : 'View Details'}
+                        </Button>
+                    </CardFooter>
                 </Card>
 
                 <Card className="lg:col-span-2">

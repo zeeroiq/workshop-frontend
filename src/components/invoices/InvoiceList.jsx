@@ -187,9 +187,9 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                             onChange={handleSearch}
                             className="max-w-sm"
                         />
-                        <Button type="submit" variant="outline" size="icon">
-                            <Search className="h-4 w-4" />
-                        </Button>
+                        {/*<Button type="submit" variant="outline" size="icon">*/}
+                        {/*    <Search className="h-4 w-4" />*/}
+                        {/*</Button>*/}
                     </div>
                 </CardHeader>
                 <CardContent>

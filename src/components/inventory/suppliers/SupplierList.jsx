@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import {
@@ -14,6 +14,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [supplierToDelete, setSupplierToDelete] = useState(null);
     const [expandedRow, setExpandedRow] = useState(null);
@@ -23,7 +24,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
 
     useEffect(() => {
         loadSuppliers();
-    }, [currentPage, searchTerm]);
+    }, [currentPage, searchTerm, statusFilter]);
 
     const loadSuppliers = async () => {
         try {
@@ -35,6 +36,9 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             };
             if (searchTerm) {
                 params.search = searchTerm;
+            }
+            if (statusFilter !== 'all') {
+                params.status = statusFilter;
             }
             const response = await inventoryService.getSuppliers(params);
             if (response?.data?.success && response.data.data) {
@@ -53,8 +57,14 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
-    const handleSearch = (e) => {
+    const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
+        setCurrentPage(0);
+    };
+
+    const handleStatusFilterChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(0);
     };
 
     const handleDeleteClick = (supplier) => {
@@ -79,11 +89,24 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         setExpandedRow(expandedRow === id ? null : id);
     };
 
+    const STATUS_CLASSES = {
+        ACTIVE: 'bg-green-100 text-green-800',
+        INACTIVE: 'bg-red-100 text-red-800',
+        SUSPENDED: 'bg-orange-100 text-orange-800',
+        DELETED: 'bg-brown-100 text-brown-800',
+    };
+
+    const humanizeStatus = (s) => (s || '')
+        .toLowerCase()
+        .replaceAll('_', ' ')
+        .replaceAll(/\b\w/g, (ch) => ch.toUpperCase()) || 'Unknown';
+
     const getStatusBadge = (status) => {
-        const statusClass = status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+        const key = (status || '').toUpperCase();
+        const statusClass = STATUS_CLASSES[key] || 'bg-gray-100 text-gray-800';
         return (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
-                {status}
+                {humanizeStatus(key)}
             </span>
         );
     };
@@ -104,15 +127,32 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 </button>
             </div>
 
-            <div className="relative mb-4">
-                <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
-                <input
-                    type="text"
-                    placeholder="Search suppliers..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
-                />
+            <div className="flex justify-between items-center mb-4">
+                <div className="relative w-full md:w-1/2">
+                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
+                    <input
+                        type="text"
+                        placeholder="Search suppliers..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
+                    />
+                </div>
+                <div className="relative">
+                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
+                    <select
+                        value={statusFilter}
+                        onChange={handleStatusFilterChange}
+                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                        <option value="SUSPENDED">Suspended</option>
+                        <option value="DELETED">Deleted</option>
+                        <option value="ARCHIVED">Archived</option>
+                    </select>
+                </div>
             </div>
 
             <div className="overflow-x-auto">

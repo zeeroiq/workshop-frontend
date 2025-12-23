@@ -42,17 +42,29 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
 
     useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchTerm]);
+
+    useEffect(() => {
         loadJobs();
-    }, [currentPage, activeTab]);
+    }, [currentPage, activeTab, debouncedSearchTerm]);
 
     const loadJobs = async () => {
         setLoading(true);
         try {
-            const response = await jobService.getAllJobs(currentPage, 10, activeTab === 'all' ? '' : activeTab);
+            const jobStatus = activeTab === 'all' ? '' : activeTab.toUpperCase().replace(/-/g, '_');
+            const response = await jobService.getAllJobs(currentPage, 10, jobStatus, debouncedSearchTerm);
             if (response?.data?.content?.length > 0) {
                 setJobs(response.data.content.map(transformJobData));
                 setTotalPages(response.data.totalPages || 1);
@@ -94,14 +106,6 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         };
     };
 
-
-    const filteredJobs = jobs.filter(job =>
-        job.jobNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.license.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     const createInvoice = async (jobId) => {
         const response = await jobService.createInvoice(jobId);
         if (response.status === 200 && response.data) {
@@ -128,18 +132,16 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                 <CardHeader>
                     <CardTitle>All Jobs</CardTitle>
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="text"
-                                placeholder="Search jobs..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="max-w-sm"
-                            />
-                            <Button type="submit" variant="outline" size="icon">
-                                <Search className="h-4 w-4" />
-                            </Button>
-                        </div>
+                        <Input
+                            type="text"
+                            placeholder="Search jobs..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="max-w-sm"
+                        />
+                        {/*<Button type="submit" variant="outline" size="icon">*/}
+                        {/*    <Search className="h-4 w-4" />*/}
+                        {/*</Button>*/}
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -149,6 +151,15 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                             <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
                             <TabsTrigger value="in-progress">In Progress</TabsTrigger>
                             <TabsTrigger value="completed">Completed</TabsTrigger>
+                            <TabsTrigger value="estimate-pending">Estimate Pending</TabsTrigger>
+                            <TabsTrigger value="estimate-sent">Estimate Sent</TabsTrigger>
+                            <TabsTrigger value="awaiting_approval">Awaiting Approval</TabsTrigger>
+                            <TabsTrigger value="approved">Approved</TabsTrigger>
+                            <TabsTrigger value="awaiting-parts">Awaiting Parts</TabsTrigger>
+                            <TabsTrigger value="ready-for-review">Ready For Review</TabsTrigger>
+                            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                            <TabsTrigger value="invoiced">Invoiced</TabsTrigger>
+                            <TabsTrigger value="paid">Paid</TabsTrigger>
                         </TabsList>
                         <TabsContent value={activeTab}>
                             <Table>
@@ -166,20 +177,21 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {loading ? (
+                                    {
+                                        loading ? (
                                         <TableRow>
                                             <TableCell colSpan="9" className="h-24 text-center">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
                                             </TableCell>
                                         </TableRow>
-                                    ) : filteredJobs.length === 0 ? (
+                                    ) : jobs.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan="9" className="h-24 text-center">
                                                 No jobs found.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredJobs.map(job => (
+                                        jobs.map(job => (
                                             <TableRow key={job.jobNumber}>
                                                 <TableCell className="font-medium">{job.jobNumber}</TableCell>
                                                 <TableCell>{job.customer}</TableCell>

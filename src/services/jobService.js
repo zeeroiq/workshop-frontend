@@ -1,8 +1,9 @@
 import api from './api';
 
 export const jobService = {
-    getAllJobs: (page = 0, size = 5, search = '') => {
+    getAllJobs: (page = 0, size = 10, jobStatus = '', search = '') => {
         const params = { page, size };
+        if (jobStatus) params.jobStatus = jobStatus;
         if (search) params.search = search;
         return api.get('/jobs', { params })
             .then(response => {
@@ -52,8 +53,8 @@ export const jobService = {
                 return response;
             }),
 
-    getJobsByStatus: (status) =>
-        api.get(`/jobs/status/${status}`)
+    getJobsByStatus: (jobStatus) =>
+        api.get(`/jobs/jobStatus/${jobStatus}`)
             .then(response => {
                 if (response?.data?.success) {
                     return {
@@ -191,8 +192,8 @@ export const jobService = {
                 return response;
             }),
 
-    updateJobStatus: (jobId, status) =>
-        api.post(`/jobs/${jobId}/status`, { status })
+    updateJobStatus: (jobId, jobStatus) =>
+        api.post(`/jobs/${jobId}/jobStatus`, { jobStatus })
             .then(response => {
                 if (response?.data?.success) {
                     return {

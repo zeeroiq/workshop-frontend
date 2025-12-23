@@ -69,6 +69,16 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
         return new Date(dateString).toLocaleDateString();
     };
 
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(0);
+    };
+
+    const handleStatusFilterChange = (e) => {
+        setStatusFilter(e.target.value);
+        setCurrentPage(0);
+    };
+
     if (loading) {
         return <div className="flex justify-center items-center h-64">Loading purchase orders...</div>;
     }
@@ -89,7 +99,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                         type="text"
                         placeholder="Search by order number or supplier"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
                     />
                 </div>
@@ -97,12 +107,13 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                     <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
                     <select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        onChange={handleStatusFilterChange}
                         className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
                     >
                         <option value="all">All Statuses</option>
                         <option value="PENDING">Pending</option>
                         <option value="ORDERED">Ordered</option>
+                        <option value="PARTIALLY_RECEIVED">Partially Received</option>
                         <option value="COMPLETED">Completed</option>
                         <option value="CANCELLED">Cancelled</option>
                     </select>

@@ -2,13 +2,21 @@ import React, { useState } from 'react';
 import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 import { invoiceService } from '@/services/invoiceService';
 import { PAYMENT_METHODS } from './constants/invoiceConstants';
+import { toast } from "react-toastify";
 
-import {todayDate} from "../helper/utils";
+import { todayDate } from "../helper/utils";
 import ProcessUPI from "../payment/ProcessUPI";
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 const PaymentForm = ({ invoice, onSave, onCancel }) => {
     const [upiPaymentFlow, setUpiPaymentFlow] = useState(false);
-    const [QRData, setQRData] = useState();
+    // const [QRData, setQRData] = useState(); // Removed as it's not used
     const [formData, setFormData] = useState({
         customerId: invoice?.customerId || '',
         invoiceNumber: invoice?.invoiceNumber || '',
@@ -26,7 +34,7 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
         let processedValue = value;
 
         if (name === 'amount') {
-            processedValue = value === '' ? '' : Number.parseFloat(value).toFixed(2);
+            processedValue = value === '' ? '' : Number.parseFloat(value); // Keep as number for validation
         }
 
         setFormData(prev => ({
@@ -41,13 +49,22 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
                 [name]: ''
             }));
         }
+    };
 
-        // depending on the option selected, enable rendering of respective payment option fields
-        // for now we keep it simple, we'll just support cash/UPI
+    // depending on the option selected, enable rendering of respective payment option fields
+    // for now we keep it simple, we'll just support cash/UPI
+    const handleSelectChange = (name, value) => {
+        setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'paymentMethod' && value === 'UPI') {
             setUpiPaymentFlow(true);
         } else {
             setUpiPaymentFlow(false);
+        }
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
         }
     };
 
@@ -74,127 +91,145 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
         if (!validateForm()) return;
 
         try {
-            await invoiceService.addPaymentToInvoice(invoice.id, formData);
+            // Ensure amount is sent as a number with 2 decimal places
+            const paymentData = {
+                ...formData,
+                amount: Number.parseFloat(formData.amount).toFixed(2)
+            };
+            await invoiceService.addPaymentToInvoice(invoice.id, paymentData);
             onSave();
+            toast.success('Payment added successfully!');
         } catch (error) {
             console.error('Error adding payment:', error);
+            toast.error('Failed to add payment.');
         }
     };
 
     const outstandingBalance = invoice ? invoice.totalAmount - (invoice.amountPaid || 0) : 0;
 
     return (
-        <div className="payment-form-container">
-            <div className="payment-form-header">
-                <button className="back-button" onClick={onCancel}>
-                    <FaArrowLeft /> Back to Invoices
-                </button>
-                <h2>Add Payment to Invoice #{invoice?.invoiceNumber}</h2>
-            </div>
-
-            <div className="payment-info">
-                <div className="info-item">
-                    <label>Customer:</label>
-                    <span>{invoice?.customerName}</span>
-                </div>
-                <div className="info-item">
-                    <label>Invoice Total:</label>
-                    <span>₹{invoice?.totalAmount?.toFixed(2)}</span>
-                </div>
-                <div className="info-item">
-                    <label>Amount Paid:</label>
-                    <span>₹{(invoice?.amountPaid || 0).toFixed(2)}</span>
-                </div>
-                <div className="info-item">
-                    <label>Outstanding Balance:</label>
-                    <span className="outstanding-balance">₹{outstandingBalance.toFixed(2)}</span>
-                </div>
-            </div>
-
-            <form className="payment-form" onSubmit={handleSubmit}>
-                <div className="form-section">
-                    <h3>Payment Details</h3>
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Amount *</label>
-                            <input
-                                type="number"
-                                name="amount"
-                                value={formData.amount}
-                                onChange={handleChange}
-                                className={errors.amount ? 'error' : ''}
-                                step="0.01"
-                                min="0"
-                                max={outstandingBalance}
-                            />
-                            {errors.amount && <span className="error-text">{errors.amount}</span>}
+        <div className="container mx-auto py-6">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <Button variant="ghost" onClick={onCancel} className="flex items-center">
+                        <FaArrowLeft className="mr-2" /> Back to Invoices
+                    </Button>
+                    <CardTitle>Add Payment to Invoice #{invoice?.invoiceNumber}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-muted/40 rounded-md">
+                        <div className="flex flex-col">
+                            <Label className="text-sm text-muted-foreground">Customer:</Label>
+                            <span className="font-medium">{invoice?.customerName}</span>
                         </div>
-                        <div className="form-group">
-                            <label>Payment Date *</label>
-                            <input
-                                type="date"
-                                name="paymentDate"
-                                value={formData.paymentDate}
-                                onChange={handleChange}
-                                className={errors.paymentDate ? 'error' : ''}
-                            />
-                            {errors.paymentDate && <span className="error-text">{errors.paymentDate}</span>}
+                        <div className="flex flex-col">
+                            <Label className="text-sm text-muted-foreground">Invoice Total:</Label>
+                            <span className="font-medium">₹{invoice?.totalAmount?.toFixed(2)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <Label className="text-sm text-muted-foreground">Amount Paid:</Label>
+                            <span className="font-medium">₹{(invoice?.amountPaid || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <Label className="text-sm text-muted-foreground">Outstanding Balance:</Label>
+                            <span className="font-semibold text-lg text-primary">₹{outstandingBalance.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Payment Method *</label>
-                            <select
-                                name="paymentMethod"
-                                value={formData.paymentMethod}
-                                onChange={handleChange}
-                                className={errors.paymentMethod ? 'error' : ''}
-                            >
-                                {PAYMENT_METHODS.map(method => (
-                                    <option key={method} value={method}>
-                                        {method.replace('_', ' ')}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.paymentMethod && <span className="error-text">{errors.paymentMethod}</span>}
-                        </div>
-                        <div className="form-group">
-                            <label>Reference Number</label>
-                            <input
-                                type="text"
-                                name="reference"
-                                value={formData.reference}
-                                onChange={handleChange}
-                                placeholder="Check #, Transaction ID, etc."
-                            />
-                        </div>
-                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold">Payment Details</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="amount">Amount *</Label>
+                                    <Input
+                                        id="amount"
+                                        type="number"
+                                        name="amount"
+                                        value={formData.amount}
+                                        onChange={handleChange}
+                                        className={errors.amount ? 'border-destructive' : ''}
+                                        step="0.01"
+                                        min="0"
+                                        max={outstandingBalance}
+                                    />
+                                    {errors.amount && <p className="text-destructive text-sm">{errors.amount}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="paymentDate">Payment Date *</Label>
+                                    <Input
+                                        id="paymentDate"
+                                        type="date"
+                                        name="paymentDate"
+                                        value={formData.paymentDate}
+                                        onChange={handleChange}
+                                        className={errors.paymentDate ? 'border-destructive' : ''}
+                                    />
+                                    {errors.paymentDate && <p className="text-destructive text-sm">{errors.paymentDate}</p>}
+                                </div>
+                            </div>
 
-                    <div className="form-group">
-                        <label>Notes</label>
-                        <textarea
-                            name="notes"
-                            value={formData.notes}
-                            onChange={handleChange}
-                            rows={3}
-                            placeholder="Additional payment notes"
-                        />
-                    </div>
-                    {upiPaymentFlow && (
-                        <ProcessUPI amount={formData?.amount} customerId={formData.customerId} transactionNote="transaction note"/>
-                    )}
-                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="paymentMethod">Payment Method *</Label>
+                                    <Select
+                                        name="paymentMethod"
+                                        value={formData.paymentMethod}
+                                        onValueChange={(value) => handleSelectChange('paymentMethod', value)}
+                                    >
+                                        <SelectTrigger className={errors.paymentMethod ? 'border-destructive' : ''}>
+                                            <SelectValue placeholder="Select method" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {PAYMENT_METHODS.map(method => (
+                                                <SelectItem key={method} value={method}>
+                                                    {method.replace('_', ' ')}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.paymentMethod && <p className="text-destructive text-sm">{errors.paymentMethod}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="reference">Reference Number</Label>
+                                    <Input
+                                        id="reference"
+                                        type="text"
+                                        name="reference"
+                                        value={formData.reference}
+                                        onChange={handleChange}
+                                        placeholder="Check #, Transaction ID, etc."
+                                    />
+                                </div>
+                            </div>
 
-                <div className="form-actions">
-                    <button type="button" className="cancel-btn" onClick={onCancel}>
-                        <FaTimes /> Cancel
-                    </button>
-                    <button type="submit" className="save-btn">
-                        <FaSave /> Add Payment
-                    </button>
-                </div>
-            </form>
+                            <div className="space-y-2">
+                                <Label htmlFor="notes">Notes</Label>
+                                <Textarea
+                                    id="notes"
+                                    name="notes"
+                                    value={formData.notes}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    placeholder="Additional payment notes"
+                                />
+                            </div>
+                            {upiPaymentFlow && (
+                                <ProcessUPI amount={formData?.amount} customerId={formData.customerId} transactionNote="transaction note" />
+                            )}
+                        </div>
+
+                        <div className="flex justify-end space-x-4">
+                            <Button type="button" variant="outline" onClick={onCancel}>
+                                <FaTimes className="mr-2" /> Cancel
+                            </Button>
+                            <Button type="submit">
+                                <FaSave className="mr-2" /> Add Payment
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 };
