@@ -41,7 +41,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState(null);
-    const [isInitializingForm, setIsInitializingForm] = useState(true); // New state
 
     useEffect(() => {
         const loadJobData = async () => {
@@ -78,7 +77,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 setCustomers(customers);
 
                 if (isEdit) {
-                    console.log("Job data for initialization:", job); // Debugging
+                    // console.log("Job data for initialization:", job); // Debugging
                     const customerForVehicles = customers.find(c => c.id.toString() === job.customerId?.toString());
                     setSelectedCustomerVehicles(customerForVehicles);
 
@@ -110,13 +109,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         }) || [],
                         notes: job.notes || []
                     });
-                    console.log("formData.selectedVehicleLicense after setFormData in loadJobData:", vehicleFromJob ? vehicleFromJob.licensePlate : ''); // Debugging
+                    // console.log("formData.selectedVehicleLicense after setFormData in loadJobData:", vehicleFromJob ? vehicleFromJob.licensePlate : ''); // Debugging
                 }
             } catch (error) {
                 toast.error("Failed to load job data. Please try again.");
             } finally {
                 setLoading(false);
-                setIsInitializingForm(false); // Set to false after initial load
             }
         };
 
@@ -134,41 +132,49 @@ const JobForm = ({ job, onSave, onCancel }) => {
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
-    const handleSelectChange = (name, value) => {
+    const handleSelectChange = async (name, value) => {
         setFormData(prev => ({ ...prev, [name]: value }));
-        if (name === 'customerId') {
-            const selectedCustomer = customers.find(c => c.id.toString() === value);
-            setSelectedCustomerVehicles(selectedCustomer);
 
-            if (!isInitializingForm) { // Only modify vehicle selection if not initializing
-                if (selectedCustomer) {
+        if (name === 'customerId') {
+            setLoading(true);
+            try {
+                const detailedCustomerRes = await customerService.getWithVehicles(value);
+                const detailedCustomer = detailedCustomerRes.data;
+
+                if (detailedCustomer) {
+                    // Update the customers list with the detailed customer info
+                    const updatedCustomers = customers.map(c => c.id === detailedCustomer.id ? detailedCustomer : c);
+                    setCustomers(updatedCustomers);
+                    setSelectedCustomerVehicles(detailedCustomer);
+
+                    // Reset vehicle selection
                     setFormData(prev => ({
                         ...prev,
-                        customerName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`,
-                        selectedVehicleLicense: selectedCustomer.vehicles?.length === 1 ? selectedCustomer.vehicles[0].licensePlate : '', // Use license
-                        vehicle: selectedCustomer.vehicles?.length === 1 ? `${selectedCustomer.vehicles[0].year} ${selectedCustomer.vehicles[0].make} ${selectedCustomer.vehicles[0].model}` : '',
-                        license: selectedCustomer.vehicles?.length === 1 ? selectedCustomer.vehicles[0].licensePlate : ''
+                        customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`,
+                        selectedVehicleLicense: '',
+                        vehicle: '',
+                        license: ''
                     }));
                 } else {
-                     setFormData(prev => ({ ...prev, selectedVehicleLicense: '', vehicle: '', license: '' }));
+                    setSelectedCustomerVehicles(null);
+                    setFormData(prev => ({ ...prev, selectedVehicleLicense: '', vehicle: '', license: '' }));
                 }
-            } else {
-                // If initializing, ensure customerName is set even if vehicle selection isn't touched
-                if (selectedCustomer) {
-                    setFormData(prev => ({
-                        ...prev,
-                        customerName: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`,
-                    }));
-                }
+            } catch (error) {
+                toast.error("Failed to load customer vehicles.");
+                setSelectedCustomerVehicles(null);
+            } finally {
+                setLoading(false);
             }
         }
-        if (name === 'selectedVehicleLicense') { // Handle change for the new vehicle select
+
+        if (name === 'selectedVehicleLicense') {
             const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
-            const vehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === value); // Match by licensePlate
-            if(vehicle) {
+            const vehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === value);
+            if (vehicle) {
                 setFormData(prev => ({ ...prev, vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, license: vehicle.licensePlate }));
             }
         }
+
         if (name === 'technicianId') {
             const selectedTechnician = technicians.find(t => t.id.toString() === value);
             if (selectedTechnician) {
