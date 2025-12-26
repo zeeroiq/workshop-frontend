@@ -2,13 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination";
 import PaginationComponent from "@/components/common/PaginationComponent";
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {

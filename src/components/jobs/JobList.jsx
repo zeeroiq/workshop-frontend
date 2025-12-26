@@ -256,13 +256,11 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                 </CardContent>
             </Card>
 
-            {totalPages > 1 && (
-                <PaginationComponent
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                />
-            )}
+            <PaginationComponent
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
         </div>
     );
 };
