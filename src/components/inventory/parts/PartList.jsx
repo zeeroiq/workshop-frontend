@@ -2,14 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle, FaFilter } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
+import PaginationComponent from "@/components/common/PaginationComponent";
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
@@ -185,43 +178,11 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
             {
                 totalPages > 1 && (
-                <Pagination className="mt-4">
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
-                                }}
-                                disabled={currentPage === 0}
-                                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                        {[...Array(totalPages).keys()].map(page => (
-                            <PaginationItem key={page}>
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
-                                    isActive={currentPage === page}
-                                >
-                                    {page + 1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
-                                }}
-                                disabled={currentPage >= totalPages - 1}
-                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 )
             }
 
