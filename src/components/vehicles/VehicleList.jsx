@@ -28,6 +28,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination';
+import PaginationComponent from "@/components/common/PaginationComponent";
 
 const VehicleList = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -174,35 +175,11 @@ const VehicleList = () => {
             </Card>
 
             {totalPages > 1 && (
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage - 1); }}
-                                disabled={currentPage === 0}
-                            />
-                        </PaginationItem>
-                        {[...Array(totalPages).keys()].map(page => (
-                            <PaginationItem key={page}>
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
-                                    isActive={currentPage === page}
-                                >
-                                    {page + 1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage + 1); }}
-                                disabled={currentPage === totalPages - 1}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             )}
         </div>
     );

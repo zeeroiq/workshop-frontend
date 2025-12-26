@@ -1,7 +1,17 @@
-import React, {useEffect, useState} from 'react';
-import { Calendar, Car, Clock, Edit, Eye, FileText, Filter, Plus, IndianRupee, Search, Trash, User, Wrench } from 'lucide-react';
+import React, {useEffect, useState, useCallback} from 'react';
+import {
+    Calendar,
+    Edit,
+    Eye,
+    FileText,
+    Plus,
+    IndianRupee,
+    Trash,
+    Search
+} from 'lucide-react';
 import {formatDateAsEnUS} from "../helper/utils";
 import {getStatusBadge} from "./helper/utils";
+import {JOB_FILTER_OPTIONS} from "./helper/constants";
 import {jobService} from "@/services/jobService";
 import {toast} from "react-toastify";
 import {
@@ -20,21 +30,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
 import {
     Tabs,
     TabsContent,
-    TabsList,
-    TabsTrigger,
 } from "@/components/ui/tabs";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+
+import PaginationComponent from "@/components/common/PaginationComponent";
 
 const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar}) => {
 
@@ -42,42 +44,61 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
 
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm);
-        }, 500);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [searchTerm]);
-
-    useEffect(() => {
-        loadJobs();
-    }, [currentPage, activeTab, debouncedSearchTerm]);
-
-    const loadJobs = async () => {
+    const loadJobs = useCallback(async () => {
         setLoading(true);
         try {
-            const jobStatus = activeTab === 'all' ? '' : activeTab.toUpperCase().replace(/-/g, '_');
-            const response = await jobService.getAllJobs(currentPage, 10, jobStatus, debouncedSearchTerm);
-            if (response?.data?.content?.length > 0) {
-                setJobs(response.data.content.map(transformJobData));
-                setTotalPages(response.data.totalPages || 1);
+            let response;
+            if (searchTerm) {
+                response = await jobService.getJobLikeJobNumber(searchTerm);
+                if (response?.data) {
+                    setJobs(response.data.content.map(transformJobData));
+                    setTotalPages(response.data.totalPages || 1);
+                } else {
+                    setJobs([]);
+                    setTotalPages(1);
+                }
             } else {
-                setJobs([]);
-                setTotalPages(1);
+                const jobStatus = activeTab === 'all' ? '' : activeTab.toUpperCase().replaceAll('-', '_');
+                response = await jobService.getAllJobs(currentPage, 10, jobStatus, searchTerm);
+                if (response?.data?.content?.length > 0) {
+                    setJobs(response.data.content.map(transformJobData));
+                    setTotalPages(response.data.totalPages || 1);
+                } else {
+                    setJobs([]);
+                    setTotalPages(1);
+                }
             }
         } catch (error) {
             console.error('Error loading jobs:', error);
             toast.error('Failed to load jobs');
+            setJobs([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
+    }, [currentPage, activeTab, searchTerm]);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchTerm) {
+                loadJobs();
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm, loadJobs]);
+
+    useEffect(() => {
+        if (!searchTerm) {
+            loadJobs();
+        }
+    }, [currentPage, activeTab, searchTerm, loadJobs]);
+
+    const handleSearch = () => {
+        loadJobs();
     };
 
     const transformJobData = (apiJob) => {
@@ -91,12 +112,12 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
             jobNumber: apiJob.jobNumber,
             customer: apiJob.customerName,
             customerId: apiJob.customerId,
-            vehicle: vehicle.trim(),
-            license: license.trim(),
+            vehicle: vehicle?.trim(),
+            license: license?.trim(),
             service: serviceItems || apiJob.description,
             technicianId: apiJob.technicianId,
             technician: apiJob.technicianName,
-            status: apiJob.status.toLowerCase().replace(/_/g, '-'), // e.g., 'IN_PROGRESS' -> 'in-progress'
+            status: apiJob?.status?.toLowerCase()?.replace(/_/g, '-'), // e.g., 'IN_PROGRESS' -> 'in-progress'
             estimatedCompletion: apiJob.completedAt || apiJob.updatedAt, // Using completedAt or updatedAt as a fallback
             cost: apiJob.totalCost,
             createdAt: apiJob.createdAt,
@@ -107,11 +128,16 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     };
 
     const createInvoice = async (jobId) => {
-        const response = await jobService.createInvoice(jobId);
-        if (response.status === 200 && response.data) {
-            toast.dark("Invoice created successfully");
-        } else {
-            toast.error("Failed to create invoice");
+        try {
+            const response = await jobService.createInvoice(jobId);
+            if (response?.status === 200 || response?.data?.success && response.data) {
+                toast.dark(`${response.data.jobNumber} updated`);
+                toast.dark(`Created Invoice ${response.data.invoiceNumber}`);
+            } else {
+                toast.error("Failed to create invoice");
+            }
+        } catch (error) {
+            toast(error.response?.data?.message || error.message);
         }
     }
 
@@ -131,36 +157,39 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
             <Card>
                 <CardHeader>
                     <CardTitle>All Jobs</CardTitle>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Search jobs..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="max-w-sm"
-                        />
-                        {/*<Button type="submit" variant="outline" size="icon">*/}
-                        {/*    <Search className="h-4 w-4" />*/}
-                        {/*</Button>*/}
-                    </div>
                 </CardHeader>
                 <CardContent>
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList>
-                            <TabsTrigger value="all">All Jobs</TabsTrigger>
-                            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-                            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-                            <TabsTrigger value="completed">Completed</TabsTrigger>
-                            <TabsTrigger value="estimate-pending">Estimate Pending</TabsTrigger>
-                            <TabsTrigger value="estimate-sent">Estimate Sent</TabsTrigger>
-                            <TabsTrigger value="awaiting_approval">Awaiting Approval</TabsTrigger>
-                            <TabsTrigger value="approved">Approved</TabsTrigger>
-                            <TabsTrigger value="awaiting-parts">Awaiting Parts</TabsTrigger>
-                            <TabsTrigger value="ready-for-review">Ready For Review</TabsTrigger>
-                            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-                            <TabsTrigger value="invoiced">Invoiced</TabsTrigger>
-                            <TabsTrigger value="paid">Paid</TabsTrigger>
-                        </TabsList>
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <Input
+                                type="text"
+                                placeholder="Search jobs by job number..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                className="max-w-sm"
+                            />
+                            <Button type="button" variant="outline" size="icon" onClick={handleSearch}>
+                                <Search className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <Select value={activeTab} onValueChange={setActiveTab}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                {
+                                    JOB_FILTER_OPTIONS.map(status => (
+                                        <SelectItem key={status.value} value={status.value}>
+                                            {status.label}
+                                        </SelectItem>
+                                    ))
+                                }
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Tabs value={activeTab}>
                         <TabsContent value={activeTab}>
                             <Table>
                                 <TableHeader>
@@ -206,7 +235,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                                                 <TableCell>
                                                     <div className="flex items-center">
                                                         <IndianRupee className="h-4 w-4 mr-1" />
-                                                        {job.cost.toFixed(2)}
+                                                        {job.cost?.toFixed(2)}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right">
@@ -228,35 +257,11 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
             </Card>
 
             {totalPages > 1 && (
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage - 1); }}
-                                disabled={currentPage === 0}
-                            />
-                        </PaginationItem>
-                        {[...Array(totalPages).keys()].map(page => (
-                            <PaginationItem key={page}>
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
-                                    isActive={currentPage === page}
-                                >
-                                    {page + 1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(currentPage + 1); }}
-                                disabled={currentPage === totalPages - 1}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             )}
         </div>
     );

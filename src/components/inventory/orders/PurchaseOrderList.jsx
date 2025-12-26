@@ -9,6 +9,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import PaginationComponent from "@/components/common/PaginationComponent";
 
 const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
@@ -176,37 +177,11 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
             </div>
             {totalPages > 1  && (
                 <div className="mt-4 flex justify-center">
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
-                                }}
-                                disabled={currentPage === 0}
-                                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                        <PaginationItem>
-                            <span className="px-4 py-2">
-                                Page {currentPage + 1} of {totalPages}
-                            </span>
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
-                                }}
-                                disabled={currentPage >= totalPages - 1}
-                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
             </div>
                 )}
         </div>

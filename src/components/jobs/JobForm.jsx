@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaArrowLeft, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 import { customerService } from "@/services/customerService";
 import { userService } from "@/services/userService";
 import { inventoryService } from "@/services/inventoryService";
@@ -113,6 +113,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 }
             } catch (error) {
                 toast.error("Failed to load job data. Please try again.");
+                console.log(error);
             } finally {
                 setLoading(false);
             }
@@ -221,13 +222,13 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 ...formData,
                 vehicleId: selectedVehicle?.id?.toString(), // Send vehicleId to backend
                 license: formData.selectedVehicleLicense, // Also send license if needed
-                cost: parseFloat(formData.cost),
+                cost: Number.parseFloat(formData.cost),
                 technician: technicians.find(t => t.id.toString() === formData.technicianId)?.firstName || formData.technician,
                 customerName: customers.find(c => c.id.toString() === formData.customerId)?.firstName || formData.customerName,
                 items: formData.items.map(item => ({
                     ...item,
-                    quantity: parseInt(item.quantity),
-                    rate: parseFloat(item.rate)
+                    quantity: Number.parseInt(item.quantity),
+                    rate: Number.parseFloat(item.rate)
                 }))
             };
             await onSave(payload);
@@ -248,7 +249,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>{isEdit ? 'Edit Job' : 'Create New Job'}</CardTitle>
+                        <CardTitle>{isEdit ? `${formData.jobNumber}` : 'Create New Job'}</CardTitle>
                          <div className="flex space-x-2">
                             <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
                             <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Job'}</Button>
@@ -289,8 +290,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 <Input name="service" value={formData.service} onChange={handleChange} required />
                             </div>
                             <div className="space-y-2">
-                                <Label>Technician *</Label>
-                                <Select name="technicianId" value={formData.technicianId} onValueChange={val => handleSelectChange('technicianId', val)} required>
+                                <Label>Technician</Label>
+                                <Select name="technicianId" value={formData.technicianId} onValueChange={val => handleSelectChange('technicianId', val)}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Assign a technician..." />
                                     </SelectTrigger>
