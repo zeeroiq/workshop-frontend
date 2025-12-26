@@ -207,6 +207,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Invoice #</TableHead>
+                                        <TableHead>Job Id</TableHead>
                                         <TableHead>Customer</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead>Due Date</TableHead>
@@ -232,6 +233,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                         filteredAndSearchedInvoices.map(invoice => (
                                             <TableRow key={invoice.id}>
                                                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                                                <TableCell className="font-medium">{invoice.jobId === null ? '-' : invoice.jobId}</TableCell>
                                                 <TableCell>{invoice.customerName}</TableCell>
                                                 <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
                                                 <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
