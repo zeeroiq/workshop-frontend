@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote } from 'lucide-react';
 import { invoiceService } from '@/services/invoiceService';
+import { jobService } from '@/services/jobService';
 import { INVOICE_STATUS_OPTIONS } from './constants/invoiceConstants';
 import { toast } from "react-toastify";
 import {
@@ -41,6 +42,16 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         loadInvoices();
     }, [currentPage, statusFilter]);
 
+    const convertJobIdtoJobNumber = async (jobId) => {
+        try {
+            const response = await jobService.getJobById(jobId);
+            return response.data.jobNumber;
+        } catch (error) {
+            console.error('Error fetching job number:', error);
+            return jobId;
+        }
+    };
+
     const loadInvoices = async () => {
         setLoading(true);
         try {
@@ -51,7 +62,15 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
             };
 
             const response = await invoiceService.getAllInvoices(params);
-            setInvoices(response.data.data.content || response.data.data);
+            const invoicesWithJobNumbers = await Promise.all(response.data.data.content.map(async (invoice) => {
+                if (invoice.jobId !== null) {
+                    const jobNumber = await convertJobIdtoJobNumber(invoice.jobId);
+                    return { ...invoice, jobId: jobNumber };
+                } else {
+                    return invoice;
+                }
+            }));
+            setInvoices(invoicesWithJobNumbers);
             setTotalPages(response.data.data.totalPages || 1);
         } catch (error) {
             console.error('Error loading invoices:', error);
@@ -201,6 +220,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Invoice #</TableHead>
+                                        <TableHead>Job Number</TableHead>
                                         <TableHead>Customer</TableHead>
                                         <TableHead>Date</TableHead>
                                         <TableHead>Due Date</TableHead>
@@ -226,6 +246,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                         filteredAndSearchedInvoices.map(invoice => (
                                             <TableRow key={invoice.id}>
                                                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                                                <TableCell className="font-medium text-center">{invoice.jobId === null ? '-' : invoice.jobId}</TableCell>
                                                 <TableCell>{invoice.customerName}</TableCell>
                                                 <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
                                                 <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
