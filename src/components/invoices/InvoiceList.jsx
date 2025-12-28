@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, Eye, Edit, Trash, TextSearch, Send, Banknote } from 'lucide-react';
+import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote } from 'lucide-react';
 import { invoiceService } from '@/services/invoiceService';
 import { INVOICE_STATUS_OPTIONS } from './constants/invoiceConstants';
 import { toast } from "react-toastify";
@@ -21,19 +21,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
-import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
 } from "@/components/ui/tabs";
+
+import PaginationComponent from "@/components/common/PaginationComponent";
 
 const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayment }) => {
     const [invoices, setInvoices] = useState([]);
@@ -274,45 +268,11 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                 </CardContent>
             </Card>
 
-            {totalPages > 1 && (
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
-                                    }}
-                                    disabled={currentPage === 0}
-                                    className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                        {[...Array(totalPages).keys()].map(page => (
-                            <PaginationItem key={page}>
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
-                                    isActive={currentPage === page}
-                                >
-                                    {page + 1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
-                                }}
-                                disabled={currentPage >= totalPages - 1}
-                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            )}
+            <PaginationComponent
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
         </div>
     );
 };

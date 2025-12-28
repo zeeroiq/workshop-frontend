@@ -29,6 +29,18 @@ export const jobService = {
                 return response;
             }),
 
+    getJobLikeJobNumber: (jobNumber) =>
+        api.get(`/jobs/alike/${jobNumber}`)
+            .then(response => {
+                if (response?.data?.success) {
+                    return {
+                        ...response,
+                        data: response.data.data
+                    };
+                }
+                return response;
+            }),
+
     getJobByCustomerId: (customerId) =>
         api.get(`/jobs/customer/${customerId}`)
             .then(response => {
