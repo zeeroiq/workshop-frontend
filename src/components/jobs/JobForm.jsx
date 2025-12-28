@@ -51,7 +51,11 @@ const JobForm = ({ job, onSave, onCancel }) => {
 
                 const [techRes, partsRes, custRes] = await Promise.all([
                     userService.getByRole("MECHANIC"),
-                    inventoryService.getParts(),
+                    // todo: fix it to be dynamic
+                    inventoryService.getParts({
+                        page: 0,
+                        size: 1000
+                    }),
                     customerService.getAll(0, 1000)
                 ]);
 
