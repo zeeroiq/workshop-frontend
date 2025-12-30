@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaTimes, FaUpload } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
+import { uploadImageToCloudinary } from '@/services/uploadService';
 import { toast } from 'react-toastify';
 import PartCatalog from './PartCatalog';
 
@@ -46,13 +47,15 @@ const PartForm = ({ part, onSave, onCancel }) => {
         minStockLevel: '',
         location: '',
         supplierId: '',
-        supplierName: ''
+        supplierName: '',
+        imageUrl: ''
     });
 
     const [errors, setErrors] = useState({});
     const [suppliers, setSuppliers] = useState([]);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -92,7 +95,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 minStockLevel: part.minStockLevel || '',
                 location: part.location || '',
                 supplierId: part.supplierId || '',
-                supplierName: part.supplierName || ''
+                supplierName: part.supplierName || '',
+                imageUrl: part.imageUrl || ''
             });
         } else {
             setFormData({
@@ -107,7 +111,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 minStockLevel: '',
                 location: '',
                 supplierId: '',
-                supplierName: ''
+                supplierName: '',
+                imageUrl: ''
             });
         }
     }, [part]);
@@ -117,6 +122,30 @@ const PartForm = ({ part, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleFileChange = async (event) => {
+        setSelectedImage(event.target.files[0]);
+        console.log(selectedImage)
+    };
+
+    const handleUploadImage = async () => {
+        if (!selectedImage) {
+            toast.error('No image selected for upload.');
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append("image", selectedImage);
+            console.log("formData",formData)
+            const imageUrl = await uploadImageToCloudinary(selectedImage);
+            console.log("url", imageUrl);
+            setFormData(prev => ({ ...prev, imageUrl : imageUrl }));
+            toast.success('Image uploaded successfully!');
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            toast.error('Failed to upload image.');
         }
     };
 
@@ -231,6 +260,14 @@ const PartForm = ({ part, onSave, onCancel }) => {
                             </select>
                         </Input>
                     </div>
+                </div>
+                <div className="p-5 border border-border rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Upload Part Image</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Input name="imageUrl" label="Part Image" onChange={handleFileChange} error={errors.imageUrl} type='file'/>
+                        <FaUpload onClick={handleUploadImage} className="cursor-pointer mt-9" />
+                    </div>
+                    <img src={formData.imageUrl !='' ? formData.imageUrl  : 'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg'} alt="Part" width={150} height={150} className="mt-4 rounded-md border border-border" />
                 </div>
 
                 <div className="flex justify-end space-x-4">
