@@ -43,10 +43,10 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                     inventoryService.getParts()
                 ]);
                 if (suppliersRes?.data?.success) {
-                    setSuppliers(suppliersRes.data.data.content || suppliersRes.data.data);
+                    setSuppliers(suppliersRes.data.content || suppliersRes.data);
                 }
                 if (partsRes?.data?.success) {
-                    setParts(partsRes.data.data.content || partsRes.data.data);
+                    setParts(partsRes.data.content || partsRes.data);
                 }
             } catch (error) {
                 toast.error("Failed to load necessary data.");
@@ -153,7 +153,7 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
             const response = await api[method.toLowerCase()](url, apiData);
             if (response?.data?.success) {
                 // todo: update it so that post update/create it should opens up detail page instead of going back to list
-                // const submittedOrder = response.data.data;
+                // const submittedOrder = response.data;
                 // setFormData({
                 //     ...submittedOrder,
                 //     orderDate: formatDateForInput(submittedOrder.orderDate),

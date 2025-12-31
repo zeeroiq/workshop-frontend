@@ -32,9 +32,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 params.status = statusFilter;
             }
             const response = await inventoryService.getParts(params);
-            setParts(response.data.data.content || []);
-            console.log('Loaded parts:', response.data.data);
-            setTotalPages(response.data.data.totalPages || 1);
+            setParts(response.data.content || []);
+            setTotalPages(response.data.totalPages || 1);
         } catch (error) {
             console.error('Error loading parts:', error);
             toast.error('Failed to load parts.');
@@ -127,8 +126,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground uppercase">
                         <tr>
+                            <th className="px-6 py-3">Part Number</th>
                             <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Part No.</th>
                             <th className="px-6 py-3">Category</th>
                             <th className="px-6 py-3">In Stock</th>
                             <th className="px-6 py-3">Unit Price</th>
@@ -141,8 +140,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         {
                             parts.map((part) => (
                             <tr key={part.id} className="border-b border-border hover:bg-muted/50">
+                                <td className="px-6 py-4 font-medium">{part.partNumber}</td>
                                 <td className="px-6 py-4 font-medium">{part.name}</td>
-                                <td className="px-6 py-4">{part.partNumber}</td>
                                 <td className="px-6 py-4">{part.category}</td>
                                 <td className="px-6 py-4">{part.quantityInStock} {part.unitType}</td>
                                 <td className="px-6 py-4">₹{part.sellingPrice?.toFixed(2)}</td>

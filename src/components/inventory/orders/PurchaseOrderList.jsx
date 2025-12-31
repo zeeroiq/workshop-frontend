@@ -32,9 +32,9 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                 params.status = statusFilter;
             }
             const response = await inventoryService.getPurchaseOrders(params);
-            if (response?.data?.success && response.data.data) {
-                setOrders(response.data.data.content || []);
-                setTotalPages(response.data.data.totalPages || 0);
+            if (response?.data?.success && response.data) {
+                setOrders(response.data.content || []);
+                setTotalPages(response.data.totalPages || 0);
             } else {
                 setOrders([]);
                 setTotalPages(0);
