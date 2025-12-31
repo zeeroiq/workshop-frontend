@@ -86,7 +86,7 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                                 <tbody>
                                     {job.items.map((item, index) => (
                                         <tr key={index} className="border-b">
-                                            <td className="px-4 py-2">{item.partName || item.description}</td>
+                                            <td className="px-4 py-2">{item.type === 'LABOR' ? item.description : `[${item.partNumber}]  ${item.partName}`}</td>
                                             <td className="px-4 py-2 text-right">{item.quantity}</td>
                                             <td className="px-4 py-2 text-right">₹ {item.rate.toFixed(2)}</td>
                                             <td className="px-4 py-2 text-right font-semibold">₹ {(item.quantity * item.rate).toFixed(2)}</td>

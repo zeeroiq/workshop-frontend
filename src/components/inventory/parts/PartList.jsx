@@ -2,14 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle, FaFilter, FaUpload } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
+import PaginationComponent from "@/components/common/PaginationComponent";
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
@@ -39,9 +32,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 params.status = statusFilter;
             }
             const response = await inventoryService.getParts(params);
-            setParts(response.data.data.content || []);
-            console.log('Loaded parts:', response.data.data);
-            setTotalPages(response.data.data.totalPages || 1);
+            setParts(response.data.content || []);
+            setTotalPages(response.data.totalPages || 1);
         } catch (error) {
             console.error('Error loading parts:', error);
             toast.error('Failed to load parts.');
@@ -134,8 +126,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground uppercase">
                         <tr>
+                            <th className="px-6 py-3">Part Number</th>
                             <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Part No.</th>
                             <th className="px-6 py-3">Category</th>
                             <th className="px-6 py-3">In Stock</th>
                             <th className="px-6 py-3">Unit Price</th>
@@ -148,8 +140,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         {
                             parts.map((part) => (
                             <tr key={part.id} className="border-b border-border hover:bg-muted/50">
+                                <td className="px-6 py-4 font-medium">{part.partNumber}</td>
                                 <td className="px-6 py-4 font-medium">{part.name}</td>
-                                <td className="px-6 py-4">{part.partNumber}</td>
                                 <td className="px-6 py-4">{part.category}</td>
                                 <td className="px-6 py-4">{part.quantityInStock} {part.unitType}</td>
                                 <td className="px-6 py-4">₹{part.sellingPrice?.toFixed(2)}</td>
@@ -190,43 +182,11 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
             {
                 totalPages > 1 && (
-                <Pagination className="mt-4">
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.max(prev - 1, 0));
-                                }}
-                                disabled={currentPage === 0}
-                                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                        {[...Array(totalPages).keys()].map(page => (
-                            <PaginationItem key={page}>
-                                <PaginationLink
-                                    href="#"
-                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
-                                    isActive={currentPage === page}
-                                >
-                                    {page + 1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
-                                }}
-                                disabled={currentPage >= totalPages - 1}
-                                className={currentPage >= totalPages - 1 ? "pointer-events-none opacity-50" : ""}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 )
             }
 

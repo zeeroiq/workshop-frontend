@@ -1,7 +1,3 @@
-// secret=czyVdpcGz-PmrYK4Q9dL_bI_S1g
-// key=464539689816816
-// services/cloudinaryUpload.js
-
 export const uploadImageToCloudinary = async (file) => {
   const CLOUD_NAME = "dc7cojpvn";
   const UPLOAD_PRESET = "inventry_management";

@@ -68,7 +68,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 ]);
 
                 if (suppliersRes.data.success) {
-                    setSuppliers(suppliersRes.data.data.content || suppliersRes.data.data);
+                    setSuppliers(suppliersRes.data.content || suppliersRes.data);
                 }
                 setCategories(categoriesRes);
             } catch (error) {
