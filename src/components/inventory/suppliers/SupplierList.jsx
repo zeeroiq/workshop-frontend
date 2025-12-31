@@ -35,9 +35,9 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 params.status = statusFilter;
             }
             const response = await inventoryService.getSuppliers(params);
-            if (response?.data?.success && response.data.data) {
-                setSuppliers(response.data.data.content || []);
-                setTotalPages(response.data.data.totalPages || 0);
+            if (response?.data?.success && response.data) {
+                setSuppliers(response.data.content || []);
+                setTotalPages(response.data.totalPages || 0);
             } else {
                 setSuppliers([]);
                 setTotalPages(0);

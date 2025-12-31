@@ -59,7 +59,7 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                     <FaArrowLeft className="mr-2" /> Back to Invoices
                 </Button>
                 <h2 className="text-2xl font-bold">Invoice #{invoice?.invoiceNumber}</h2>
-                <Button onClick={() => onEditInvoice(invoice)} variant="outline">
+                <Button onClick={() => onEditInvoice(invoice)} variant="outline"  disabled={invoice?.status === 'PAID'}>
                     <FaEdit className="mr-2" /> Edit
                 </Button>
             </div>
@@ -109,6 +109,14 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                             <span className="text-muted-foreground">Invoice Number:</span>
                             <span>{invoice?.invoiceNumber || 'NA'}</span>
                         </div>
+                        {
+                            invoice?.jobNumber && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Job Number:</span>
+                                    <span>{invoice?.jobNumber || 'NA'}</span>
+                                </div>
+                            )
+                        }
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Invoice Date:</span>
                             <span>{invoice?.invoiceDate || 'NA'}</span>
