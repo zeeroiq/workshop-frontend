@@ -58,6 +58,7 @@ const Jobs = () => {
                     toast.error(`Error while updating job: ${response.message}`);
                 }
             } catch (error) {
+                console.log(error.response.data.message)
                 toast.error(`Error while updating job: ${error}`);
             }
             // setJobs(jobs.map(job => job.id === jobData.id ? jobData : job));
@@ -83,7 +84,8 @@ const Jobs = () => {
         const response =  await jobService.deleteJob(jobId);
         if (response?.status === 200) {
             // await loadJobs(); // wont be needed as we already removed it from UI optimistically
-            setJobs(jobs.filter(job => job.jobNumber !== jobId));
+            // setJobs(jobs.filter(job => job.jobNumber !== jobId));
+            toast.success(`Job ${jobId} deleted successfully!`);
         } else {
             console.error("error deleting job:", response.details);
             toast.error(`Error while deleting job: ${response.message}`);

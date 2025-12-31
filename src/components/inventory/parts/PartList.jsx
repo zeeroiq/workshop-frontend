@@ -32,8 +32,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 params.status = statusFilter;
             }
             const response = await inventoryService.getParts(params);
-            setParts(response.data.data.content || []);
-            setTotalPages(response.data.data.totalPages || 1);
+            setParts(response.data.content || []);
+            setTotalPages(response.data.totalPages || 1);
         } catch (error) {
             console.error('Error loading parts:', error);
             toast.error('Failed to load parts.');
@@ -126,11 +126,13 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 <table className="w-full text-sm text-left">
                     <thead className="bg-muted text-muted-foreground uppercase">
                         <tr>
+                            <th className="px-6 py-3">Part Number</th>
                             <th className="px-6 py-3">Name</th>
                             <th className="px-6 py-3">Category</th>
                             <th className="px-6 py-3">In Stock</th>
                             <th className="px-6 py-3">Unit Price</th>
                             <th className="px-6 py-3">Status</th>
+                            <th className="px-6 py-3">Location</th>
                             <th className="px-6 py-3">Actions</th>
                         </tr>
                     </thead>
@@ -138,6 +140,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         {
                             parts.map((part) => (
                             <tr key={part.id} className="border-b border-border hover:bg-muted/50">
+                                <td className="px-6 py-4 font-medium">{part.partNumber}</td>
                                 <td className="px-6 py-4 font-medium">{part.name}</td>
                                 <td className="px-6 py-4">{part.category}</td>
                                 <td className="px-6 py-4">{part.quantityInStock} {part.unitType}</td>
@@ -148,6 +151,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                                         {part.quantityInStock <= part.minStockLevel && <FaExclamationTriangle className="inline-block ml-1" />}
                                     </span>
                                 </td>
+                                <td className="px-6 py-4">{part.location}</td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center space-x-2">
                                         <button className="text-primary hover:text-primary/80" onClick={() => onViewDetails(part)}>
