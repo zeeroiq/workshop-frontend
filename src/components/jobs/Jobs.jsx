@@ -58,7 +58,6 @@ const Jobs = () => {
                     toast.error(`Error while updating job: ${response.message}`);
                 }
             } catch (error) {
-                console.log(error.response.data.message)
                 toast.error(`Error while updating job: ${error}`);
             }
             // setJobs(jobs.map(job => job.id === jobData.id ? jobData : job));

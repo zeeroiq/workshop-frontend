@@ -242,8 +242,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 items: formData.items.map(item => ({
                     ...item,
                     quantity: Number.parseInt(item.quantity),
-                    rate: Number.parseFloat(item.rate),
-                    discount: Number.parseFloat(item.discount || 0)
+                    rate: Number.parseFloat(item.rate)
                 }))
             };
             await onSave(payload);
