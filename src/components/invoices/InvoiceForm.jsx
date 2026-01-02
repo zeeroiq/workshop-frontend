@@ -342,7 +342,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 <tbody>
                                     {formData.items.map((item, index) => (
                                         <tr key={index} className="border-b">
-                                            <td className="px-4 py-2">{item.description}</td>
+                                            <td className="px-4 py-2">{item.itemType.toLowerCase() === 'labor' ? item.description : `[${item.partNumber}] ${item.description}`}</td>
                                             <td className="px-4 py-2 text-right">{item.quantity}</td>
                                             <td className="px-4 py-2 text-right">₹{Number(item.unitPrice).toFixed(2)}</td>
                                             <td className="px-4 py-2 text-right">
@@ -356,7 +356,9 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                             </td>
                                             <td className="px-4 py-2 text-right">{item.taxRate}</td>
                                             <td className="px-4 py-2 text-right font-semibold">₹{Number(item.totalPrice).toFixed(2)}</td>
-                                            <td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!formData.jobNumber && index < originalItemCount}><FaTrash /></Button></td>
+                                            {/*<td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!formData.jobNumber && index < originalItemCount}><FaTrash /></Button></td>*/}
+                                            {/*TODO: FOR NOW KEEPING DELETE OPTION ENABLED FROM INVOICE PAGE, would revisit later*/}
+                                            <td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}><FaTrash /></Button></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -376,6 +378,12 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                 <div className="text-right text-2xl font-bold">
                     Total: ₹{calculateTotal().toFixed(2)}
                 </div>
+                <CardHeader className="flex flex-row justify-end">
+                    <div className="flex space-x-2">
+                        <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
+                        <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Invoice'}</Button>
+                    </div>
+                </CardHeader>
             </form>
         </div>
     );

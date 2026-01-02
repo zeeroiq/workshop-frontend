@@ -42,6 +42,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
         category: '',
         manufacturer: '',
         costPrice: '',
+        discount: '',
         sellingPrice: '',
         quantityInStock: '',
         minStockLevel: '',
@@ -90,6 +91,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 category: part.category || '',
                 manufacturer: part.manufacturer || '',
                 costPrice: part.costPrice || '',
+                discount: part.discount || '',
                 sellingPrice: part.sellingPrice || '',
                 quantityInStock: part.quantityInStock || '',
                 minStockLevel: part.minStockLevel || '',
@@ -106,6 +108,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 category: '',
                 manufacturer: '',
                 costPrice: '',
+                discount: '',
                 sellingPrice: '',
                 quantityInStock: '',
                 minStockLevel: '',
@@ -119,9 +122,18 @@ const PartForm = ({ part, onSave, onCancel }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
+        let updatedFormData = { ...formData, [name]: value };
+
+        // Recalculate selling price if costPrice or discount changes
+        if (name === 'costPrice' || name === 'discount') {
+            const costPrice = Number.parseFloat(updatedFormData.costPrice) || 0;
+            const discount = Number.parseFloat(updatedFormData.discount) || 0;
+            if (costPrice > 0 && discount >= 0 && discount <= 100) {
+                const discountAmount = costPrice * (discount / 100);
+                updatedFormData.sellingPrice = (costPrice - discountAmount).toFixed(2);
+            } else if (name === 'costPrice' && costPrice <= 0) { // If cost price is invalid, reset selling price
+                updatedFormData.sellingPrice = '';
+            }
         }
     };
 
@@ -147,6 +159,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
             console.error('Error uploading image:', error);
             toast.error('Failed to upload image.');
         }
+        setFormData(updatedFormData);
+        setErrors(prev => ({ ...prev, [name]: '' })); // Clear error for the changed field
     };
 
     const handlePartSelect = (selectedPart) => {
@@ -240,9 +254,10 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 {/* Pricing & Inventory */}
                 <div className="p-5 border border-border rounded-lg">
                     <h3 className="text-lg font-semibold mb-4">Pricing & Inventory</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <Input name="costPrice" label="Cost Price *" type="number" value={formData.costPrice} onChange={handleChange} error={errors.costPrice} step="0.01" min="0" />
-                        <Input name="sellingPrice" label="Selling Price *" type="number" value={formData.sellingPrice} onChange={handleChange} error={errors.sellingPrice} step="0.01" min="0" />
+                        <Input name="discount" label="Discount (%)" type="number" value={formData.discount} onChange={handleChange} step="0.01" min="0" />
+                        <Input name="sellingPrice" label="Selling Price *" type="number" value={formData.sellingPrice} onChange={handleChange} error={errors.sellingPrice} step="0.01" min="0" disabled={formData.discount}/>
                         <Input name="quantityInStock" label="Current Stock *" type="number" value={formData.quantityInStock} onChange={handleChange} error={errors.quantityInStock} min="0" />
                         <Input name="minStockLevel" label="Minimum Stock Level *" type="number" value={formData.minStockLevel} onChange={handleChange} error={errors.minStockLevel} min="0" />
                     </div>
