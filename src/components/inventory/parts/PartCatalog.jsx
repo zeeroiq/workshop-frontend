@@ -111,18 +111,18 @@ const PartCatalog = ({ onPartSelect }) => {
       {showModels && (
         <div className="flex items-center space-x-2 mt-4">
           <Select onValueChange={handleModelChange} value={selectedModel}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 dark:border-gray-700">
               <SelectValue placeholder="Select Model" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white dark:bg-gray-800 dark:text-white">
               {models.map((model) => (
-                <SelectItem key={model.modelCode} value={model.modelCode}>
+                <SelectItem key={model.modelCode} value={model.modelCode} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                   {model.modelCode}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Input type="text" value={modelName} placeholder="Model Name" disabled />
+          <Input type="text" value={modelName} placeholder="Model Name" disabled className="bg-gray-100 dark:bg-gray-800 dark:text-gray-400" />
           <Button onClick={handleLoadParts} disabled={!selectedModel}>
             Load Parts
           </Button>
@@ -131,35 +131,36 @@ const PartCatalog = ({ onPartSelect }) => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Parts for ${modelName}`}>
         <div className="max-h-96 overflow-y-auto">
-          <Table className="table-fixed w-full">
+          <Table className="table-fixed w-full text-foreground">
             <TableHeader>
-              <TableRow>
+              <TableRow className="border-b dark:border-gray-700">
                 <TableHead style={{ width: '5%' }}></TableHead>
                 <TableHead style={{ width: '25%' }}>Part No</TableHead>
                 <TableHead style={{ width: '40%' }}>Description</TableHead>
                 <TableHead style={{ width: '30%' }}>Plate Title</TableHead>
               </TableRow>
-              <TableRow>
+              <TableRow className="border-b dark:border-gray-700">
                 <TableCell></TableCell>
                 <TableCell>
-                  <Input name="partNo" value={filters.partNo} onChange={handleFilterChange} className="h-8" />
+                  <Input name="partNo" value={filters.partNo} onChange={handleFilterChange} className="h-8 bg-white dark:bg-gray-800 dark:text-white" />
                 </TableCell>
                 <TableCell>
-                  <Input name="description" value={filters.description} onChange={handleFilterChange} className="h-8" />
+                  <Input name="description" value={filters.description} onChange={handleFilterChange} className="h-8 bg-white dark:bg-gray-800 dark:text-white" />
                 </TableCell>
                 <TableCell>
-                  <Input name="plateTitle" value={filters.plateTitle} onChange={handleFilterChange} className="h-8" />
+                  <Input name="plateTitle" value={filters.plateTitle} onChange={handleFilterChange} className="h-8 bg-white dark:bg-gray-800 dark:text-white" />
                 </TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredParts.map((part, index) => (
-                <TableRow key={`${part.partNo}-${part.no}-${index}`}>
+                <TableRow key={`${part.partNo}-${part.no}-${index}`} className="border-b dark:border-gray-700">
                   <TableCell>
                     <input
                       type="radio"
                       name="part"
                       onChange={() => handleSelectPart(part)}
+                      className="form-radio h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
                     />
                   </TableCell>
                   <TableCell>{part.partNo}</TableCell>
