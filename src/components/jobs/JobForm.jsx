@@ -355,15 +355,23 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                     )
                                     }
                                 </div>
-                                <div className="col-span-2 space-y-2"><Input name="quantity" type="text" pattern="[0-9]*" value={item.quantity} onChange={(e) => {
+                                <div className="col-span-2 space-y-2">
+                                    <Input name="quantity" type="number" pattern="[0-9]*" value={item.quantity} step="1" min="0" onChange={(e) => {
                                         const newItems = [...formData.items];
                                         newItems[index] = {...newItems[index], quantity: e.target.value};
                                         setFormData({ ...formData, items: newItems });
-                                    }} placeholder="Qty" /></div>
-                                <div className="col-span-2 space-y-2"><Input name="rate" type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} placeholder="Rate" disabled={item.type === 'PART' || !!item.id} /></div>
-                                <div className="col-span-1 space-y-2"><Input name="discount" type="number" value={item.discount} onChange={e => handleItemChange(index, 'discount', e.target.value)} placeholder="Discount %" /></div>
-                                <div className="col-span-2 self-center pt-3">₹{(((item.quantity || 0) * (item.rate || 0)) * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
-                                <div className="col-span-1 self-center pt-3">
+                                    }} placeholder="Qty" />
+                                </div>
+                                <div className="col-span-2 space-y-2">
+                                    <Input name="rate" type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)}
+                                           placeholder="Rate" disabled={item.type === 'PART' || !!item.id} />
+                                </div>
+                                {/*<div className="col-span-1 space-y-2">*/}
+                                {/*    <Input name="discount" type="number" value={item.discount} onChange={e => handleItemChange(index, 'discount', e.target.value)}*/}
+                                {/*           placeholder="Discount %" />*/}
+                                {/*</div>*/}
+                                <div className="col-span-2 justify-self-center pt-3">₹{(((item.quantity || 0) * (item.rate || 0)) * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
+                                <div className="col-span-2 justify-self-center pt-3">
                                     <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!item.id}>
                                         <FaTrash />
                                     </Button>

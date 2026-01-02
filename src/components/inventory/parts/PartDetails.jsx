@@ -1,5 +1,18 @@
 import React from 'react';
-import { FaArrowLeft, FaEdit, FaBox, FaTag, FaIndustry, FaRupeeSign, FaMapMarkerAlt, FaUserTie, FaExclamationTriangle, FaCalendarAlt, FaFileAlt } from 'react-icons/fa';
+import {
+    FaArrowLeft,
+    FaEdit,
+    FaBox,
+    FaTag,
+    FaIndustry,
+    FaRupeeSign,
+    FaMapMarkerAlt,
+    FaUserTie,
+    FaExclamationTriangle,
+    FaCalendarAlt,
+    FaFileAlt,
+    FaPercentage
+} from 'react-icons/fa';
 
 const PartDetails = ({ part, onBack, onEdit }) => {
     console.log("Part Details:", part);
@@ -100,6 +113,13 @@ const PartDetails = ({ part, onBack, onEdit }) => {
                         <div>
                             <label className="text-sm text-muted-foreground">Cost Price</label>
                             <p>₹{part.costPrice?.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start">
+                        <FaPercentage className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">Discount Applied</label>
+                            <p>{part.discount?.toFixed(2)}</p>
                         </div>
                     </div>
                     <div className="flex items-start">

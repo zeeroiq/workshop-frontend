@@ -175,15 +175,17 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                                         <TableHead>Description</TableHead>
                                         <TableHead>Quantity</TableHead>
                                         <TableHead>Unit Price</TableHead>
+                                        <TableHead>Discount (%)</TableHead>
                                         <TableHead>Total</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {invoice.items.map((item, index) => (
                                         <TableRow key={index}>
-                                            <TableCell>{item.description}</TableCell>
+                                            <TableCell>{item.itemType.toLowerCase() === 'labor' ? item.description : `[${item.partNumber}] ${item.description}`}</TableCell>
                                             <TableCell>{item.quantity}</TableCell>
                                             <TableCell>₹ {item.unitPrice}</TableCell>
+                                            <TableCell>{item.discount ? item.discount : 'NA'}</TableCell>
                                             <TableCell>₹ {item.totalPrice}</TableCell>
                                         </TableRow>
                                     ))}
