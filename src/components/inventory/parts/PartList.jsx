@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle, FaFilter } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle, FaFilter, FaUpload } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PaginationComponent from "@/components/common/PaginationComponent";

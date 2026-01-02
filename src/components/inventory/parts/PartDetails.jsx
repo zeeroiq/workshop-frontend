@@ -2,6 +2,7 @@ import React from 'react';
 import { FaArrowLeft, FaEdit, FaBox, FaTag, FaIndustry, FaRupeeSign, FaMapMarkerAlt, FaUserTie, FaExclamationTriangle, FaCalendarAlt, FaFileAlt } from 'react-icons/fa';
 
 const PartDetails = ({ part, onBack, onEdit }) => {
+    console.log("Part Details:", part);
     const getStatusColor = (quantity, minStockLevel) => {
         if (quantity === 0) return 'bg-red-100 text-red-800';
         if (quantity <= minStockLevel) return 'bg-yellow-100 text-yellow-800';
@@ -143,6 +144,12 @@ const PartDetails = ({ part, onBack, onEdit }) => {
                         </div>
                     </div>
                 </div>
+                
+                {/*Image of the product*/}
+                <div className="p-5 border border-border rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Part Image</h3>
+                    <img src={part.imageUrl !='' ? part.imageUrl  : 'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg'} alt="Part" width={150} height={150} className="mt-4 rounded-md border border-border" />
+                </div>
 
                 {/* Dates */}
                 <div className="space-y-4 col-span-full">
@@ -164,6 +171,7 @@ const PartDetails = ({ part, onBack, onEdit }) => {
                         </div>
                      </div>
                 </div>
+
             </div>
         </div>
     );
