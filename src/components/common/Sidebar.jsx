@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -9,8 +9,10 @@ import {
     FileText,
     ChartBar,
     Calendar,
-    Settings,
-    X
+    Settings2,
+    X,
+    ChevronDown,
+    Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const Sidebar = ({ isExpanded, onClose }) => {
     const location = useLocation();
+    const [manageOpen, setManageOpen] = useState(false);
 
     const menuItems = [
         { path: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
@@ -28,8 +31,19 @@ const Sidebar = ({ isExpanded, onClose }) => {
         { path: '/inventory', icon: <Boxes size={20} />, label: 'Inventory' },
         { path: '/invoices', icon: <FileText size={20} />, label: 'Invoices' },
         { path: '/reports', icon: <ChartBar size={20} />, label: 'Reports' },
-        { path: '/settings', icon: <Settings size={20} />, label: 'Settings' }
+        {
+            label: 'Manage',
+            icon: <Settings2 size={20} />,
+            subItems: [
+                { path: '/manage/users', icon: <Users size={20} />, label: 'Users' },
+                { path: '/manage/roles', icon: <Shield size={20} />, label: 'Roles' }
+            ]
+        }
     ];
+
+    const handleManageClick = () => {
+        setManageOpen(!manageOpen);
+    };
 
     return (
         <>
@@ -43,7 +57,7 @@ const Sidebar = ({ isExpanded, onClose }) => {
             <aside
                 className={cn(
                     'fixed top-0 left-0 h-full bg-card border-r z-40 transform transition-all duration-300 ease-in-out overflow-hidden',
-                    isExpanded ? 'w-64' : 'w-0 md:w-20',
+                    isExpanded ? 'w-64' : 'w-0 md:w-20'
                 )}
             >
                 <div className="flex items-center justify-between p-4 border-b h-16">
@@ -56,30 +70,67 @@ const Sidebar = ({ isExpanded, onClose }) => {
                     <TooltipProvider>
                         <ul>
                             {menuItems.map(item => (
-                                <li key={item.path}>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Link
-                                                to={item.path}
+                                <li key={item.label}>
+                                    {item.subItems ? (
+                                        <>
+                                            <div
                                                 className={cn(
-                                                    'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
-                                                    location.pathname === item.path
-                                                        ? 'bg-primary text-primary-foreground'
-                                                        : 'hover:bg-muted',
-                                                    !isExpanded && 'justify-center'
+                                                    'flex items-center justify-between p-3 rounded-md text-sm font-medium transition-colors cursor-pointer',
+                                                    'hover:bg-muted'
                                                 )}
-                                                // Removed onClick={onClose} to prevent sidebar from closing on item click
+                                                onClick={handleManageClick}
                                             >
-                                                {item.icon}
-                                                {isExpanded && <span>{item.label}</span>}
-                                            </Link>
-                                        </TooltipTrigger>
-                                        {!isExpanded && (
-                                            <TooltipContent side="right">
-                                                <p>{item.label}</p>
-                                            </TooltipContent>
-                                        )}
-                                    </Tooltip>
+                                                <div className="flex items-center gap-3">
+                                                    {item.icon}
+                                                    {isExpanded && <span>{item.label}</span>}
+                                                </div>
+                                                {isExpanded && <ChevronDown size={16} className={cn('transition-transform', manageOpen && 'rotate-180')} />}
+                                            </div>
+                                            {manageOpen && isExpanded && (
+                                                <ul className="pl-8">
+                                                    {item.subItems.map(subItem => (
+                                                        <li key={subItem.path}>
+                                                            <Link
+                                                                to={subItem.path}
+                                                                className={cn(
+                                                                    'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
+                                                                    location.pathname === subItem.path
+                                                                        ? 'bg-primary text-primary-foreground'
+                                                                        : 'hover:bg-muted'
+                                                                )}
+                                                            >
+                                                                {subItem.icon}
+                                                                <span>{subItem.label}</span>
+                                                            </Link>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Link
+                                                    to={item.path}
+                                                    className={cn(
+                                                        'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
+                                                        location.pathname === item.path
+                                                            ? 'bg-primary text-primary-foreground'
+                                                            : 'hover:bg-muted',
+                                                        !isExpanded && 'justify-center'
+                                                    )}
+                                                >
+                                                    {item.icon}
+                                                    {isExpanded && <span>{item.label}</span>}
+                                                </Link>
+                                            </TooltipTrigger>
+                                            {!isExpanded && (
+                                                <TooltipContent side="right">
+                                                    <p>{item.label}</p>
+                                                </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    )}
                                 </li>
                             ))}
                         </ul>

@@ -22,6 +22,10 @@ import Invoice from "./components/invoices/Invoice";
 import Reports from "./components/reports/Reports";
 import JobForm from "./components/jobs/JobForm";
 import InvoiceForm from "./components/invoices/InvoiceForm";
+import UserList from "./components/users/UserList";
+import UserForm from "./components/users/UserForm";
+import RoleList from "./components/roles/RoleList";
+import RoleForm from "./components/roles/RoleForm";
 
 import { ThemeProvider } from './components/common/ThemeProvider';
 
@@ -84,6 +88,12 @@ function AppContent() {
                             <Route path="/invoices" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
                             <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
                             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                            <Route path="/manage/users" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
+                            <Route path="/manage/users/new" element={<ProtectedRoute><UserForm /></ProtectedRoute>} />
+                            <Route path="/manage/users/edit/:id" element={<ProtectedRoute><UserForm /></ProtectedRoute>} />
+                            <Route path="/manage/roles" element={<ProtectedRoute><RoleList /></ProtectedRoute>} />
+                            <Route path="/manage/roles/new" element={<ProtectedRoute><RoleForm /></ProtectedRoute>} />
+                            <Route path="/manage/roles/edit/:id" element={<ProtectedRoute><RoleForm /></ProtectedRoute>} />
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                     </main>
