@@ -135,6 +135,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 updatedFormData.sellingPrice = '';
             }
         }
+        setFormData(updatedFormData); // Update formData state
+        setErrors(prev => ({ ...prev, [name]: '' })); // Clear error for the changed field
     };
 
     const handleFileChange = async (event) => {

@@ -4,6 +4,7 @@ import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import PartScannerModal from './PartScannerModal';
+import {Button} from "@/components/ui/button";
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
@@ -72,6 +73,14 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
+    const handlePartAction = ({ type, data }) => {
+        if (type === 'edit') {
+            onEdit(data);
+        } else if (type === 'add') {
+            onCreate(data);
+        }
+    };
+
     const getStatusColor = (quantity, minQuantity) => {
         if (quantity === 0) return 'bg-red-100 text-red-800';
         if (quantity <= minQuantity) return 'bg-yellow-100 text-yellow-800';
@@ -93,10 +102,10 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Parts Inventory</h3>
                 <div className="flex space-x-2">
-                    <PartScannerModal onPartScanned={loadParts} />
-                    <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
+                    <PartScannerModal onPartAction={handlePartAction} />
+                    <Button className="text-md font-medium" variant="default" size="lg" onClick={onCreate}>
                         <FaPlus className="mr-2" /> Add Part
-                    </button>
+                    </Button>
                 </div>
             </div>
 

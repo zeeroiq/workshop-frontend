@@ -28,10 +28,10 @@ const Inventory = () => {
         setCurrentView('form');
     };
 
-    const handleCreate = () => {
-        setEditItem(null);
-        setCurrentView('form');
-    };
+    const handleCreate = (initialData = null) => {
+    setEditItem(initialData);
+    setCurrentView('form');
+};
 
     const handleBackToList = () => {
         setCurrentView('list');

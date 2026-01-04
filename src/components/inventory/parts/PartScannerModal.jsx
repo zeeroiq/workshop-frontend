@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import QrBarcodeScanner from '@/components/common/QrBarcodeScanner';
 import { inventoryService } from '@/services/inventoryService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import {BsQrCode} from "react-icons/bs";
 
 const PartScannerModal = ({ onPartAction }) => { // Changed prop name
     const [isOpen, setIsOpen] = useState(false);
@@ -56,7 +57,7 @@ const PartScannerModal = ({ onPartAction }) => { // Changed prop name
             if (!open) resetState();
         }}>
             <DialogTrigger asChild>
-                <Button variant="outline">Scan Part</Button>
+                <Button className="text-md font-medium" variant="default" size="lg"><BsQrCode /> Scan Part QR/Barcode</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
