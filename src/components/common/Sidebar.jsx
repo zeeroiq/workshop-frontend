@@ -35,8 +35,7 @@ const Sidebar = ({ isExpanded, onClose }) => {
             label: 'Manage',
             icon: <Settings2 size={20} />,
             subItems: [
-                { path: '/manage/users', icon: <Users size={20} />, label: 'Users' },
-                { path: '/manage/roles', icon: <Shield size={20} />, label: 'Roles' }
+                { path: '/manage/users&roles', icon: <Users size={20} />, label: 'Users & Roles' }
             ]
         }
     ];
@@ -86,26 +85,28 @@ const Sidebar = ({ isExpanded, onClose }) => {
                                                 </div>
                                                 {isExpanded && <ChevronDown size={16} className={cn('transition-transform', manageOpen && 'rotate-180')} />}
                                             </div>
-                                            {manageOpen && isExpanded && (
-                                                <ul className="pl-8">
-                                                    {item.subItems.map(subItem => (
-                                                        <li key={subItem.path}>
-                                                            <Link
-                                                                to={subItem.path}
-                                                                className={cn(
-                                                                    'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
-                                                                    location.pathname === subItem.path
-                                                                        ? 'bg-primary text-primary-foreground'
-                                                                        : 'hover:bg-muted'
-                                                                )}
-                                                            >
-                                                                {subItem.icon}
-                                                                <span>{subItem.label}</span>
-                                                            </Link>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
+                                            {
+                                                manageOpen && isExpanded && (
+                                                    <ul className="pl-8">
+                                                        {item.subItems.map(subItem => (
+                                                            <li key={subItem.path}>
+                                                                <Link
+                                                                    to={subItem.path}
+                                                                    className={cn(
+                                                                        'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
+                                                                        location.pathname === subItem.path
+                                                                            ? 'bg-primary text-primary-foreground'
+                                                                            : 'hover:bg-muted'
+                                                                    )}
+                                                                >
+                                                                    {subItem.icon}
+                                                                    <span>{subItem.label}</span>
+                                                                </Link>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )
+                                            }
                                         </>
                                     ) : (
                                         <Tooltip>

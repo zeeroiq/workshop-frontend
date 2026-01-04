@@ -22,12 +22,11 @@ import Invoice from "./components/invoices/Invoice";
 import Reports from "./components/reports/Reports";
 import JobForm from "./components/jobs/JobForm";
 import InvoiceForm from "./components/invoices/InvoiceForm";
-import UserList from "./components/users/UserList";
-import UserForm from "./components/users/UserForm";
-import RoleList from "./components/roles/RoleList";
-import RoleForm from "./components/roles/RoleForm";
+import Manage from "./components/manage/Manage";
+import UserForm from "@/components/workshop/users/UserForm";
+import RoleForm from "@/components/workshop/roles/RoleForm";
 
-import { ThemeProvider } from './components/common/ThemeProvider';
+import {ThemeProvider} from './components/common/ThemeProvider';
 
 function AppContent() {
     const [user, setUser] = useState(null);
@@ -56,63 +55,62 @@ function AppContent() {
     };
 
     if (loading) {
-        return (
-            <div className="fixed inset-0 flex items-center justify-center bg-background">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
+        return (<div className="fixed inset-0 flex items-center justify-center bg-background">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+        </div>);
     }
 
-    return (
-        <div className="flex h-screen bg-background">
-            {user && <Sidebar isExpanded={sidebarExpanded} onClose={closeSidebar} />}
-            <div className="flex flex-col flex-1">
-                {user && <Header onToggleSidebar={toggleSidebarExpansion} />}
-                <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${user && (sidebarExpanded ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20')}`}>
-                    <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16">
-                        <Routes>
-                            <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-                            <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
-                            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                            <Route path="/customers" element={<ProtectedRoute><CustomerList /></ProtectedRoute>} />
-                            <Route path="/customers/new" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
-                            <Route path="/customers/edit/:id" element={<ProtectedRoute><CustomerForm /></ProtectedRoute>} />
-                            <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetails /></ProtectedRoute>} />
-                            <Route path="/vehicles" element={<ProtectedRoute><VehicleList /></ProtectedRoute>} />
-                            <Route path="/vehicles/new" element={<ProtectedRoute><VehicleForm /></ProtectedRoute>} />
-                            <Route path="/vehicles/edit/:id" element={<ProtectedRoute><VehicleForm /></ProtectedRoute>} />
-                            <Route path="/vehicles/:id" element={<ProtectedRoute><VehicleDetails /></ProtectedRoute>} />
-                            <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-                            <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-                            <Route path="/jobs/new" element={<ProtectedRoute><JobForm /></ProtectedRoute>} />
-                            <Route path="/invoices" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
-                            <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm /></ProtectedRoute>} />
-                            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                            <Route path="/manage/users" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
-                            <Route path="/manage/users/new" element={<ProtectedRoute><UserForm /></ProtectedRoute>} />
-                            <Route path="/manage/users/edit/:id" element={<ProtectedRoute><UserForm /></ProtectedRoute>} />
-                            <Route path="/manage/roles" element={<ProtectedRoute><RoleList /></ProtectedRoute>} />
-                            <Route path="/manage/roles/new" element={<ProtectedRoute><RoleForm /></ProtectedRoute>} />
-                            <Route path="/manage/roles/edit/:id" element={<ProtectedRoute><RoleForm /></ProtectedRoute>} />
-                            <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-                    </main>
-                </div>
-                <ToastContainer
-                    position="bottom-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="dark"
-                />
+    return (<div className="flex h-screen bg-background">
+        {user && <Sidebar isExpanded={sidebarExpanded} onClose={closeSidebar}/>}
+        <div className="flex flex-col flex-1">
+            {user && <Header onToggleSidebar={toggleSidebarExpansion}/>}
+            <div
+                className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${user && (sidebarExpanded ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20')}`}>
+                <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16">
+                    <Routes>
+                        <Route path="/login" element={user ? <Navigate to="/" replace/> : <Login/>}/>
+                        <Route path="/register" element={user ? <Navigate to="/" replace/> : <Register/>}/>
+                        <Route path="/" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
+                        <Route path="/customers" element={<ProtectedRoute><CustomerList/></ProtectedRoute>}/>
+                        <Route path="/customers/new" element={<ProtectedRoute><CustomerForm/></ProtectedRoute>}/>
+                        <Route path="/customers/edit/:id"
+                               element={<ProtectedRoute><CustomerForm/></ProtectedRoute>}/>
+                        <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetails/></ProtectedRoute>}/>
+                        <Route path="/vehicles" element={<ProtectedRoute><VehicleList/></ProtectedRoute>}/>
+                        <Route path="/vehicles/new" element={<ProtectedRoute><VehicleForm/></ProtectedRoute>}/>
+                        <Route path="/vehicles/edit/:id" element={<ProtectedRoute><VehicleForm/></ProtectedRoute>}/>
+                        <Route path="/vehicles/:id" element={<ProtectedRoute><VehicleDetails/></ProtectedRoute>}/>
+                        <Route path="/inventory" element={<ProtectedRoute><Inventory/></ProtectedRoute>}/>
+                        <Route path="/jobs" element={<ProtectedRoute><Jobs/></ProtectedRoute>}/>
+                        <Route path="/jobs/new" element={<ProtectedRoute><JobForm/></ProtectedRoute>}/>
+                        <Route path="/invoices" element={<ProtectedRoute><Invoice/></ProtectedRoute>}/>
+                        <Route path="/invoices/new" element={<ProtectedRoute><InvoiceForm/></ProtectedRoute>}/>
+                        <Route path="/reports" element={<ProtectedRoute><Reports/></ProtectedRoute>}/>
+                        <Route path="/manage/users&roles" element={<ProtectedRoute><Manage/></ProtectedRoute>}/>
+                        <Route path="/manage/users/new" element={<ProtectedRoute><UserForm/></ProtectedRoute>}/>
+                        <Route path="/manage/users/edit/:id"
+                               element={<ProtectedRoute><UserForm/></ProtectedRoute>}/>
+                        <Route path="/manage/roles/new" element={<ProtectedRoute><RoleForm/></ProtectedRoute>}/>
+                        <Route path="/manage/roles/edit/:id"
+                               element={<ProtectedRoute><RoleForm/></ProtectedRoute>}/>
+                        <Route path="*" element={<Navigate to="/" replace/>}/>
+                    </Routes>
+                </main>
             </div>
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+            />
         </div>
-    );
+    </div>);
 }
 
 function App() {
