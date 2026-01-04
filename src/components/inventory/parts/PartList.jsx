@@ -3,6 +3,7 @@ import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaExclamationTriangle, FaFilt
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PaginationComponent from "@/components/common/PaginationComponent";
+import PartScannerModal from './PartScannerModal';
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
@@ -91,9 +92,12 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         <div className="bg-card p-4 rounded-lg">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Parts Inventory</h3>
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
-                    <FaPlus className="mr-2" /> Add Part
-                </button>
+                <div className="flex space-x-2">
+                    <PartScannerModal onPartScanned={loadParts} />
+                    <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
+                        <FaPlus className="mr-2" /> Add Part
+                    </button>
+                </div>
             </div>
 
             <div className="flex justify-between items-center mb-4">

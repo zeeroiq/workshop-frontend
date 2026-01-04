@@ -18,6 +18,7 @@ export const inventoryService = {
     // Parts endpoints
     getParts: (params = {}) => api.get(`${BASE_URL}/parts`, { params }).then(handleResponse),
     getPart: (id) => api.get(`${BASE_URL}/parts/${id}`).then(handleResponse),
+    getPartViaQrBarcode: (qrBarcode) => api.get(`${BASE_URL}/parts/qr-barcode/${qrBarcode}`).then(handleResponse),
     createPart: (data) => api.post(`${BASE_URL}/parts`, data).then(handleResponse),
     updatePart: (id, data) => api.put(`${BASE_URL}/parts/${id}`, data).then(handleResponse),
     deletePart: (id) => api.delete(`${BASE_URL}/parts/${id}`).then(handleResponse),
