@@ -6,17 +6,17 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'react-toastify';
 import QrBarcodeScanner from '@/components/common/QrBarcodeScanner';
 import { inventoryService } from '@/services/inventoryService';
+import { catalogService } from '@/services/catalogService';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import {BsQrCode} from "react-icons/bs";
 
-const PartScannerModal = ({ onPartAction }) => { // Changed prop name
+const PartScannerModal = ({ onPartAction }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [rawContent, setRawContent] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const handleScan = async (data) => {
-        console.log('data from scanner', data);
         if (data) {
             setRawContent(data);
             setLoading(true);
@@ -24,24 +24,60 @@ const PartScannerModal = ({ onPartAction }) => { // Changed prop name
             try {
                 const response = await inventoryService.getPartViaQrBarcode(data);
                 if (response.data) {
-                    toast.success(`Part "${response.data.name}" loaded successfully! Opening Part Form.`);
+                    toast.success(`Part "${response.data.name}" loaded successfully`);
                     onPartAction({ type: 'edit', data: response.data });
-                    setIsOpen(false); // Close scanner modal
+                    setIsOpen(false);
                 } else {
-                    // This case might be hit if the API returns 200 with empty data for not found
-                    toast.info(`No part found with ID: ${data}. Opening Part Form to add new part.`);
-                    onPartAction({ type: 'add', data: { partNumber: data } });
-                    setIsOpen(false); // Close scanner modal
+                    toast.info(`No part found with ID: ${data}. Checking catalog...`);
+                    // Fallback to catalog service
+                    await handleCatalogSearch(data);
                 }
             } catch (err) {
-                console.error("Error fetching part details:", err);
-                // Assuming 404 or other error means part not found
-                toast.info(`No part found with ID: ${data}. Opening Part Form to add new part.`);
-                onPartAction({ type: 'add', data: { partNumber: data } });
-                setIsOpen(false); // Close scanner modal
-            } finally {
-                setLoading(false);
+                console.error("Error fetching part details from inventory:", err);
+                if (err.response?.status === 404) {
+                    // toast.info(`No part found in inventory with ID: ${data}. Checking catalog...`);
+                    console.log(`No part found in inventory with ID: ${data}. Checking catalog...`);
+                    // Fallback to catalog service
+                    handleCatalogSearch(data);
+                } else {
+                    toast.error("An error occurred while fetching part from inventory.");
+                    setLoading(false);
+                }
             }
+        }
+    };
+
+    const handleCatalogSearch = async (partNumber) => {
+        try {
+            const response = await catalogService.getSpcCatalogPartsViaQrBarcode(partNumber);
+            if (response.data?.success && response.data?.data) {
+                toast.success("Part found in catalog.\nProceed with adding it to inventory.");
+
+                onPartAction({ type: 'add',
+                    data: {
+                        partNumber: response.data.data.partNo,
+                        name: response.data.data.description,
+                        description: `${response.data.data.plateTitle} - ${response.data.data.description}\n${response.data.data.model}`,
+                    }
+                });
+                setIsOpen(false);
+            } else {
+                // This case might not be hit if 404 is thrown for not found
+                toast.info(`No part found in catalog with ID: ${partNumber}. Opening Part Form for manual entry.`);
+                onPartAction({ type: 'add', data: { partNumber: partNumber } });
+                setIsOpen(false);
+            }
+        } catch (err) {
+            console.error("Error fetching part details from catalog:", err);
+            if (err.response?.status === 404) {
+                toast.info(`No part found in catalog with ID: ${partNumber}. Opening Part Form for manual entry.`);
+                onPartAction({ type: 'add', data: { partNumber: partNumber } });
+            } else {
+                toast.error("An error occurred while fetching part from catalog.");
+            }
+            setIsOpen(false);
+        } finally {
+            setLoading(false);
         }
     };
 
