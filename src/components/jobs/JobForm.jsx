@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LoadingSpinner from '../common/LoadingSpinner';
+import PartScannerButton from '../common/PartScannerButton';
 
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job?.id);
@@ -220,6 +221,24 @@ const JobForm = ({ job, onSave, onCancel }) => {
         }));
     };
 
+    const addScannedPartItem = (partData) => {
+        setFormData(prev => ({
+            ...prev,
+            items: [...prev.items, {
+                type: 'PART',
+                partId: partData.id.toString(),
+                description: partData.name,
+                quantity: 1,
+                rate: partData.sellingPrice,
+                discount: 0
+            }]
+        }));
+    };
+
+    const isPartAlreadyInJob = (partData) => {
+        return formData.items.some(item => item.partId === partData.id.toString());
+    };
+
     const handleRemoveItem = (index) => {
         setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
     };
@@ -329,6 +348,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Parts & Labor</CardTitle>
                         <div className="space-x-2">
+                            <PartScannerButton onPartScanned={addScannedPartItem} onPartAlreadyExists={isPartAlreadyInJob} />
                             <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('PART')}><FaPlus className="mr-2" />Part</Button>
                             <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('LABOR')}><FaPlus className="mr-2" />Labor</Button>
                         </div>
