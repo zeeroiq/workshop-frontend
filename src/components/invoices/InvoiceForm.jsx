@@ -38,6 +38,9 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [itemType, setItemType] = useState('LABOR');
     const [originalItemCount, setOriginalItemCount] = useState(0);
+    const [page, setPage] = useState(0);
+    const [prevParts, setPrevParts] = useState([]);
+    const [query, setQuery] = useState('');
 
     useEffect(() => {
         const loadCustomers = async () => {
@@ -50,8 +53,9 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         };
         const loadParts = async () => {
             try {
-                const response = await inventoryService.getParts();
+                const response = await inventoryService.getParts({page: 0, size:5});
                 setParts(response?.data?.content || []);
+                setPrevParts(response?.data?.content || []);
             } catch (error) {
                 toast.error('Failed to fetch parts');
             }
@@ -116,6 +120,22 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
             setOriginalItemCount(0);
         }
     }, [invoice, customers]); // Depend on invoice and customers
+
+    useEffect(() => {
+        const searchParts = setTimeout(async () => {
+            if (!query) {
+                setParts(prevParts);
+                return;
+            }
+            try {
+                const partsRes = await inventoryService.searchParts(query);
+                setParts(partsRes?.data?.content || []);
+            } catch (error) {
+                toast.error("Failed to search parts.");
+            }
+        }, 800);
+        return () => clearTimeout(searchParts);
+    }, [query]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -267,6 +287,28 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         return item.isDiscountEditable === false;
     };
 
+    
+    const loadNextPage = async () => {
+        try {
+            const partsRes = await inventoryService.getParts({
+                page: page + 1,
+                size: 5
+            });
+            const newParts = partsRes?.data?.content || [];
+            if(newParts.length === 0) {
+                toast.info("No more parts to load.");
+                return;
+            }
+            setParts(prevParts);
+            setParts(prev => [...prev, ...newParts]);
+            setPrevParts(prev => [...prev, ...newParts]);
+            setPage(prev => prev + 1);
+            console.log('Loaded parts page:', page + 1);
+        } catch (error) {
+            toast.error("Failed to load more parts.");
+        }
+    };
+
     return (
         <div className="container mx-auto py-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -340,11 +382,13 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                         <Select onValueChange={handlePartSelectChange}>
                                             <SelectTrigger><SelectValue placeholder="Select a part..." /></SelectTrigger>
                                             <SelectContent>
+                                                <Input name="partId" onChange={(e) => setQuery(e.target.value)} placeholder="Search part..." hidden />
                                                 {parts.map(part => (
                                                     <SelectItem key={part.id} value={part.id.toString()}>
                                                         {part.name} ({part.partNumber}) - In Stock: {part.quantityInStock}
                                                     </SelectItem>
                                                 ))}
+                                                <Button type="button" variant="link" className="w-full text-center" onClick={loadNextPage}>Load More</Button>
                                             </SelectContent>
                                         </Select>
                                     </div>
