@@ -41,6 +41,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
         partNumber: '',
         category: '',
         manufacturer: '',
+        mrp: '',
         costPrice: '',
         discount: '',
         sellingPrice: '',
@@ -90,6 +91,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 partNumber: part.partNumber || '',
                 category: part.category || '',
                 manufacturer: part.manufacturer || '',
+                mrp: part.mrp || '',
                 costPrice: part.costPrice || '',
                 discount: part.discount || '',
                 sellingPrice: part.sellingPrice || '',
@@ -107,6 +109,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 partNumber: '',
                 category: '',
                 manufacturer: '',
+                mrp: '',
                 costPrice: '',
                 discount: '',
                 sellingPrice: '',
@@ -125,13 +128,13 @@ const PartForm = ({ part, onSave, onCancel }) => {
         let updatedFormData = { ...formData, [name]: value };
 
         // Recalculate selling price if costPrice or discount changes
-        if (name === 'costPrice' || name === 'discount') {
-            const costPrice = Number.parseFloat(updatedFormData.costPrice) || 0;
+        if (name === 'mrp' || name === 'discount') {
+            const mrp = Number.parseFloat(updatedFormData.mrp) || 0;
             const discount = Number.parseFloat(updatedFormData.discount) || 0;
-            if (costPrice > 0 && discount >= 0 && discount <= 100) {
-                const discountAmount = costPrice * (discount / 100);
-                updatedFormData.sellingPrice = (costPrice - discountAmount).toFixed(2);
-            } else if (name === 'costPrice' && costPrice <= 0) { // If cost price is invalid, reset selling price
+            if (mrp > 0 && discount >= 0 && discount <= 100) {
+                const discountAmount = mrp * (discount / 100);
+                updatedFormData.sellingPrice = (mrp - discountAmount).toFixed(2);
+            } else if (name === 'mrp' && mrp <= 0) { // If cost price is invalid, reset selling price
                 updatedFormData.sellingPrice = '';
             }
         }
@@ -257,6 +260,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                 <div className="p-5 border border-border rounded-lg">
                     <h3 className="text-lg font-semibold mb-4">Pricing & Inventory</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <Input name="mrp" label="MRP *" type="number" value={formData.mrp} onChange={handleChange} error={errors.mrp} step="0.01" min="0" />
                         <Input name="costPrice" label="Cost Price *" type="number" value={formData.costPrice} onChange={handleChange} error={errors.costPrice} step="0.01" min="0" />
                         <Input name="discount" label="Discount (%)" type="number" value={formData.discount} onChange={handleChange} step="0.01" min="0" />
                         <Input name="sellingPrice" label="Selling Price *" type="number" value={formData.sellingPrice} onChange={handleChange} error={errors.sellingPrice} step="0.01" min="0" disabled={formData.discount}/>

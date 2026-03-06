@@ -116,6 +116,13 @@ const PartDetails = ({ part, onBack, onEdit }) => {
                         </div>
                     </div>
                     <div className="flex items-start">
+                        <FaRupeeSign className="text-muted-foreground mt-1 mr-3" />
+                        <div>
+                            <label className="text-sm text-muted-foreground">MRP</label>
+                            <p>₹{part.mrp?.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start">
                         <FaPercentage className="text-muted-foreground mt-1 mr-3" />
                         <div>
                             <label className="text-sm text-muted-foreground">Discount Applied</label>
