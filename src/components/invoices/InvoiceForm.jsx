@@ -168,7 +168,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
             partNumber: partData.partNumber,
             description: partData.name,
             quantity: 1,
-            unitPrice: partData.costPrice,
+            unitPrice: partData.mrp,
             taxRate: 0, // Default tax rate
             discount: partData.isDiscounted ? partData.discount : 0,
             isDiscountEditable: !partData.isDiscounted,
@@ -220,7 +220,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                 partId: part.id,
                 partNumber: part.partNumber,
                 description: part.name,
-                unitPrice: part.costPrice,
+                unitPrice: part.mrp,
                 discount: part.isDiscounted ? part.discount : 0,
                 isDiscountEditable: !part.isDiscounted,
             }));

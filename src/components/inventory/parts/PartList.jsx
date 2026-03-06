@@ -94,7 +94,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         {
             accessorKey: 'costPrice',
             header: 'Unit Price',
-            cell: ({ row }) => `₹${row.original.costPrice?.toFixed(2)}`,
+            cell: ({ row }) => `₹${row.original.mrp?.toFixed(2)}`,
             enableSorting: true,
         },
         {
