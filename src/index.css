@@ -93,4 +93,17 @@
   #root {
     min-height: 100vh;
   }
+
+  /* Override browser autofill styling for inputs */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px hsl(var(--input)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+  }
+
+  input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px hsl(var(--input)) inset, 0 0 0 1px hsl(var(--ring)) !important;
+  }
 }

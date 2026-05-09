@@ -1,18 +1,18 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
-import { customerService } from "@/services/customerService";
-import { userService } from "@/services/userService";
-import { inventoryService } from "@/services/inventoryService";
-import { toast } from "react-toastify";
-import { authService } from "@/services/authService";
-import { jobStatuses } from "./helper/constants";
-import { toUpperCase_space } from "../helper/utils";
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, {useCallback, useEffect, useState} from 'react';
+import {FaPlus, FaSave, FaTimes, FaTrash} from 'react-icons/fa';
+import {customerService} from "@/services/customerService";
+import {userService} from "@/services/userService";
+import {inventoryService} from "@/services/inventoryService";
+import {toast} from "react-toastify";
+import {authService} from "@/services/authService";
+import {jobStatuses} from "./helper/constants";
+import {toUpperCase_space} from "../helper/utils";
+import {Button} from '@/components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Textarea} from '@/components/ui/textarea';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import LoadingSpinner from '../common/LoadingSpinner';
 import PartScannerButton from '../common/PartScannerButton';
 import SearchableSelect from '../common/SearchableSelect';
@@ -136,22 +136,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
         }, 0);
         setFormData(prev => ({ ...prev, cost: totalItemsCost }));
     }, [formData.items]);
-
-    // useEffect(() => {
-    //     const searchParts = setTimeout(async () => {
-    //         if (!query) {
-    //             setParts(prevParts);
-    //             return;
-    //         }
-    //         try {
-    //             const partsRes = await inventoryService.searchParts(query);
-    //             setParts(partsRes?.data?.content || []);
-    //         } catch (error) {
-    //             toast.error("Failed to search parts.");
-    //         }
-    //     }, 800);
-    //     return () => clearTimeout(searchParts);
-    // }, [query]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -321,7 +305,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
     }, []);
 
     const fetchParts = useCallback(async (page, pageSize, search) => {
-        return await inventoryService.getParts({ page, size: pageSize, q: search });
+        return await inventoryService.getParts({ page, size: pageSize, search: search });
     }, []);
 
     if (loading) return <LoadingSpinner />;

@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FaArrowLeft, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
-import { invoiceService } from '@/services/invoiceService';
-import { INVOICE_STATUS } from './constants/invoiceConstants';
-import { customerService } from "@/services/customerService";
-import { inventoryService } from "@/services/inventoryService";
-import { toast } from "react-toastify";
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import React, {useCallback, useEffect, useState} from 'react';
+import {FaPlus, FaSave, FaTimes, FaTrash} from 'react-icons/fa';
+import {invoiceService} from '@/services/invoiceService';
+import {INVOICE_STATUS} from './constants/invoiceConstants';
+import {customerService} from "@/services/customerService";
+import {inventoryService} from "@/services/inventoryService";
+import {toast} from "react-toastify";
+import {Button} from '@/components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Textarea} from '@/components/ui/textarea';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import PartScannerButton from '../common/PartScannerButton';
 import SearchableSelect from '../common/SearchableSelect';
 
@@ -273,7 +273,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     }, []);
 
     const fetchParts = useCallback(async (page, pageSize, search) => {
-        return await inventoryService.getParts({ page, size: pageSize, q: search });
+        return await inventoryService.getParts({ page, size: pageSize, search: search });
     }, []);
 
     const getDiscountDisabledState = (item, index) => {

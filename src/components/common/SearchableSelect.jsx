@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
 import LoadingSpinner from './LoadingSpinner';
-import { toast } from 'react-toastify';
+import {toast} from 'react-toastify';
 
 const DEBOUNCE_DELAY = 800;
 const INITIAL_PAGE_SIZE = 10;
@@ -48,6 +48,7 @@ const SearchableSelect = ({
     const [selectedItem, setSelectedItem] = useState(null);
     const searchTimeoutRef = useRef(null);
     const contentRef = useRef(null);
+    const inputRef = useRef(null);
 
     // Update items when initialData changes, but preserve selected item if needed
     useEffect(() => {
@@ -123,12 +124,18 @@ const SearchableSelect = ({
         }, DEBOUNCE_DELAY);
     }, [fetchItems]);
 
-    // Initial load when dropdown opens
+    // Focus input and load items on open
     useEffect(() => {
-        if (isOpen && items.length === 0) {
-            fetchItems(0, searchQuery);
+        if (isOpen) {
+            // Focus the search input
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+
+            // Always refresh data on open to ensure we have the latest list
+            fetchItems(0, '');
         }
-    }, [isOpen, fetchItems, items.length, searchQuery]);
+    }, [isOpen, fetchItems]);
 
     // Update selectedItem when value changes
     useEffect(() => {
@@ -179,6 +186,16 @@ const SearchableSelect = ({
         }
     };
 
+    const filteredItems = useMemo(() => {
+        if (!searchQuery) return items;
+        const lowerQuery = searchQuery.toLowerCase();
+        return items.filter(item => {
+            const displayValue = renderItem(item);
+            return displayValue && typeof displayValue === 'string' && 
+                   displayValue.toLowerCase().includes(lowerQuery);
+        });
+    }, [items, searchQuery, renderItem]);
+
     return (
         <div className={className.container}>
             {label && <Label className="mb-1 block">{label}</Label>}
@@ -191,16 +208,16 @@ const SearchableSelect = ({
                 <SelectContent className={className.content}>
                     <div className="p-2 sticky top-0 bg-popover z-10">
                         <Input
+                            ref={inputRef}
                             placeholder={searchPlaceholder}
                             value={searchQuery}
                             onChange={handleSearch}
                             className="mb-2"
+                            onPointerDown={(e) => e.stopPropagation()}
                             onClick={(e) => e.stopPropagation()}
                             onKeyDown={(e) => {
-                                // Prevent Radix from handling keys like Space or Enter when typing in search
-                                if (e.key === ' ' || e.key === 'Enter') {
-                                    e.stopPropagation();
-                                }
+                                // Stop propagation for ALL keys to prevent Radix typeahead
+                                e.stopPropagation();
                             }}
                         />
                     </div>
@@ -211,12 +228,12 @@ const SearchableSelect = ({
                         className="overflow-y-auto"
                         style={{ maxHeight: VIRTUAL_LIST_HEIGHT }}
                     >
-                        {items.length === 0 && !isLoading ? (
+                        {filteredItems.length === 0 && !isLoading ? (
                             <div className="text-center py-4 text-sm text-muted-foreground">
                                 No items found
                             </div>
                         ) : (
-                            items.map((item) => {
+                            filteredItems.map((item) => {
                                 const itemKey = getItemKey(item).toString();
                                 return (
                                     <SelectItem key={itemKey} value={itemKey}>
