@@ -118,6 +118,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         },
         {
             id: 'actions',
+            header: 'Actions',
             cell: ({ row }) => {
                 const part = row.original;
                 return (
@@ -135,6 +136,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 );
             },
         },
+
     ], [onViewDetails, onEdit]);
 
     const filteredParts = useMemo(() => parts.filter(part => {
@@ -177,7 +179,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 </div>
             </div>
 
-            <PartsDataTable
+            <PartsDataTable mobilePriority={['Name','Part Number','In Stock','Unit Price','Actions']} mobileLimit={5}
                 columns={columns}
                 data={filteredParts}
             />

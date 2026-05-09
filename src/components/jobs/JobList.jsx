@@ -191,7 +191,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                     </div>
                     <Tabs value={activeTab}>
                         <TabsContent value={activeTab}>
-                            <Table>
+                            <Table mobilePriority={['Job ID','Customer','Status','Cost','Actions']} mobileLimit={5}>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Job ID</TableHead>

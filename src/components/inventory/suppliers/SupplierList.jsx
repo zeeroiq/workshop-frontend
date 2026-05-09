@@ -3,6 +3,7 @@ import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter } from 
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PaginationComponent from "@/components/common/PaginationComponent";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
@@ -150,37 +151,37 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Contact</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <Table mobilePriority={['Name','Contact','Status','Actions']} mobileLimit={4}>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Contact</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {suppliers.map((supplier) => (
                             <React.Fragment key={supplier.id}>
-                                <tr className="border-b border-border hover:bg-muted/50">
-                                    <td className="px-6 py-4">
+                                <TableRow className="border-b border-border hover:bg-muted/50">
+                                    <TableCell>
                                         <div className="font-medium">{supplier.name}</div>
                                         <div className="text-muted-foreground">{supplier.email}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell>
                                         <div>{supplier.contactPerson}</div>
                                         <div className="text-muted-foreground">{supplier.phone}</div>
-                                    </td>
-                                    <td className="px-6 py-4">{getStatusBadge(supplier.status)}</td>
-                                    <td className="px-6 py-4 text-right">
+                                    </TableCell>
+                                    <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                                    <TableCell className="text-right">
                                         <button className="text-muted-foreground hover:text-primary" onClick={() => toggleRowExpansion(supplier.id)}>
                                             <FaEllipsisV />
                                         </button>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                                 {expandedRow === supplier.id && (
-                                    <tr className="bg-muted/20">
-                                        <td colSpan="4" className="p-4">
+                                    <TableRow className="bg-muted/20">
+                                        <TableCell colSpan={4} className="p-4">
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
                                                     <h4 className="font-semibold">Address</h4>
@@ -208,13 +209,13 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                                                     <FaTrash className="mr-1" /> Delete
                                                 </button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
                             </React.Fragment>
                         ))}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
 
                 {suppliers.length === 0 && (
                     <div className="text-center py-16">

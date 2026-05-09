@@ -3,6 +3,7 @@ import { FaEye, FaEdit, FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
 import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import PaginationComponent from "@/components/common/PaginationComponent";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
@@ -115,34 +116,34 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Order #</th>
-                            <th className="px-6 py-3">Supplier</th>
-                            <th className="px-6 py-3">Order Date</th>
-                            <th className="px-6 py-3">Expected Date</th>
-                            <th className="px-6 py-3">Total</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <Table mobilePriority={['Order #','Supplier','Total','Status','Actions']} mobileLimit={5}>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Order #</TableHead>
+                            <TableHead>Supplier</TableHead>
+                            <TableHead>Order Date</TableHead>
+                            <TableHead>Expected Date</TableHead>
+                            <TableHead>Total</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {orders.map(order => {
                             const isDisabled = order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED';
                             return (
-                                <tr key={order.id} className="border-b border-border hover:bg-muted/50">
-                                    <td className="px-6 py-4 font-medium">{order.orderNumber}</td>
-                                    <td className="px-6 py-4">{order.supplierName}</td>
-                                    <td className="px-6 py-4">{formatDate(order.orderDate)}</td>
-                                    <td className="px-6 py-4">{formatDate(order.expectedDeliveryDate)}</td>
-                                    <td className="px-6 py-4">₹{order.totalAmount.toFixed(2)}</td>
-                                    <td className="px-6 py-4">
+                                <TableRow key={order.id} className="border-b border-border hover:bg-muted/50">
+                                    <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                                    <TableCell>{order.supplierName}</TableCell>
+                                    <TableCell>{formatDate(order.orderDate)}</TableCell>
+                                    <TableCell>{formatDate(order.expectedDeliveryDate)}</TableCell>
+                                    <TableCell>₹{order.totalAmount.toFixed(2)}</TableCell>
+                                    <TableCell>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}`}>
                                             {order.status}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell>
                                         <div className="flex items-center space-x-2">
                                             <button className="text-primary hover:text-primary/80" onClick={() => onViewDetails(order)}>
                                                 <FaEye />
@@ -156,12 +157,12 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                                                 <FaEdit />
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             );
                         })}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
                 {orders.length === 0 && (
                     <div className="text-center py-8">
                         <p className="text-muted-foreground">No orders found</p>

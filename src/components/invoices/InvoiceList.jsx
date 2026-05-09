@@ -198,7 +198,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                             ))}
                         </TabsList>
                         <TabsContent value={statusFilter}>
-                            <Table>
+                            <Table mobilePriority={['Invoice','Customer','Amount','Status','Actions']} mobileLimit={5}>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Invoice #</TableHead>

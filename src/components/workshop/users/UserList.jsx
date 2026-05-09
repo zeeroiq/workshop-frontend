@@ -49,7 +49,7 @@ const UserList = ({ onEdit, onCreate }) => {
                     <Button variant="link" onClick={onCreate}>Add a new user</Button>
                 </div>
             ) : (
-                <Table>
+                <Table mobilePriority={['Name','Email','Role','Actions']} mobileLimit={4}>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>

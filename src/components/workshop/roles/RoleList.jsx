@@ -63,7 +63,7 @@ const RoleList = ({ onCreate, onRoleDeleted }) => {
                     <Button variant="link" onClick={onCreate}>Add a new role</Button>
                 </div>
             ) : (
-                <Table>
+                <Table mobilePriority={['Name','Actions']} mobileLimit={2}>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>

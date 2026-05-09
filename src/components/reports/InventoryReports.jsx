@@ -176,7 +176,7 @@ const InventoryReports = () => {
                                 <CardTitle>Low Stock Items</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Table>
+                                <Table mobilePriority={['Part Name','Part Number','Current Stock','Value','Status']} mobileLimit={5}>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Part Name</TableHead>

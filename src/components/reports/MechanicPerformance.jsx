@@ -221,7 +221,7 @@ const MechanicPerformance = () => {
                                 <CardTitle>Mechanic Details</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Table>
+                                <Table mobilePriority={['Mechanic Name','Total Revenue','Completed Jobs','Efficiency']} mobileLimit={5}>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Mechanic Name</TableHead>

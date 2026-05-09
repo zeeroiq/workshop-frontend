@@ -31,11 +31,13 @@ import {ThemeProvider} from './components/common/ThemeProvider';
 function AppContent() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [sidebarExpanded, setSidebarExpanded] = useState(true);
+    const [sidebarExpanded, setSidebarExpanded] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 : true));
+    const [userToggled, setUserToggled] = useState(false);
     const location = useLocation();
 
     useEffect(() => {
-        // Removed: setSidebarExpanded(false) on location change to preserve sidebar state.
+        // Keep sidebar state when navigating, but initialize from viewport and
+        // allow automatic adaptation unless user has manually toggled.
     }, [location]);
 
     useEffect(() => {
@@ -47,12 +49,24 @@ function AppContent() {
     }, []);
 
     const toggleSidebarExpansion = () => {
-        setSidebarExpanded(!sidebarExpanded);
+        setUserToggled(true);
+        setSidebarExpanded(prev => !prev);
     };
 
     const closeSidebar = () => {
         setSidebarExpanded(false);
     };
+
+    useEffect(() => {
+        // Auto-adapt sidebar on resize only if user hasn't toggled manually
+        const onResize = () => {
+            if (!userToggled) {
+                setSidebarExpanded(window.innerWidth >= 768);
+            }
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, [userToggled]);
 
     if (loading) {
         return (<div className="fixed inset-0 flex items-center justify-center bg-background">

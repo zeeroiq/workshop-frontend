@@ -67,7 +67,7 @@ const PartsDataTable = ({ columns, data }) => {
                 </div>
             </div>
             <div className="rounded-md border">
-                <Table>
+                <Table mobilePriority={['Name','Part Number','In Stock','Unit Price']} mobileLimit={4}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>

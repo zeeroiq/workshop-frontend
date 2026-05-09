@@ -131,13 +131,13 @@ const PartCatalog = ({ onPartSelect }) => {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Parts for ${modelName}`}>
         <div className="max-h-96 overflow-y-auto">
-          <Table className="table-fixed w-full text-foreground">
+          <Table className="w-full text-foreground">
             <TableHeader>
               <TableRow className="border-b dark:border-gray-700">
-                <TableHead style={{ width: '5%' }}></TableHead>
-                <TableHead style={{ width: '25%' }}>Part No</TableHead>
-                <TableHead style={{ width: '40%' }}>Description</TableHead>
-                <TableHead style={{ width: '30%' }}>Plate Title</TableHead>
+                <TableHead className="w-6"></TableHead>
+                <TableHead className="w-1/4">Part No</TableHead>
+                <TableHead className="w-2/5">Description</TableHead>
+                <TableHead className="w-1/3">Plate Title</TableHead>
               </TableRow>
               <TableRow className="border-b dark:border-gray-700">
                 <TableCell></TableCell>

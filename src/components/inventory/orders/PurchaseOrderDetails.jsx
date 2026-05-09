@@ -144,7 +144,7 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
                     <CardTitle>Order Items ({order.items?.length || 0})</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Table>
+                    <Table mobilePriority={['Part Name','Part Number','Quantity','Total Price']} mobileLimit={4}>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Part Name</TableHead>

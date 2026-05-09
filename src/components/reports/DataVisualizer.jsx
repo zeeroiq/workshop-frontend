@@ -49,7 +49,7 @@ const DataVisualizer = ({ title, data, availableViews = ['table'], viewConfig })
                 )}
 
                 {activeView === 'table' && tableConfig && (
-                    <Table>
+                    <Table mobilePriority={tableConfig.mobilePriority} mobileLimit={tableConfig.mobileLimit}>
                         <TableHeader>
                             <TableRow>
                                 {tableConfig.columns.map(col => <TableHead key={col.header}>{col.header}</TableHead>)}

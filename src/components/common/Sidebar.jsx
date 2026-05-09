@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -44,9 +44,24 @@ const Sidebar = ({ isExpanded, onClose }) => {
         setManageOpen(!manageOpen);
     };
 
+    useEffect(() => {
+        // prevent body scroll on mobile when sidebar is open
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        if (isExpanded && isMobile) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isExpanded]);
+
     return (
         <>
             <div
+                role="presentation"
+                aria-hidden={!isExpanded}
                 className={cn(
                     'fixed inset-0 bg-black/50 z-30 md:hidden',
                     isExpanded ? 'block' : 'hidden'
@@ -54,6 +69,9 @@ const Sidebar = ({ isExpanded, onClose }) => {
                 onClick={onClose}
             ></div>
             <aside
+                role="dialog"
+                aria-modal={isExpanded}
+                aria-hidden={!isExpanded}
                 className={cn(
                     'fixed top-0 left-0 h-full bg-card border-r z-40 transform transition-all duration-300 ease-in-out overflow-hidden',
                     isExpanded ? 'w-64' : 'w-0 md:w-20'
@@ -61,7 +79,7 @@ const Sidebar = ({ isExpanded, onClose }) => {
             >
                 <div className="flex items-center justify-between p-4 border-b h-16">
                     {isExpanded && <h2 className="text-lg font-semibold"></h2>}
-                    <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose}>
+                    <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose} aria-label="Close sidebar">
                         <X size={20} />
                     </Button>
                 </div>

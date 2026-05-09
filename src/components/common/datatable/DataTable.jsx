@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FaSearch, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { useIsMobile } from '@/lib/hooks/useWindowSize';
 
 const DataTable = ({ columns, data, setData }) => {
     const [sorting, setSorting] = useState([]);
@@ -51,9 +52,56 @@ const DataTable = ({ columns, data, setData }) => {
         }
     });
 
+    const isMobile = useIsMobile();
+
+    // Mobile: render rows as stacked cards (key: row.id)
+    if (isMobile) {
+        const rows = table.getRowModel().rows;
+        return (
+            <div className="space-y-4">
+                {rows.length === 0 ? (
+                    <div className="text-center py-4 text-sm text-muted-foreground">No results.</div>
+                ) : (
+                    rows.map(row => (
+                        <div key={row.id} className="p-4 border rounded shadow-sm bg-card">
+                            {row.getVisibleCells().map(cell => {
+                                const header = cell.column.columnDef.header;
+                                const headerText = typeof header === 'string' ? header : (cell.column.id || '');
+                                return (
+                                    <div key={cell.id} className="mb-2">
+                                        <div className="text-xs text-muted-foreground">{headerText}</div>
+                                        <div className="text-sm">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))
+                )}
+                <div className="flex items-center justify-end space-x-2 py-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div>
-            <div className="rounded-md border">
+        <div className="overflow-x-auto">
+            <div className="rounded-md border min-w-[700px] md:min-w-full">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

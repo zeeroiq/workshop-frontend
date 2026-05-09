@@ -254,7 +254,7 @@ const FinancialReports = () => {
                                         <FaReceipt className="text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
-                                        <Table>
+                                        <Table mobilePriority={['Total','Paid','Overdue']} mobileLimit={3}>
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead>Total</TableHead>
@@ -289,7 +289,7 @@ const FinancialReports = () => {
                                 <CardTitle>Monthly Trends</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Table>
+                                <Table mobilePriority={['Month','Revenue','Profit']} mobileLimit={4}>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Month</TableHead>
