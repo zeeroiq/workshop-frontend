@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {FaPlus, FaSave, FaTimes, FaTrash} from 'react-icons/fa';
+import {FaPlus, FaSave, FaTimes, FaTrash, FaCalendar} from 'react-icons/fa';
 import {customerService} from "@/services/customerService";
 import {userService} from "@/services/userService";
 import {inventoryService} from "@/services/inventoryService";
@@ -17,6 +17,11 @@ import LoadingSpinner from '../common/LoadingSpinner';
 import PartScannerButton from '../common/PartScannerButton';
 import SearchableSelect from '../common/SearchableSelect';
 
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils"; // Assuming this path for cn utility
+
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job?.id);
     const [formData, setFormData] = useState({
@@ -29,7 +34,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
         technicianId: '',
         technician: '',
         status: 'estimate-pending',
-        estimatedCompletion: '',
+        estimatedCompletion: '', // This will be YYYY-MM-DDTHH:MM string
         cost: 0,
         description: '',
         notes: [],
@@ -43,6 +48,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState(null);
+    const [calendarDate, setCalendarDate] = useState(undefined); // State for the shadcn calendar component
+    const [timeInput, setTimeInput] = useState(''); // State for the time input
 
     useEffect(() => {
         const loadJobData = async () => {
@@ -82,12 +89,16 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 setCustomers(customers);
 
                 if (isEdit) {
-                    // console.log("Job data for initialization:", job); // Debugging
                     const customerForVehicles = customers.find(c => c.id.toString() === job.customerId?.toString());
                     setSelectedCustomerVehicles(customerForVehicles);
 
                     // Find the vehicle using job.vehicleId, then get its licensePlate
                     const vehicleFromJob = customerForVehicles?.vehicles?.find(v => v.licensePlate === job.license || v.id.toString() === job.vehicleId?.toString());
+
+                    const initialEstimatedCompletionDate = job.estimatedCompletion ? new Date(job.estimatedCompletion) : undefined;
+                    setCalendarDate(initialEstimatedCompletionDate); // Set calendar date
+                    const initialTimeInput = job.estimatedCompletion ? job.estimatedCompletion.substring(11, 16) : ''; // Extract time
+                    setTimeInput(initialTimeInput);
 
                     setFormData({
                         ...job,
@@ -99,14 +110,14 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         vehicle: vehicleFromJob ? `${vehicleFromJob.year} ${vehicleFromJob.make} ${vehicleFromJob.model}` : '',
                         license: vehicleFromJob ? vehicleFromJob.licensePlate : '',
                         technician: technicians.find(t => t.id.toString() === job.technicianId?.toString())?.firstName || job.technician,
-                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '',
+                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '', // Keep original string format for formData
                         items: job.items?.map(item => {
                             const newItem = { ...item, discount: item.discount || 0 };
                             if (newItem.type === 'PART') {
                                 const partDetails = parts.find(p => p.id.toString() === newItem.partId?.toString());
                                 return {
                                     ...newItem,
-                                    partId: newItem.partId ? newItem.partId.toString() : '', // Explicitly handle null/undefined
+                                    partId: newItem.partId ? newItem.partId.toString() : '',
                                     description: partDetails?.name || newItem.description,
                                     rate: partDetails?.sellingPrice || newItem.rate,
                                 };
@@ -115,7 +126,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         }) || [],
                         notes: job.notes || []
                     });
-                    // console.log("formData.selectedVehicleLicense after setFormData in loadJobData:", vehicleFromJob ? vehicleFromJob.licensePlate : ''); // Debugging
                 }
             } catch (error) {
                 toast.error("Failed to load job data. Please try again.");
@@ -265,6 +275,22 @@ const JobForm = ({ job, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
     };
 
+    const handleTimeChange = (e) => {
+        const newTime = e.target.value;
+        setTimeInput(newTime);
+        if (calendarDate && newTime) {
+            const formattedDate = format(calendarDate, "yyyy-MM-dd");
+            setFormData(prev => ({ ...prev, estimatedCompletion: `${formattedDate}T${newTime}` }));
+        } else if (!newTime) {
+            if (!calendarDate) {
+                setFormData(prev => ({ ...prev, estimatedCompletion: '' }));
+            } else {
+                const formattedDate = format(calendarDate, "yyyy-MM-dd");
+                setFormData(prev => ({ ...prev, estimatedCompletion: `${formattedDate}T00:00` })); // Default time if cleared
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -275,8 +301,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
 
             const payload = {
                 ...formData,
-                vehicleId: selectedVehicle?.id?.toString(), // Send vehicleId to backend
-                license: formData.selectedVehicleLicense, // Also send license if needed
+                vehicleId: selectedVehicle?.id?.toString(),
+                license: formData.selectedVehicleLicense,
                 cost: Number.parseFloat(formData.cost),
                 technician: technicians.find(t => t.id.toString() === formData.technicianId)?.firstName || formData.technician,
                 customerName: customers.find(c => c.id.toString() === formData.customerId)?.firstName || formData.customerName,
@@ -309,9 +335,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
     }, []);
 
     if (loading) return <LoadingSpinner />;
-
-    // This line is no longer needed for the vehicle dropdown options
-    // const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
 
     return (
         <div className="container mx-auto py-6">
@@ -454,7 +477,46 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         </div>
                         <div className="space-y-2">
                             <Label>Est. Completion *</Label>
-                            <Input name="estimatedCompletion" type="datetime-local" value={formData.estimatedCompletion} onChange={handleChange} required />
+                            <div className="flex gap-2"> {/* Use flex to place date and time side-by-side */}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !calendarDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <FaCalendar className="mr-2 h-4 w-4" />
+                                            {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>} {/* Display only date */}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={calendarDate}
+                                            onSelect={(selectedDate) => {
+                                                setCalendarDate(selectedDate);
+                                                if (selectedDate) {
+                                                    const formattedDate = format(selectedDate, "yyyy-MM-dd");
+                                                    const newEstimatedCompletion = `${formattedDate}T${timeInput || '00:00'}`;
+                                                    setFormData(prev => ({ ...prev, estimatedCompletion: newEstimatedCompletion }));
+                                                } else {
+                                                    setFormData(prev => ({ ...prev, estimatedCompletion: '' }));
+                                                }
+                                            }}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <Input
+                                    type="time"
+                                    value={timeInput}
+                                    onChange={handleTimeChange}
+                                    required={!!calendarDate} // Require time if a date is selected
+                                    className="w-auto"
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label>Job Estimate</Label>
