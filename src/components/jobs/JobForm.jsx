@@ -1,20 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
-import { customerService } from "@/services/customerService";
-import { userService } from "@/services/userService";
-import { inventoryService } from "@/services/inventoryService";
-import { toast } from "react-toastify";
-import { authService } from "@/services/authService";
-import { jobStatuses } from "./helper/constants";
-import { toUpperCase_space } from "../helper/utils";
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, {useCallback, useEffect, useState} from 'react';
+import {FaPlus, FaSave, FaTimes, FaTrash, FaCalendar} from 'react-icons/fa';
+import {customerService} from "@/services/customerService";
+import {userService} from "@/services/userService";
+import {inventoryService} from "@/services/inventoryService";
+import {toast} from "react-toastify";
+import {authService} from "@/services/authService";
+import {jobStatuses} from "./helper/constants";
+import {toUpperCase_space} from "../helper/utils";
+import {Button} from '@/components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Textarea} from '@/components/ui/textarea';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import LoadingSpinner from '../common/LoadingSpinner';
 import PartScannerButton from '../common/PartScannerButton';
+import SearchableSelect from '../common/SearchableSelect';
+
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils"; // Assuming this path for cn utility
 
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job?.id);
@@ -28,7 +34,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
         technicianId: '',
         technician: '',
         status: 'estimate-pending',
-        estimatedCompletion: '',
+        estimatedCompletion: '', // This will be YYYY-MM-DDTHH:MM string
         cost: 0,
         description: '',
         notes: [],
@@ -42,9 +48,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState(null);
-    const [page, setPage] = useState(0);
-    const [prevParts, setPrevParts] = useState([]);
-    const [query, setQuery] = useState('');
+    const [calendarDate, setCalendarDate] = useState(undefined); // State for the shadcn calendar component
+    const [timeInput, setTimeInput] = useState(''); // State for the time input
 
     useEffect(() => {
         const loadJobData = async () => {
@@ -54,13 +59,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 setCurrentUser(userInfo);
 
                 const [techRes, partsRes, custRes] = await Promise.all([
-                    userService.getByRole("MECHANIC"),
-                    // todo: fix it to be dynamic
+                    userService.getByRole("MECHANIC", 0, 10),
                     inventoryService.getParts({
                         page: 0,
-                        size: 5
+                        size: 10
                     }),
-                    customerService.getAll(0, 5)
+                    customerService.getAll(0, 10)
                 ]);
 
                 const technicians = techRes?.data || [];
@@ -82,16 +86,19 @@ const JobForm = ({ job, onSave, onCancel }) => {
 
                 setTechnicians(technicians);
                 setParts(parts);
-                setPrevParts(parts);
                 setCustomers(customers);
 
                 if (isEdit) {
-                    // console.log("Job data for initialization:", job); // Debugging
                     const customerForVehicles = customers.find(c => c.id.toString() === job.customerId?.toString());
                     setSelectedCustomerVehicles(customerForVehicles);
 
                     // Find the vehicle using job.vehicleId, then get its licensePlate
                     const vehicleFromJob = customerForVehicles?.vehicles?.find(v => v.licensePlate === job.license || v.id.toString() === job.vehicleId?.toString());
+
+                    const initialEstimatedCompletionDate = job.estimatedCompletion ? new Date(job.estimatedCompletion) : undefined;
+                    setCalendarDate(initialEstimatedCompletionDate); // Set calendar date
+                    const initialTimeInput = job.estimatedCompletion ? job.estimatedCompletion.substring(11, 16) : ''; // Extract time
+                    setTimeInput(initialTimeInput);
 
                     setFormData({
                         ...job,
@@ -103,14 +110,14 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         vehicle: vehicleFromJob ? `${vehicleFromJob.year} ${vehicleFromJob.make} ${vehicleFromJob.model}` : '',
                         license: vehicleFromJob ? vehicleFromJob.licensePlate : '',
                         technician: technicians.find(t => t.id.toString() === job.technicianId?.toString())?.firstName || job.technician,
-                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '',
+                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '', // Keep original string format for formData
                         items: job.items?.map(item => {
                             const newItem = { ...item, discount: item.discount || 0 };
                             if (newItem.type === 'PART') {
                                 const partDetails = parts.find(p => p.id.toString() === newItem.partId?.toString());
                                 return {
                                     ...newItem,
-                                    partId: newItem.partId ? newItem.partId.toString() : '', // Explicitly handle null/undefined
+                                    partId: newItem.partId ? newItem.partId.toString() : '',
                                     description: partDetails?.name || newItem.description,
                                     rate: partDetails?.sellingPrice || newItem.rate,
                                 };
@@ -119,7 +126,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         }) || [],
                         notes: job.notes || []
                     });
-                    // console.log("formData.selectedVehicleLicense after setFormData in loadJobData:", vehicleFromJob ? vehicleFromJob.licensePlate : ''); // Debugging
                 }
             } catch (error) {
                 toast.error("Failed to load job data. Please try again.");
@@ -141,46 +147,38 @@ const JobForm = ({ job, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, cost: totalItemsCost }));
     }, [formData.items]);
 
-    useEffect(() => {
-        const searchParts = setTimeout(async () => {
-            if (!query) {
-                setParts(prevParts);
-                return;
-            }
-            try {
-                const partsRes = await inventoryService.searchParts(query);
-                setParts(partsRes?.data?.content || []);
-            } catch (error) {
-                toast.error("Failed to search parts.");
-            }
-        }, 800);
-        return () => clearTimeout(searchParts);
-    }, [query]);
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
-    const handleSelectChange = async (name, value) => {
+    const handleSelectChange = async (name, value, selectedItem) => {
         setFormData(prev => ({ ...prev, [name]: value }));
 
         if (name === 'customerId') {
             setLoading(true);
             try {
+                // If we have the selectedItem from SearchableSelect, we might still want to fetch detailed info with vehicles
+                // though SearchableSelect might only have basic info.
                 const detailedCustomerRes = await customerService.getWithVehicles(value);
                 const detailedCustomer = detailedCustomerRes.data;
 
                 if (detailedCustomer) {
-                    // Update the customers list with the detailed customer info
-                    const updatedCustomers = customers.map(c => c.id === detailedCustomer.id ? detailedCustomer : c);
-                    setCustomers(updatedCustomers);
+                    // Update the customers list with the detailed customer info, adding it if it doesn't exist
+                    setCustomers(prev => {
+                        const exists = prev.some(c => c.id.toString() === detailedCustomer.id.toString());
+                        if (exists) {
+                            return prev.map(c => c.id.toString() === detailedCustomer.id.toString() ? detailedCustomer : c);
+                        }
+                        return [...prev, detailedCustomer];
+                    });
                     setSelectedCustomerVehicles(detailedCustomer);
 
                     // Reset vehicle selection
                     setFormData(prev => ({
                         ...prev,
+                        customerId: value,
                         customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`,
                         selectedVehicleLicense: '',
                         vehicle: '',
@@ -199,31 +197,45 @@ const JobForm = ({ job, onSave, onCancel }) => {
         }
 
         if (name === 'selectedVehicleLicense') {
-            const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
-            const vehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === value);
+            // Use the already fetched selectedCustomerVehicles
+            const vehicle = selectedCustomerVehicles?.vehicles?.find(v => v.licensePlate === value);
             if (vehicle) {
                 setFormData(prev => ({ ...prev, vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, license: vehicle.licensePlate }));
             }
         }
 
         if (name === 'technicianId') {
-            const selectedTechnician = technicians.find(t => t.id.toString() === value);
-            if (selectedTechnician) {
-                setFormData(prev => ({ ...prev, technician: `${selectedTechnician.firstName} ${selectedTechnician.lastName}` }));
+            // Use selectedItem if available from SearchableSelect
+            const tech = selectedItem || technicians.find(t => t.id.toString() === value);
+            if (tech) {
+                setTechnicians(prev => {
+                    const exists = prev.some(t => t.id.toString() === tech.id.toString());
+                    return exists ? prev : [...prev, tech];
+                });
+                setFormData(prev => ({ ...prev, technician: `${tech.firstName} ${tech.lastName}` }));
             }
         }
     };
 
-    const handleItemChange = (index, field, value) => {
+    const handleItemChange = (index, field, value, selectedItem) => {
         setFormData(prev => {
             const updatedItems = prev.items.map((item, i) => {
                 if (i === index) {
                     const updatedItem = { ...item, [field]: value };
                     if (field === 'partId') {
-                        const selectedPart = parts.find(p => p.id.toString() === value);
+                        // Use selectedItem if provided, otherwise fallback to finding in parts list
+                        const selectedPart = selectedItem || parts.find(p => p.id.toString() === value);
                         if (selectedPart) {
                             updatedItem.description = selectedPart.name;
                             updatedItem.rate = selectedPart.sellingPrice;
+                            
+                            // Also ensure this part is in our local parts list for future lookups
+                            setParts(prevParts => {
+                                if (!prevParts.some(p => p.id.toString() === selectedPart.id.toString())) {
+                                    return [...prevParts, selectedPart];
+                                }
+                                return prevParts;
+                            });
                         }
                     }
                     return updatedItem;
@@ -263,6 +275,22 @@ const JobForm = ({ job, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
     };
 
+    const handleTimeChange = (e) => {
+        const newTime = e.target.value;
+        setTimeInput(newTime);
+        if (calendarDate && newTime) {
+            const formattedDate = format(calendarDate, "yyyy-MM-dd");
+            setFormData(prev => ({ ...prev, estimatedCompletion: `${formattedDate}T${newTime}` }));
+        } else if (!newTime) {
+            if (!calendarDate) {
+                setFormData(prev => ({ ...prev, estimatedCompletion: '' }));
+            } else {
+                const formattedDate = format(calendarDate, "yyyy-MM-dd");
+                setFormData(prev => ({ ...prev, estimatedCompletion: `${formattedDate}T00:00` })); // Default time if cleared
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -273,8 +301,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
 
             const payload = {
                 ...formData,
-                vehicleId: selectedVehicle?.id?.toString(), // Send vehicleId to backend
-                license: formData.selectedVehicleLicense, // Also send license if needed
+                vehicleId: selectedVehicle?.id?.toString(),
+                license: formData.selectedVehicleLicense,
                 cost: Number.parseFloat(formData.cost),
                 technician: technicians.find(t => t.id.toString() === formData.technicianId)?.firstName || formData.technician,
                 customerName: customers.find(c => c.id.toString() === formData.customerId)?.firstName || formData.customerName,
@@ -293,31 +321,26 @@ const JobForm = ({ job, onSave, onCancel }) => {
         }
     };
 
-    const loadNextPage = async () => {
-        try {
-            const partsRes = await inventoryService.getParts({
-                page: page + 1,
-                size: 5
-            });
-            const newParts = partsRes?.data?.content || [];
-            if(newParts.length === 0) {
-                toast.info("No more parts to load.");
-                return;
-            }
-            setParts(prevParts);
-            setParts(prev => [...prev, ...newParts]); //this is to back to the original list when query is cleared
-            setPrevParts(prev => [...prev, ...newParts]);
-            setPage(prev => prev + 1);
-            console.log('Loaded parts page:', page + 1);
-        } catch (error) {
-            toast.error("Failed to load more parts.");
-        }
-    };
+    // Fetcher functions for SearchableSelect
+    const fetchCustomers = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await customerService.getAll(params.page, params.size, params.search, { signal: options.signal });
+    }, []);
+
+    const fetchTechnicians = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize, role: "MECHANIC" };
+        if (search) params.search = search;
+        return await userService.getByRole(params.role, params.page, params.size, params.search, { signal: options.signal });
+    }, []);
+
+    const fetchParts = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await inventoryService.getParts({ ...params, signal: options.signal });
+    }, []);
 
     if (loading) return <LoadingSpinner />;
-
-    // This line is no longer needed for the vehicle dropdown options
-    // const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
 
     return (
         <div className="container mx-auto py-6">
@@ -334,15 +357,17 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         {/* Customer and Vehicle */}
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label>Customer *</Label>
-                                <Select name="customerId" value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)} required>
-                                    <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
-                                    <SelectContent>
-                                        {
-                                            customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)
-                                        }
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    label="Customer *"
+                                    fetcher={fetchCustomers}
+                                    renderItem={(c) => `${c.firstName} ${c.lastName}`}
+                                    getItemKey={(c) => c.id}
+                                    value={formData.customerId}
+                                    onChange={(val, item) => handleSelectChange('customerId', val, item)}
+                                    placeholder="Select a customer..."
+                                    searchPlaceholder="Search customers..."
+                                    initialData={customers}
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label>Vehicle *</Label>
@@ -365,17 +390,17 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 <Input name="service" value={formData.service} onChange={handleChange} required />
                             </div>
                             <div className="space-y-2">
-                                <Label>Technician</Label>
-                                <Select name="technicianId" value={formData.technicianId} onValueChange={val => handleSelectChange('technicianId', val)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Assign a technician..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {
-                                            technicians.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.firstName} {t.lastName}</SelectItem>)
-                                        }
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    label="Technician"
+                                    fetcher={fetchTechnicians}
+                                    renderItem={(t) => `${t.firstName} ${t.lastName}`}
+                                    getItemKey={(t) => t.id}
+                                    value={formData.technicianId}
+                                    onChange={(val, item) => handleSelectChange('technicianId', val, item)}
+                                    placeholder="Assign a technician..."
+                                    searchPlaceholder="Search technicians..."
+                                    initialData={technicians}
+                                />
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -401,18 +426,17 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 <div className="col-span-4 space-y-2">
                                     {
                                         item.type === 'PART' ? (
-                                        <Select name="partId" value={item.partId} onValueChange={val => handleItemChange(index, 'partId', val)} disabled={!!item.id}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select part..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <Input name="partId" onChange={(e) => setQuery(e.target.value)} placeholder="Search part..." hidden />
-                                                {
-                                                    parts.map(p => <SelectItem key={p.id} value={p.id.toString()}>[{p.partNumber}] {p.name}</SelectItem>)
-                                                }
-                                                <Button type="button" variant="link" className="w-full text-center" onClick={loadNextPage}>Load More</Button>
-                                            </SelectContent>
-                                        </Select>
+                                        <SearchableSelect
+                                            fetcher={fetchParts}
+                                            renderItem={(p) => `[${p.partNumber}] ${p.name}`}
+                                            getItemKey={(p) => p.id}
+                                            value={item.partId}
+                                            onChange={(val, item) => handleItemChange(index, 'partId', val, item)}
+                                            placeholder="Select part..."
+                                            searchPlaceholder="Search parts..."
+                                            initialData={parts}
+                                            disabled={!!item.id}
+                                        />
                                     ) : (
                                         <Input name="description" value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} placeholder="Labor description" disabled={!!item.id} />
                                     )
@@ -459,7 +483,46 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         </div>
                         <div className="space-y-2">
                             <Label>Est. Completion *</Label>
-                            <Input name="estimatedCompletion" type="datetime-local" value={formData.estimatedCompletion} onChange={handleChange} required />
+                            <div className="flex gap-2"> {/* Use flex to place date and time side-by-side */}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !calendarDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <FaCalendar className="mr-2 h-4 w-4" />
+                                            {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>} {/* Display only date */}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={calendarDate}
+                                            onSelect={(selectedDate) => {
+                                                setCalendarDate(selectedDate);
+                                                if (selectedDate) {
+                                                    const formattedDate = format(selectedDate, "yyyy-MM-dd");
+                                                    const newEstimatedCompletion = `${formattedDate}T${timeInput || '00:00'}`;
+                                                    setFormData(prev => ({ ...prev, estimatedCompletion: newEstimatedCompletion }));
+                                                } else {
+                                                    setFormData(prev => ({ ...prev, estimatedCompletion: '' }));
+                                                }
+                                            }}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <Input
+                                    type="time"
+                                    value={timeInput}
+                                    onChange={handleTimeChange}
+                                    required={!!calendarDate} // Require time if a date is selected
+                                    className="w-auto"
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label>Job Estimate</Label>

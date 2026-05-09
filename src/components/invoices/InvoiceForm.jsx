@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { FaArrowLeft, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
-import { invoiceService } from '@/services/invoiceService';
-import { INVOICE_STATUS } from './constants/invoiceConstants';
-import { customerService } from "@/services/customerService";
-import { inventoryService } from "@/services/inventoryService";
-import { toast } from "react-toastify";
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import React, {useCallback, useEffect, useState} from 'react';
+import {FaPlus, FaSave, FaTimes, FaTrash} from 'react-icons/fa';
+import {invoiceService} from '@/services/invoiceService';
+import {INVOICE_STATUS} from './constants/invoiceConstants';
+import {customerService} from "@/services/customerService";
+import {inventoryService} from "@/services/inventoryService";
+import {toast} from "react-toastify";
+import {Button} from '@/components/ui/button';
+import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Textarea} from '@/components/ui/textarea';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import PartScannerButton from '../common/PartScannerButton';
+import SearchableSelect from '../common/SearchableSelect';
 
 const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const isEdit = Boolean(invoice && invoice.id);
@@ -38,14 +39,11 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [itemType, setItemType] = useState('LABOR');
     const [originalItemCount, setOriginalItemCount] = useState(0);
-    const [page, setPage] = useState(0);
-    const [prevParts, setPrevParts] = useState([]);
-    const [query, setQuery] = useState('');
 
     useEffect(() => {
         const loadCustomers = async () => {
             try {
-                const response = await customerService.listAll();
+                const response = await customerService.getAll(0, 10);
                 setCustomers(response?.data?.content || []);
             } catch (error) {
                 toast.error('Failed to fetch customers');
@@ -53,9 +51,8 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         };
         const loadParts = async () => {
             try {
-                const response = await inventoryService.getParts({page: 0, size:5});
+                const response = await inventoryService.getParts({page: 0, size: 10});
                 setParts(response?.data?.content || []);
-                setPrevParts(response?.data?.content || []);
             } catch (error) {
                 toast.error('Failed to fetch parts');
             }
@@ -73,69 +70,59 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     }, [itemType]);
 
     useEffect(() => {
-        if (invoice) {
-            // Initialize formData with invoice details
-            const initialFormData = {
-                ...invoice,
-                invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
-                dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
-                items: invoice.items || [],
-            };
-
-            // Find the customer in the fetched list
+        // Initialize or update form data when invoice prop changes
+        if (invoice && invoice.id) {
+            // Edit Mode: Resolve customer details from the customers list if available
             const customerFromList = customers.find(c => c.id === invoice.customerId);
 
-            if (customerFromList) {
-                setSelectedCustomer(customerFromList);
-                // Update formData with customer details from the found customer
-                initialFormData.customerId = customerFromList.id;
-                initialFormData.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
-                initialFormData.customerEmail = customerFromList.email;
-                initialFormData.customerPhone = customerFromList.phone;
-                initialFormData.customerAddress = customerFromList.address;
-            } else {
-                // If customer not found in list, ensure selectedCustomer is null
-                setSelectedCustomer(null);
-                // Keep customer details from invoice if customerFromList is not found
-            }
+            setFormData(prev => {
+                const updatedFormData = {
+                    ...prev,
+                    ...invoice,
+                    invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
+                    dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
+                    items: invoice.items || [],
+                };
 
-            setFormData(initialFormData);
-            setOriginalItemCount(initialFormData.items.length);
-        } else {
-            setFormData({
-                invoiceNumber: '',
-                customerId: '',
-                customerName: '',
-                customerEmail: '',
-                customerPhone: '',
-                customerAddress: '',
-                invoiceDate: new Date().toISOString().split('T')[0],
-                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                items: [],
-                notes: '',
-                terms: '',
-                status: INVOICE_STATUS.DRAFT
+                if (customerFromList) {
+                    setSelectedCustomer(customerFromList);
+                    updatedFormData.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
+                    updatedFormData.customerEmail = customerFromList.email;
+                    updatedFormData.customerPhone = customerFromList.phone;
+                    updatedFormData.customerAddress = customerFromList.address;
+                }
+                return updatedFormData;
+            });
+            setOriginalItemCount(invoice.items?.length || 0);
+        } else if (!invoice) {
+            // Create Mode: Only reset to initial state if the form was previously in edit mode or explicitly reset
+            // We use the presence of invoiceNumber or customerId as a proxy for "dirty" state we might want to clear
+            // but we avoid doing this on every render or list update.
+            // Actually, the initial state is already set in useState. 
+            // We only reset if the invoice prop itself goes from "something" to "null".
+            setFormData(prev => {
+                if (prev.invoiceNumber || prev.customerId) {
+                    return {
+                        invoiceNumber: '',
+                        customerId: '',
+                        customerName: '',
+                        customerEmail: '',
+                        customerPhone: '',
+                        customerAddress: '',
+                        invoiceDate: new Date().toISOString().split('T')[0],
+                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        items: [],
+                        notes: '',
+                        terms: '',
+                        status: INVOICE_STATUS.DRAFT
+                    };
+                }
+                return prev;
             });
             setSelectedCustomer(null);
             setOriginalItemCount(0);
         }
-    }, [invoice, customers]); // Depend on invoice and customers
-
-    useEffect(() => {
-        const searchParts = setTimeout(async () => {
-            if (!query) {
-                setParts(prevParts);
-                return;
-            }
-            try {
-                const partsRes = await inventoryService.searchParts(query);
-                setParts(partsRes?.data?.content || []);
-            } catch (error) {
-                toast.error("Failed to search parts.");
-            }
-        }, 800);
-        return () => clearTimeout(searchParts);
-    }, [query]);
+    }, [invoice?.id]); // Only re-run when the invoice ID changes
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -143,12 +130,18 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
-    const handleSelectChange = (name, value) => {
+    const handleSelectChange = (name, value, selectedItem) => {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'customerId') {
-            const customer = customers.find(c => c.id.toString() === value);
+            const customer = selectedItem || customers.find(c => c.id.toString() === value);
             setSelectedCustomer(customer);
             if (customer) {
+                // Ensure customer is in our local list
+                setCustomers(prev => {
+                    const exists = prev.some(c => c.id.toString() === customer.id.toString());
+                    return exists ? prev : [...prev, customer];
+                });
+                
                 setFormData(prev => ({
                     ...prev,
                     customerName: `${customer.firstName} ${customer.lastName}`,
@@ -211,9 +204,15 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, items: updatedItems }));
     };
 
-    const handlePartSelectChange = (partId) => {
-        const part = parts.find(p => p.id.toString() === partId);
+    const handlePartSelectChange = (partId, selectedPart) => {
+        const part = selectedPart || parts.find(p => p.id.toString() === partId);
         if (part) {
+            // Ensure part is in our local list
+            setParts(prev => {
+                const exists = prev.some(p => p.id.toString() === part.id.toString());
+                return exists ? prev : [...prev, part];
+            });
+
             setNewItem(prev => ({
                 ...prev,
                 itemType: "part",
@@ -274,6 +273,20 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         }
     };
 
+    // Fetcher functions for SearchableSelect
+    const fetchCustomers = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await customerService.getAll(params.page, params.size, params.search, { signal: options.signal });
+    }, []);
+
+    const fetchParts = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await inventoryService.getParts({ ...params, signal: options.signal });
+    }, []);
+
+
     const getDiscountDisabledState = (item, index) => {
         const isJobItem = !!formData.jobNumber && index < originalItemCount;
         // if (!item.partId) { // Is labor
@@ -285,28 +298,6 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         }
         // For newly added parts, use the isDiscountEditable flag set during part selection
         return item.isDiscountEditable === false;
-    };
-
-    
-    const loadNextPage = async () => {
-        try {
-            const partsRes = await inventoryService.getParts({
-                page: page + 1,
-                size: 5
-            });
-            const newParts = partsRes?.data?.content || [];
-            if(newParts.length === 0) {
-                toast.info("No more parts to load.");
-                return;
-            }
-            setParts(prevParts);
-            setParts(prev => [...prev, ...newParts]);
-            setPrevParts(prev => [...prev, ...newParts]);
-            setPage(prev => prev + 1);
-            console.log('Loaded parts page:', page + 1);
-        } catch (error) {
-            toast.error("Failed to load more parts.");
-        }
     };
 
     return (
@@ -337,11 +328,17 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                         </div>
                         {/* Customer Info */}
                         <div className="space-y-2">
-                            <Label>Customer *</Label>
-                            <Select name="customerId" value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)} required>
-                                <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
-                                <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                label="Customer *"
+                                fetcher={fetchCustomers}
+                                renderItem={(c) => `${c.firstName} ${c.lastName}`}
+                                getItemKey={(c) => c.id}
+                                value={formData.customerId}
+                                onChange={(val, item) => handleSelectChange('customerId', val, item)}
+                                placeholder="Select a customer..."
+                                searchPlaceholder="Search customers..."
+                                initialData={customers}
+                            />
                         </div>
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="space-y-2"><Label>Email</Label><Input name="customerEmail" value={formData.customerEmail} disabled /></div>
@@ -378,19 +375,17 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                             ) : (
                                 <>
                                     <div className="col-span-3 space-y-2">
-                                        <Label>Part</Label>
-                                        <Select onValueChange={handlePartSelectChange}>
-                                            <SelectTrigger><SelectValue placeholder="Select a part..." /></SelectTrigger>
-                                            <SelectContent>
-                                                <Input name="partId" onChange={(e) => setQuery(e.target.value)} placeholder="Search part..." hidden />
-                                                {parts.map(part => (
-                                                    <SelectItem key={part.id} value={part.id.toString()}>
-                                                        {part.name} ({part.partNumber}) - In Stock: {part.quantityInStock}
-                                                    </SelectItem>
-                                                ))}
-                                                <Button type="button" variant="link" className="w-full text-center" onClick={loadNextPage}>Load More</Button>
-                                            </SelectContent>
-                                        </Select>
+                                        <SearchableSelect
+                                            label="Part"
+                                            fetcher={fetchParts}
+                                            renderItem={(p) => `${p.name} (${p.partNumber}) - In Stock: ${p.quantityInStock}`}
+                                            getItemKey={(p) => p.id}
+                                            value={newItem.partId || ""}
+                                            onChange={handlePartSelectChange}
+                                            placeholder="Select a part..."
+                                            searchPlaceholder="Search parts..."
+                                            initialData={parts}
+                                        />
                                     </div>
                                     <div className="col-span-2 space-y-2">
                                         <Label>Discount (%)</Label>
