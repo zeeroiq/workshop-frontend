@@ -1,6 +1,6 @@
 import React from "react";
 import {toUpperCase_space} from "../../helper/utils";
-
+import { formatDate } from "../../helper/utils";
 
 export const getStatusBadge = (status) => {
     switch(status) {
@@ -14,3 +14,5 @@ export const getStatusBadge = (status) => {
             return <span className="status-badge default">{toUpperCase_space(status)}</span>;
     }
 };
+
+export { formatDate };

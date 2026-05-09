@@ -1,8 +1,10 @@
 import {toast} from "react-toastify";
-
+import { formatDate, formatDateForInput } from "../helper/utils";
 
 export const handleOrderEditClick = (order, onEdit) => {
-    if (order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED' || order.status.toUpperCase() === 'DELIVERED' && order.status.toUpperCase() !== 'PENDING') {
+    // Only block editing for COMPLETED, CANCELLED, DELIVERED
+    const status = order.status.toUpperCase();
+    if (['COMPLETED', 'CANCELLED', 'DELIVERED'].includes(status)) {
         toast.warn(`Cannot edit ${order.status.toLowerCase()} order`);
         return;
     }
@@ -11,26 +13,11 @@ export const handleOrderEditClick = (order, onEdit) => {
 
 
 export const isOrderEditable = (order) => {
+    // Allow editing for PENDING and ORDERED; only prevent COMPLETED, CANCELLED, DELIVERED
     const status = order.status.toUpperCase();
     const nonEditable = ['COMPLETED', 'CANCELLED', 'DELIVERED'];
-    if (nonEditable.includes(status) || status !== 'PENDING') {
-        toast.warn(`Cannot edit ${order.status.toLowerCase()} order`);
-        return false;
-    }
-    return true;
+    return !nonEditable.includes(status);
+
 };
 
-export const formatDate = (dateString) => {
-    if (!dateString) return 'Not received yet';
-    return new Date(dateString).toLocaleDateString();
-};
-
-
-export const formatDateForInput = (date) => {
-    if (!date) return '';
-    const dte = new Date(date);
-    if (isNaN(dte.getTime())) {
-        return '';
-    }
-    return dte.toISOString().split('T')[0];
-}
+export { formatDate, formatDateForInput };

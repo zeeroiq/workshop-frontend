@@ -4,6 +4,7 @@ import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import { formatDateForInput, isOrderEditable } from "../Utils";
 import api from "@/services/api";
+import { DatePicker } from '@/components/ui/date-picker';
 
 const Input = ({ label, children, ...props }) => (
     <div>
@@ -32,7 +33,9 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     const [loading, setLoading] = useState(false);
 
     const isEditMode = Boolean(order?.id);
+    const isOrdered = order?.status === 'ORDERED';
     const canEditOrder = isEditMode ? isOrderEditable(order) : true;
+    const canEditItems = canEditOrder && !isOrdered;
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -40,7 +43,7 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
             try {
                 const [suppliersRes, partsRes] = await Promise.all([
                     inventoryService.getSuppliers(),
-                    inventoryService.getParts()
+                    inventoryService.getParts({ size: 1000 }) // Fetch more parts to avoid missing items
                 ]);
                 if (suppliersRes?.data?.success) {
                     setSuppliers(suppliersRes.data.content || suppliersRes.data);
@@ -67,12 +70,15 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                 orderDate: formatDateForInput(order.orderDate),
                 expectedDeliveryDate: formatDateForInput(order.expectedDeliveryDate),
                 status: order.status || 'PENDING',
-                items: (order.items || []).map(item => ({
-                    ...item,
-                    partId: item.partId || '',
-                    quantity: item.quantity || 1,
-                    unitPrice: item.unitPrice || 0
-                })),
+                items: (order.items || []).map(item => {
+                    const partId = item.partId || item.part?.id || '';
+                    return {
+                        ...item,
+                        partId: partId.toString(),
+                        quantity: item.quantity || 1,
+                        unitPrice: item.unitPrice || 0
+                    };
+                }),
             });
         } else {
             // Reset form for new order
@@ -90,10 +96,12 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (isEditMode && ['orderNumber', 'supplierId', 'orderDate'].includes(name)) return;
+        if (isOrdered && name === 'expectedDeliveryDate') return;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleAddItem = () => {
+        if (!canEditItems) return;
         setFormData(prev => ({
             ...prev,
             items: [...prev.items, { partId: '', quantity: 1, unitPrice: 0 }]
@@ -101,6 +109,7 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     };
 
     const handleRemoveItem = (index) => {
+        if (!canEditItems) return;
         setFormData(prev => ({
             ...prev,
             items: prev.items.filter((_, i) => i !== index)
@@ -108,6 +117,7 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
     };
 
     const handleItemChange = (index, field, value) => {
+        if (!canEditItems) return;
         const updatedItems = formData.items.map((item, i) => {
             if (i === index) {
                 const newItem = { ...item, [field]: value };
@@ -115,6 +125,8 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                     const selectedPart = parts.find(p => p.id.toString() === value);
                     if (selectedPart) {
                         newItem.unitPrice = selectedPart.costPrice;
+                        newItem.partName = selectedPart.name;
+                        newItem.partNumber = selectedPart.partNumber;
                     }
                 }
                 return newItem;
@@ -214,10 +226,32 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </Input>
-                        <Input label="Order Date" name="orderDate" type="date" value={formData.orderDate} onChange={handleInputChange} disabled={isEditMode} required />
-                        <Input label="Expected Delivery" name="expectedDeliveryDate" type="date" value={formData.expectedDeliveryDate} onChange={handleInputChange} required />
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-muted-foreground">Order Date *</label>
+                            <DatePicker
+                                value={formData.orderDate}
+                                onChange={(e) => {
+                                    if (!isEditMode) {
+                                        setFormData(prev => ({ ...prev, orderDate: e.target.value }));
+                                    }
+                                }}
+                                disabled={isEditMode}
+                                placeholder="Pick a date"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-muted-foreground">Expected Delivery *</label>
+                            <DatePicker
+                                value={formData.expectedDeliveryDate}
+                                onChange={(e) => {
+                                    setFormData(prev => ({ ...prev, expectedDeliveryDate: e.target.value }));
+                                }}
+                                disabled={isOrdered}
+                                placeholder="Pick a date"
+                            />
+                        </div>
                         <Input label="Status" name="status" value={formData.status} onChange={handleInputChange}>
-                             <select>
+                             <select disabled={!canEditOrder}>
                                 <option value="PENDING">Pending</option>
                                 <option value="ORDERED">Ordered</option>
                                 <option value="COMPLETED">Completed</option>
@@ -230,7 +264,7 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                 <div className="p-5 border border-border rounded-lg">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold">Order Items</h3>
-                        {canEditOrder && (
+                        {canEditItems && (
                             <button type="button" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-1 rounded-md flex items-center text-sm" onClick={handleAddItem}>
                                 <FaPlus className="mr-2" /> Add Item
                             </button>
@@ -241,24 +275,27 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                             <div key={index} className="grid grid-cols-12 gap-4 items-center">
                                 <div className="col-span-5">
                                     <Input label="Part" name="partId" value={item.partId} onChange={(e) => handleItemChange(index, 'partId', e.target.value)} required>
-                                        <select disabled={!canEditOrder}>
+                                        <select disabled={!canEditItems}>
                                             <option value="">Select Part</option>
-                                            {parts.map(p => <option key={p.id} value={p.id}>{p.name} ({p.partNumber})</option>)}
+                                            {parts.map(p => <option key={p.id} value={p.id.toString()}>{p.name} ({p.partNumber})</option>)}
+                                            {item.partId && !parts.find(p => p.id.toString() === item.partId) && (
+                                                <option value={item.partId}>{item.partName || 'Unknown Part'} ({item.partNumber || item.partId})</option>
+                                            )}
                                         </select>
                                     </Input>
                                 </div>
                                 <div className="col-span-2">
-                                    <Input label="Quantity" name="quantity" type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required disabled={!canEditOrder} />
+                                    <Input label="Quantity" name="quantity" type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required disabled={!canEditItems} />
                                 </div>
                                 <div className="col-span-2">
-                                    <Input label="Unit Price" name="unitPrice" type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} required disabled={!canEditOrder} />
+                                    <Input label="Unit Price" name="unitPrice" type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} required disabled={!canEditItems} />
                                 </div>
                                 <div className="col-span-2">
                                     <label className="text-sm font-medium text-muted-foreground">Total</label>
                                     <p className="mt-2">₹{(item.quantity * item.unitPrice).toFixed(2)}</p>
                                 </div>
                                 <div className="col-span-1 flex items-end">
-                                    {canEditOrder && (
+                                    {canEditItems && (
                                         <button type="button" className="text-red-500 hover:text-red-700" onClick={() => handleRemoveItem(index)}>
                                             <FaTrash />
                                         </button>

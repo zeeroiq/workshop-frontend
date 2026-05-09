@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaArrowLeft, FaEdit, FaBuilding, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaGlobe, FaCalendar, FaStickyNote } from 'react-icons/fa';
+import { formatDate } from "../Utils";
 
 const SupplierDetails = ({ supplier, onBack, onEdit }) => {
     if (!supplier) {
@@ -12,15 +13,6 @@ const SupplierDetails = ({ supplier, onBack, onEdit }) => {
             </div>
         );
     }
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
 
     const getStatusBadge = (status) => {
         const statusClass = status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
