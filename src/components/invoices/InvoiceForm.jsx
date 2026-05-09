@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FaArrowLeft, FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 import { invoiceService } from '@/services/invoiceService';
 import { INVOICE_STATUS } from './constants/invoiceConstants';
@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import PartScannerButton from '../common/PartScannerButton';
+import SearchableSelect from '../common/SearchableSelect';
 
 const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const isEdit = Boolean(invoice && invoice.id);
@@ -38,14 +39,11 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [itemType, setItemType] = useState('LABOR');
     const [originalItemCount, setOriginalItemCount] = useState(0);
-    const [page, setPage] = useState(0);
-    const [prevParts, setPrevParts] = useState([]);
-    const [query, setQuery] = useState('');
 
     useEffect(() => {
         const loadCustomers = async () => {
             try {
-                const response = await customerService.listAll();
+                const response = await customerService.getAll(0, 10);
                 setCustomers(response?.data?.content || []);
             } catch (error) {
                 toast.error('Failed to fetch customers');
@@ -53,9 +51,8 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         };
         const loadParts = async () => {
             try {
-                const response = await inventoryService.getParts({page: 0, size:5});
+                const response = await inventoryService.getParts({page: 0, size: 10});
                 setParts(response?.data?.content || []);
-                setPrevParts(response?.data?.content || []);
             } catch (error) {
                 toast.error('Failed to fetch parts');
             }
@@ -120,22 +117,6 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
             setOriginalItemCount(0);
         }
     }, [invoice, customers]); // Depend on invoice and customers
-
-    useEffect(() => {
-        const searchParts = setTimeout(async () => {
-            if (!query) {
-                setParts(prevParts);
-                return;
-            }
-            try {
-                const partsRes = await inventoryService.searchParts(query);
-                setParts(partsRes?.data?.content || []);
-            } catch (error) {
-                toast.error("Failed to search parts.");
-            }
-        }, 800);
-        return () => clearTimeout(searchParts);
-    }, [query]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -274,6 +255,15 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         }
     };
 
+    // Fetcher functions for SearchableSelect
+    const fetchCustomers = useCallback(async (page, pageSize, search) => {
+        return await customerService.getAll(page, pageSize, search);
+    }, []);
+
+    const fetchParts = useCallback(async (page, pageSize, search) => {
+        return await inventoryService.getParts({ page, size: pageSize, q: search });
+    }, []);
+
     const getDiscountDisabledState = (item, index) => {
         const isJobItem = !!formData.jobNumber && index < originalItemCount;
         // if (!item.partId) { // Is labor
@@ -285,28 +275,6 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         }
         // For newly added parts, use the isDiscountEditable flag set during part selection
         return item.isDiscountEditable === false;
-    };
-
-    
-    const loadNextPage = async () => {
-        try {
-            const partsRes = await inventoryService.getParts({
-                page: page + 1,
-                size: 5
-            });
-            const newParts = partsRes?.data?.content || [];
-            if(newParts.length === 0) {
-                toast.info("No more parts to load.");
-                return;
-            }
-            setParts(prevParts);
-            setParts(prev => [...prev, ...newParts]);
-            setPrevParts(prev => [...prev, ...newParts]);
-            setPage(prev => prev + 1);
-            console.log('Loaded parts page:', page + 1);
-        } catch (error) {
-            toast.error("Failed to load more parts.");
-        }
     };
 
     return (
@@ -337,11 +305,17 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                         </div>
                         {/* Customer Info */}
                         <div className="space-y-2">
-                            <Label>Customer *</Label>
-                            <Select name="customerId" value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)} required>
-                                <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
-                                <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)}</SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                label="Customer *"
+                                fetcher={fetchCustomers}
+                                renderItem={(c) => `${c.firstName} ${c.lastName}`}
+                                getItemKey={(c) => c.id}
+                                value={formData.customerId}
+                                onChange={(val) => handleSelectChange('customerId', val)}
+                                placeholder="Select a customer..."
+                                searchPlaceholder="Search customers..."
+                                initialData={customers}
+                            />
                         </div>
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="space-y-2"><Label>Email</Label><Input name="customerEmail" value={formData.customerEmail} disabled /></div>
@@ -378,19 +352,17 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                             ) : (
                                 <>
                                     <div className="col-span-3 space-y-2">
-                                        <Label>Part</Label>
-                                        <Select onValueChange={handlePartSelectChange}>
-                                            <SelectTrigger><SelectValue placeholder="Select a part..." /></SelectTrigger>
-                                            <SelectContent>
-                                                <Input name="partId" onChange={(e) => setQuery(e.target.value)} placeholder="Search part..." hidden />
-                                                {parts.map(part => (
-                                                    <SelectItem key={part.id} value={part.id.toString()}>
-                                                        {part.name} ({part.partNumber}) - In Stock: {part.quantityInStock}
-                                                    </SelectItem>
-                                                ))}
-                                                <Button type="button" variant="link" className="w-full text-center" onClick={loadNextPage}>Load More</Button>
-                                            </SelectContent>
-                                        </Select>
+                                        <SearchableSelect
+                                            label="Part"
+                                            fetcher={fetchParts}
+                                            renderItem={(p) => `${p.name} (${p.partNumber}) - In Stock: ${p.quantityInStock}`}
+                                            getItemKey={(p) => p.id}
+                                            value=""
+                                            onChange={handlePartSelectChange}
+                                            placeholder="Select a part..."
+                                            searchPlaceholder="Search parts..."
+                                            initialData={parts}
+                                        />
                                     </div>
                                     <div className="col-span-2 space-y-2">
                                         <Label>Discount (%)</Label>

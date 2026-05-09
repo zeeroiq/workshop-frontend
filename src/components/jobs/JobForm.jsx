@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { FaSave, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 import { customerService } from "@/services/customerService";
 import { userService } from "@/services/userService";
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LoadingSpinner from '../common/LoadingSpinner';
 import PartScannerButton from '../common/PartScannerButton';
+import SearchableSelect from '../common/SearchableSelect';
 
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job?.id);
@@ -42,9 +43,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState(null);
-    const [page, setPage] = useState(0);
-    const [prevParts, setPrevParts] = useState([]);
-    const [query, setQuery] = useState('');
 
     useEffect(() => {
         const loadJobData = async () => {
@@ -54,13 +52,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 setCurrentUser(userInfo);
 
                 const [techRes, partsRes, custRes] = await Promise.all([
-                    userService.getByRole("MECHANIC"),
-                    // todo: fix it to be dynamic
+                    userService.getByRole("MECHANIC", 0, 10),
                     inventoryService.getParts({
                         page: 0,
-                        size: 5
+                        size: 10
                     }),
-                    customerService.getAll(0, 5)
+                    customerService.getAll(0, 10)
                 ]);
 
                 const technicians = techRes?.data || [];
@@ -82,7 +79,6 @@ const JobForm = ({ job, onSave, onCancel }) => {
 
                 setTechnicians(technicians);
                 setParts(parts);
-                setPrevParts(parts);
                 setCustomers(customers);
 
                 if (isEdit) {
@@ -141,21 +137,21 @@ const JobForm = ({ job, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, cost: totalItemsCost }));
     }, [formData.items]);
 
-    useEffect(() => {
-        const searchParts = setTimeout(async () => {
-            if (!query) {
-                setParts(prevParts);
-                return;
-            }
-            try {
-                const partsRes = await inventoryService.searchParts(query);
-                setParts(partsRes?.data?.content || []);
-            } catch (error) {
-                toast.error("Failed to search parts.");
-            }
-        }, 800);
-        return () => clearTimeout(searchParts);
-    }, [query]);
+    // useEffect(() => {
+    //     const searchParts = setTimeout(async () => {
+    //         if (!query) {
+    //             setParts(prevParts);
+    //             return;
+    //         }
+    //         try {
+    //             const partsRes = await inventoryService.searchParts(query);
+    //             setParts(partsRes?.data?.content || []);
+    //         } catch (error) {
+    //             toast.error("Failed to search parts.");
+    //         }
+    //     }, 800);
+    //     return () => clearTimeout(searchParts);
+    // }, [query]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -293,26 +289,18 @@ const JobForm = ({ job, onSave, onCancel }) => {
         }
     };
 
-    const loadNextPage = async () => {
-        try {
-            const partsRes = await inventoryService.getParts({
-                page: page + 1,
-                size: 5
-            });
-            const newParts = partsRes?.data?.content || [];
-            if(newParts.length === 0) {
-                toast.info("No more parts to load.");
-                return;
-            }
-            setParts(prevParts);
-            setParts(prev => [...prev, ...newParts]); //this is to back to the original list when query is cleared
-            setPrevParts(prev => [...prev, ...newParts]);
-            setPage(prev => prev + 1);
-            console.log('Loaded parts page:', page + 1);
-        } catch (error) {
-            toast.error("Failed to load more parts.");
-        }
-    };
+    // Fetcher functions for SearchableSelect
+    const fetchCustomers = useCallback(async (page, pageSize, search) => {
+        return await customerService.getAll(page, pageSize, search);
+    }, []);
+
+    const fetchTechnicians = useCallback(async (page, pageSize, search) => {
+        return await userService.getByRole("MECHANIC", page, pageSize, search);
+    }, []);
+
+    const fetchParts = useCallback(async (page, pageSize, search) => {
+        return await inventoryService.getParts({ page, size: pageSize, q: search });
+    }, []);
 
     if (loading) return <LoadingSpinner />;
 
@@ -334,15 +322,17 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         {/* Customer and Vehicle */}
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label>Customer *</Label>
-                                <Select name="customerId" value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)} required>
-                                    <SelectTrigger><SelectValue placeholder="Select a customer..." /></SelectTrigger>
-                                    <SelectContent>
-                                        {
-                                            customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName}</SelectItem>)
-                                        }
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    label="Customer *"
+                                    fetcher={fetchCustomers}
+                                    renderItem={(c) => `${c.firstName} ${c.lastName}`}
+                                    getItemKey={(c) => c.id}
+                                    value={formData.customerId}
+                                    onChange={(val) => handleSelectChange('customerId', val)}
+                                    placeholder="Select a customer..."
+                                    searchPlaceholder="Search customers..."
+                                    initialData={customers}
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label>Vehicle *</Label>
@@ -365,17 +355,17 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 <Input name="service" value={formData.service} onChange={handleChange} required />
                             </div>
                             <div className="space-y-2">
-                                <Label>Technician</Label>
-                                <Select name="technicianId" value={formData.technicianId} onValueChange={val => handleSelectChange('technicianId', val)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Assign a technician..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {
-                                            technicians.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.firstName} {t.lastName}</SelectItem>)
-                                        }
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    label="Technician"
+                                    fetcher={fetchTechnicians}
+                                    renderItem={(t) => `${t.firstName} ${t.lastName}`}
+                                    getItemKey={(t) => t.id}
+                                    value={formData.technicianId}
+                                    onChange={(val) => handleSelectChange('technicianId', val)}
+                                    placeholder="Assign a technician..."
+                                    searchPlaceholder="Search technicians..."
+                                    initialData={technicians}
+                                />
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -401,18 +391,17 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 <div className="col-span-4 space-y-2">
                                     {
                                         item.type === 'PART' ? (
-                                        <Select name="partId" value={item.partId} onValueChange={val => handleItemChange(index, 'partId', val)} disabled={!!item.id}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select part..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <Input name="partId" onChange={(e) => setQuery(e.target.value)} placeholder="Search part..." hidden />
-                                                {
-                                                    parts.map(p => <SelectItem key={p.id} value={p.id.toString()}>[{p.partNumber}] {p.name}</SelectItem>)
-                                                }
-                                                <Button type="button" variant="link" className="w-full text-center" onClick={loadNextPage}>Load More</Button>
-                                            </SelectContent>
-                                        </Select>
+                                        <SearchableSelect
+                                            fetcher={fetchParts}
+                                            renderItem={(p) => `[${p.partNumber}] ${p.name}`}
+                                            getItemKey={(p) => p.id}
+                                            value={item.partId}
+                                            onChange={(val) => handleItemChange(index, 'partId', val)}
+                                            placeholder="Select part..."
+                                            searchPlaceholder="Search parts..."
+                                            initialData={parts}
+                                            disabled={!!item.id}
+                                        />
                                     ) : (
                                         <Input name="description" value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} placeholder="Labor description" disabled={!!item.id} />
                                     )
