@@ -13,6 +13,7 @@ import {
     FaFileAlt,
     FaPercentage
 } from 'react-icons/fa';
+import { formatDate } from "../Utils";
 
 const PartDetails = ({ part, onBack, onEdit }) => {
     console.log("Part Details:", part);
@@ -26,17 +27,6 @@ const PartDetails = ({ part, onBack, onEdit }) => {
         if (quantity === 0) return 'Out of Stock';
         if (quantity <= minStockLevel) return 'Low Stock';
         return 'In Stock';
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     if (!part) {

@@ -3,6 +3,7 @@ import { FaEye, FaEdit, FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
 import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import PaginationComponent from "@/components/common/PaginationComponent";
+import { formatDate } from "../Utils";
 
 const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
@@ -56,11 +57,6 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
             case 'CANCELLED': return 'bg-red-100 text-red-800';
             default: return 'bg-gray-100 text-gray-800';
         }
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString();
     };
 
     const handleSearchChange = (e) => {

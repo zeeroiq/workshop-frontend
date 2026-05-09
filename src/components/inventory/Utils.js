@@ -1,5 +1,5 @@
 import {toast} from "react-toastify";
-
+import { formatDate, formatDateForInput } from "../helper/utils";
 
 export const handleOrderEditClick = (order, onEdit) => {
     if (order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED' || order.status.toUpperCase() === 'DELIVERED' && order.status.toUpperCase() !== 'PENDING') {
@@ -20,17 +20,4 @@ export const isOrderEditable = (order) => {
     return true;
 };
 
-export const formatDate = (dateString) => {
-    if (!dateString) return 'Not received yet';
-    return new Date(dateString).toLocaleDateString();
-};
-
-
-export const formatDateForInput = (date) => {
-    if (!date) return '';
-    const dte = new Date(date);
-    if (isNaN(dte.getTime())) {
-        return '';
-    }
-    return dte.toISOString().split('T')[0];
-}
+export { formatDate, formatDateForInput };

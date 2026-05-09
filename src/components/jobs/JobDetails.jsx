@@ -1,16 +1,10 @@
 import React from 'react';
 import { FaArrowLeft, FaEdit, FaUser, FaCar, FaWrench, FaUserCog, FaFileAlt, FaCalendar, FaClock, FaRupeeSign } from 'react-icons/fa';
-import { getStatusBadge } from "./helper/utils";
+import { getStatusBadge, formatDate } from "./helper/utils";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const JobDetails = ({ job, onBack, onEdit }) => {
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return new Date(dateString).toLocaleDateString('en-US', options);
-    };
-
     if (!job) {
         return (
             <div className="container mx-auto py-6">

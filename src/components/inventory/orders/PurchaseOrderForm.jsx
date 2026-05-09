@@ -4,6 +4,7 @@ import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import { formatDateForInput, isOrderEditable } from "../Utils";
 import api from "@/services/api";
+import { DatePicker } from '@/components/ui/date-picker';
 
 const Input = ({ label, children, ...props }) => (
     <div>
@@ -214,8 +215,29 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </Input>
-                        <Input label="Order Date" name="orderDate" type="date" value={formData.orderDate} onChange={handleInputChange} disabled={isEditMode} required />
-                        <Input label="Expected Delivery" name="expectedDeliveryDate" type="date" value={formData.expectedDeliveryDate} onChange={handleInputChange} required />
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-muted-foreground">Order Date *</label>
+                            <DatePicker
+                                value={formData.orderDate}
+                                onChange={(e) => {
+                                    if (!isEditMode) {
+                                        setFormData(prev => ({ ...prev, orderDate: e.target.value }));
+                                    }
+                                }}
+                                disabled={isEditMode}
+                                placeholder="Pick a date"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-muted-foreground">Expected Delivery *</label>
+                            <DatePicker
+                                value={formData.expectedDeliveryDate}
+                                onChange={(e) => {
+                                    setFormData(prev => ({ ...prev, expectedDeliveryDate: e.target.value }));
+                                }}
+                                placeholder="Pick a date"
+                            />
+                        </div>
                         <Input label="Status" name="status" value={formData.status} onChange={handleInputChange}>
                              <select>
                                 <option value="PENDING">Pending</option>
