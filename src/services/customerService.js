@@ -1,10 +1,10 @@
 import api from './api';
 
 export const customerService = {
-    getAll: (page = 0, size = 10, search = '') => {
+    getAll: (page = 0, size = 10, search = '', config = {}) => {
         const params = { page, size };
         if (search) params.search = search;
-        return api.get('/customers', { params })
+        return api.get('/customers', { params, ...config })
             .then(response => {
                 // Handle the API response structure
                 if (response?.data?.success) {
@@ -16,8 +16,8 @@ export const customerService = {
                 return response;
             });
     },
-    listAll: () => {
-        return api.get('/customers')
+    listAll: (config = {}) => {
+        return api.get('/customers', config)
             .then(response => {
                 // Handle the API response structure
                 if (response?.data?.success) {
@@ -30,8 +30,8 @@ export const customerService = {
             });
     },
 
-    getById: (id) =>
-        api.get(`/customers/${id}`)
+    getById: (id, config = {}) =>
+        api.get(`/customers/${id}`, config)
             .then(response => {
                 if (response?.data?.success) {
                     return {
@@ -42,8 +42,8 @@ export const customerService = {
                 return response;
             }),
 
-    getWithVehicles: (id) =>
-        api.get(`/customers/${id}/with-vehicles`)
+    getWithVehicles: (id, config = {}) =>
+        api.get(`/customers/${id}/with-vehicles`, config)
             .then(response => {
                 if (response?.data?.success) {
                     return {

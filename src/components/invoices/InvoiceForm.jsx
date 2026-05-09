@@ -268,13 +268,18 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     };
 
     // Fetcher functions for SearchableSelect
-    const fetchCustomers = useCallback(async (page, pageSize, search) => {
-        return await customerService.getAll(page, pageSize, search);
+    const fetchCustomers = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await customerService.getAll(params.page, params.size, params.search, { signal: options.signal });
     }, []);
 
-    const fetchParts = useCallback(async (page, pageSize, search) => {
-        return await inventoryService.getParts({ page, size: pageSize, search: search });
+    const fetchParts = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await inventoryService.getParts({ ...params, signal: options.signal });
     }, []);
+
 
     const getDiscountDisabledState = (item, index) => {
         const isJobItem = !!formData.jobNumber && index < originalItemCount;
@@ -369,7 +374,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                             fetcher={fetchParts}
                                             renderItem={(p) => `${p.name} (${p.partNumber}) - In Stock: ${p.quantityInStock}`}
                                             getItemKey={(p) => p.id}
-                                            value=""
+                                            value={newItem.partId || ""}
                                             onChange={handlePartSelectChange}
                                             placeholder="Select a part..."
                                             searchPlaceholder="Search parts..."

@@ -49,6 +49,24 @@ const SearchableSelect = ({
     const searchTimeoutRef = useRef(null);
     const contentRef = useRef(null);
     const inputRef = useRef(null);
+    const abortControllerRef = useRef(null);
+    
+    // Refs to avoid dependency loops in useCallback
+    const fetcherRef = useRef(fetcher);
+    const getItemKeyRef = useRef(getItemKey);
+    const selectedItemRef = useRef(selectedItem);
+
+    useEffect(() => { fetcherRef.current = fetcher; }, [fetcher]);
+    useEffect(() => { getItemKeyRef.current = getItemKey; }, [getItemKey]);
+    useEffect(() => { selectedItemRef.current = selectedItem; }, [selectedItem]);
+
+    // Clean up on unmount
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+        };
+    }, []);
 
     // Update items when initialData changes, but preserve selected item if needed
     useEffect(() => {
@@ -56,10 +74,10 @@ const SearchableSelect = ({
             setItems(prevItems => {
                 // Merge initialData into current items, avoiding duplicates
                 const newItems = [...initialData];
-                const existingKeys = new Set(newItems.map(item => getItemKey(item).toString()));
+                const existingKeys = new Set(newItems.map(item => getItemKeyRef.current(item).toString()));
                 
                 prevItems.forEach(item => {
-                    const key = getItemKey(item).toString();
+                    const key = getItemKeyRef.current(item).toString();
                     if (!existingKeys.has(key)) {
                         newItems.push(item);
                     }
@@ -67,13 +85,20 @@ const SearchableSelect = ({
                 return newItems;
             });
         }
-    }, [initialData, getItemKey]);
+    }, [initialData]);
 
     // Fetch items based on search and pagination
     const fetchItems = useCallback(async (page = 0, search = '') => {
+        // Cancel any pending request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        
+        abortControllerRef.current = new AbortController();
+
         try {
             setIsLoading(true);
-            const response = await fetcher(page, INITIAL_PAGE_SIZE, search);
+            const response = await fetcherRef.current(page, INITIAL_PAGE_SIZE, search, { signal: abortControllerRef.current.signal });
             
             // Handle different response structures
             const responseData = response?.data?.content || response?.data?.items || response?.data || [];
@@ -83,30 +108,37 @@ const SearchableSelect = ({
             const hasMoreItems = fetchedItems.length === INITIAL_PAGE_SIZE;
             
             setItems(prev => {
+                const currentGetItemKey = getItemKeyRef.current;
+                const currentSelectedItem = selectedItemRef.current;
+
                 if (page === 0) {
                     // When starting a new search, we should still keep the currently selected item if it exists
-                    if (selectedItem) {
-                        const selectedKey = getItemKey(selectedItem).toString();
-                        const isAlreadyInFetched = fetchedItems.some(item => getItemKey(item).toString() === selectedKey);
-                        return isAlreadyInFetched ? fetchedItems : [selectedItem, ...fetchedItems];
+                    if (currentSelectedItem) {
+                        const selectedKey = currentGetItemKey(currentSelectedItem).toString();
+                        const isAlreadyInFetched = fetchedItems.some(item => currentGetItemKey(item).toString() === selectedKey);
+                        return isAlreadyInFetched ? fetchedItems : [currentSelectedItem, ...fetchedItems];
                     }
                     return fetchedItems;
                 }
                 
                 // For pagination, append new items
-                const existingKeys = new Set(prev.map(item => getItemKey(item).toString()));
-                const filteredNewItems = fetchedItems.filter(item => !existingKeys.has(getItemKey(item).toString()));
+                const existingKeys = new Set(prev.map(item => currentGetItemKey(item).toString()));
+                const filteredNewItems = fetchedItems.filter(item => !existingKeys.has(currentGetItemKey(item).toString()));
                 return [...prev, ...filteredNewItems];
             });
             
             setHasMore(hasMoreItems);
             setCurrentPage(page);
         } catch (error) {
-            toast.error(`Failed to fetch items: ${error.message}`);
+            if (error.name === 'AbortError' || error.message === 'canceled') {
+                return; // Ignore aborted requests
+            }
+            console.error('Fetch error:', error);
+            // toast.error(`Failed to fetch items: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
-    }, [fetcher, selectedItem, getItemKey]);
+    }, []); // Empty dependencies because we use refs
 
     // Handle search with debounce
     const handleSearch = useCallback((e) => {
@@ -132,10 +164,13 @@ const SearchableSelect = ({
                 inputRef.current?.focus();
             }, 100);
 
-            // Always refresh data on open to ensure we have the latest list
-            fetchItems(0, '');
+            // Only refresh data on open if we don't have items or if it's the first time
+            // This prevents redundant calls if the user just toggles the dropdown
+            if (items.length === 0 || searchQuery === '') {
+                fetchItems(0, '');
+            }
         }
-    }, [isOpen, fetchItems]);
+    }, [isOpen, fetchItems]); // items and searchQuery excluded to prevent re-fetching on every open if not needed
 
     // Update selectedItem when value changes
     useEffect(() => {

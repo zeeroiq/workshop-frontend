@@ -322,16 +322,22 @@ const JobForm = ({ job, onSave, onCancel }) => {
     };
 
     // Fetcher functions for SearchableSelect
-    const fetchCustomers = useCallback(async (page, pageSize, search) => {
-        return await customerService.getAll(page, pageSize, search);
+    const fetchCustomers = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await customerService.getAll(params.page, params.size, params.search, { signal: options.signal });
     }, []);
 
-    const fetchTechnicians = useCallback(async (page, pageSize, search) => {
-        return await userService.getByRole("MECHANIC", page, pageSize, search);
+    const fetchTechnicians = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize, role: "MECHANIC" };
+        if (search) params.search = search;
+        return await userService.getByRole(params.role, params.page, params.size, params.search, { signal: options.signal });
     }, []);
 
-    const fetchParts = useCallback(async (page, pageSize, search) => {
-        return await inventoryService.getParts({ page, size: pageSize, search: search });
+    const fetchParts = useCallback(async (page, pageSize, search, options = {}) => {
+        const params = { page, size: pageSize };
+        if (search) params.search = search;
+        return await inventoryService.getParts({ ...params, signal: options.signal });
     }, []);
 
     if (loading) return <LoadingSpinner />;

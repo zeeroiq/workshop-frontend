@@ -16,19 +16,19 @@ const handleResponse = (response) => {
 
 export const inventoryService = {
     // Parts endpoints
-    getParts: (params = {}) => api.get(`${BASE_URL}/parts`, { params }).then(handleResponse),
-    getPart: (id) => api.get(`${BASE_URL}/parts/${id}`).then(handleResponse),
-    getPartViaQrBarcode: (qrBarcode) => api.get(`${BASE_URL}/parts/qr-barcode/${qrBarcode}`).then(handleResponse),
+    getParts: (params = {}, config = {}) => api.get(`${BASE_URL}/parts`, { params, ...config }).then(handleResponse),
+    getPart: (id, config = {}) => api.get(`${BASE_URL}/parts/${id}`, config).then(handleResponse),
+    getPartViaQrBarcode: (qrBarcode, config = {}) => api.get(`${BASE_URL}/parts/qr-barcode/${qrBarcode}`, config).then(handleResponse),
     createPart: (data) => api.post(`${BASE_URL}/parts`, data).then(handleResponse),
     updatePart: (id, data) => api.put(`${BASE_URL}/parts/${id}`, data).then(handleResponse),
     deletePart: (id) => api.delete(`${BASE_URL}/parts/${id}`).then(handleResponse),
     updateStock: (id, stockData) => api.patch(`${BASE_URL}/parts/${id}/stock`, stockData).then(handleResponse),
-    getLowStockParts: () => api.get(`${BASE_URL}/parts/low-stock`).then(handleResponse),
-    searchParts: (query) => api.get(`${BASE_URL}/parts/search`, { params: { q: query } }).then(handleResponse),
+    getLowStockParts: (config = {}) => api.get(`${BASE_URL}/parts/low-stock`, config).then(handleResponse),
+    searchParts: (query, config = {}) => api.get(`${BASE_URL}/parts/search`, { params: { q: query }, ...config }).then(handleResponse),
 
     // Purchase Orders endpoints
-    getPurchaseOrders: (params = {}) => api.get(`${BASE_URL}/purchase-orders`, { params }).then(handleResponse),
-    getPurchaseOrder: (id) => api.get(`${BASE_URL}/purchase-orders/${id}`).then(handleResponse),
+    getPurchaseOrders: (params = {}, config = {}) => api.get(`${BASE_URL}/purchase-orders`, { params, ...config }).then(handleResponse),
+    getPurchaseOrder: (id, config = {}) => api.get(`${BASE_URL}/purchase-orders/${id}`, config).then(handleResponse),
     createPurchaseOrder: (data) => api.post(`${BASE_URL}/purchase-orders`, data).then(handleResponse),
     addItemToPurchaseOrder: (id, itemData) => api.post(`${BASE_URL}/purchase-orders/${id}/items`, itemData).then(handleResponse),
     receivePurchaseOrder: (id, data) => api.post(`${BASE_URL}/purchase-orders/${id}/receive`, data).then(handleResponse),
@@ -36,10 +36,10 @@ export const inventoryService = {
     removeItemFromPurchaseOrder: (orderId, itemId) => api.delete(`${BASE_URL}/purchase-orders/${orderId}/items/${itemId}`).then(handleResponse),
 
     // Suppliers endpoints
-    getSuppliers: (params = {}) => api.get(`${BASE_URL}/suppliers`, { params }).then(handleResponse),
-    getSupplier: (id) => api.get(`${BASE_URL}/suppliers/${id}`).then(handleResponse),
+    getSuppliers: (params = {}, config = {}) => api.get(`${BASE_URL}/suppliers`, { params, ...config }).then(handleResponse),
+    getSupplier: (id, config = {}) => api.get(`${BASE_URL}/suppliers/${id}`, config).then(handleResponse),
     createSupplier: (data) => api.post(`${BASE_URL}/suppliers`, data).then(handleResponse),
     updateSupplier: (id, data) => api.put(`${BASE_URL}/suppliers/${id}`, data).then(handleResponse),
     deleteSupplier: (id) => api.delete(`${BASE_URL}/suppliers/${id}`).then(handleResponse),
-    searchSuppliers: (query) => api.get(`${BASE_URL}/suppliers/search`, { params: { q: query } }).then(handleResponse),
+    searchSuppliers: (query, config = {}) => api.get(`${BASE_URL}/suppliers/search`, { params: { q: query }, ...config }).then(handleResponse),
 };
