@@ -70,53 +70,59 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     }, [itemType]);
 
     useEffect(() => {
-        if (invoice) {
-            // Initialize formData with invoice details
-            const initialFormData = {
-                ...invoice,
-                invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
-                dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
-                items: invoice.items || [],
-            };
-
-            // Find the customer in the fetched list
+        // Initialize or update form data when invoice prop changes
+        if (invoice && invoice.id) {
+            // Edit Mode: Resolve customer details from the customers list if available
             const customerFromList = customers.find(c => c.id === invoice.customerId);
 
-            if (customerFromList) {
-                setSelectedCustomer(customerFromList);
-                // Update formData with customer details from the found customer
-                initialFormData.customerId = customerFromList.id;
-                initialFormData.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
-                initialFormData.customerEmail = customerFromList.email;
-                initialFormData.customerPhone = customerFromList.phone;
-                initialFormData.customerAddress = customerFromList.address;
-            } else {
-                // If customer not found in list, ensure selectedCustomer is null
-                setSelectedCustomer(null);
-                // Keep customer details from invoice if customerFromList is not found
-            }
+            setFormData(prev => {
+                const updatedFormData = {
+                    ...prev,
+                    ...invoice,
+                    invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
+                    dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
+                    items: invoice.items || [],
+                };
 
-            setFormData(initialFormData);
-            setOriginalItemCount(initialFormData.items.length);
-        } else {
-            setFormData({
-                invoiceNumber: '',
-                customerId: '',
-                customerName: '',
-                customerEmail: '',
-                customerPhone: '',
-                customerAddress: '',
-                invoiceDate: new Date().toISOString().split('T')[0],
-                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                items: [],
-                notes: '',
-                terms: '',
-                status: INVOICE_STATUS.DRAFT
+                if (customerFromList) {
+                    setSelectedCustomer(customerFromList);
+                    updatedFormData.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
+                    updatedFormData.customerEmail = customerFromList.email;
+                    updatedFormData.customerPhone = customerFromList.phone;
+                    updatedFormData.customerAddress = customerFromList.address;
+                }
+                return updatedFormData;
+            });
+            setOriginalItemCount(invoice.items?.length || 0);
+        } else if (!invoice) {
+            // Create Mode: Only reset to initial state if the form was previously in edit mode or explicitly reset
+            // We use the presence of invoiceNumber or customerId as a proxy for "dirty" state we might want to clear
+            // but we avoid doing this on every render or list update.
+            // Actually, the initial state is already set in useState. 
+            // We only reset if the invoice prop itself goes from "something" to "null".
+            setFormData(prev => {
+                if (prev.invoiceNumber || prev.customerId) {
+                    return {
+                        invoiceNumber: '',
+                        customerId: '',
+                        customerName: '',
+                        customerEmail: '',
+                        customerPhone: '',
+                        customerAddress: '',
+                        invoiceDate: new Date().toISOString().split('T')[0],
+                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        items: [],
+                        notes: '',
+                        terms: '',
+                        status: INVOICE_STATUS.DRAFT
+                    };
+                }
+                return prev;
             });
             setSelectedCustomer(null);
             setOriginalItemCount(0);
         }
-    }, [invoice, customers]); // Depend on invoice and customers
+    }, [invoice?.id]); // Only re-run when the invoice ID changes
 
     const handleChange = (e) => {
         const { name, value } = e.target;
