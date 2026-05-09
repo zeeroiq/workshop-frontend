@@ -159,24 +159,32 @@ const JobForm = ({ job, onSave, onCancel }) => {
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
-    const handleSelectChange = async (name, value) => {
+    const handleSelectChange = async (name, value, selectedItem) => {
         setFormData(prev => ({ ...prev, [name]: value }));
 
         if (name === 'customerId') {
             setLoading(true);
             try {
+                // If we have the selectedItem from SearchableSelect, we might still want to fetch detailed info with vehicles
+                // though SearchableSelect might only have basic info.
                 const detailedCustomerRes = await customerService.getWithVehicles(value);
                 const detailedCustomer = detailedCustomerRes.data;
 
                 if (detailedCustomer) {
-                    // Update the customers list with the detailed customer info
-                    const updatedCustomers = customers.map(c => c.id === detailedCustomer.id ? detailedCustomer : c);
-                    setCustomers(updatedCustomers);
+                    // Update the customers list with the detailed customer info, adding it if it doesn't exist
+                    setCustomers(prev => {
+                        const exists = prev.some(c => c.id.toString() === detailedCustomer.id.toString());
+                        if (exists) {
+                            return prev.map(c => c.id.toString() === detailedCustomer.id.toString() ? detailedCustomer : c);
+                        }
+                        return [...prev, detailedCustomer];
+                    });
                     setSelectedCustomerVehicles(detailedCustomer);
 
                     // Reset vehicle selection
                     setFormData(prev => ({
                         ...prev,
+                        customerId: value,
                         customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`,
                         selectedVehicleLicense: '',
                         vehicle: '',
@@ -195,31 +203,45 @@ const JobForm = ({ job, onSave, onCancel }) => {
         }
 
         if (name === 'selectedVehicleLicense') {
-            const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
-            const vehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === value);
+            // Use the already fetched selectedCustomerVehicles
+            const vehicle = selectedCustomerVehicles?.vehicles?.find(v => v.licensePlate === value);
             if (vehicle) {
                 setFormData(prev => ({ ...prev, vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, license: vehicle.licensePlate }));
             }
         }
 
         if (name === 'technicianId') {
-            const selectedTechnician = technicians.find(t => t.id.toString() === value);
-            if (selectedTechnician) {
-                setFormData(prev => ({ ...prev, technician: `${selectedTechnician.firstName} ${selectedTechnician.lastName}` }));
+            // Use selectedItem if available from SearchableSelect
+            const tech = selectedItem || technicians.find(t => t.id.toString() === value);
+            if (tech) {
+                setTechnicians(prev => {
+                    const exists = prev.some(t => t.id.toString() === tech.id.toString());
+                    return exists ? prev : [...prev, tech];
+                });
+                setFormData(prev => ({ ...prev, technician: `${tech.firstName} ${tech.lastName}` }));
             }
         }
     };
 
-    const handleItemChange = (index, field, value) => {
+    const handleItemChange = (index, field, value, selectedItem) => {
         setFormData(prev => {
             const updatedItems = prev.items.map((item, i) => {
                 if (i === index) {
                     const updatedItem = { ...item, [field]: value };
                     if (field === 'partId') {
-                        const selectedPart = parts.find(p => p.id.toString() === value);
+                        // Use selectedItem if provided, otherwise fallback to finding in parts list
+                        const selectedPart = selectedItem || parts.find(p => p.id.toString() === value);
                         if (selectedPart) {
                             updatedItem.description = selectedPart.name;
                             updatedItem.rate = selectedPart.sellingPrice;
+                            
+                            // Also ensure this part is in our local parts list for future lookups
+                            setParts(prevParts => {
+                                if (!prevParts.some(p => p.id.toString() === selectedPart.id.toString())) {
+                                    return [...prevParts, selectedPart];
+                                }
+                                return prevParts;
+                            });
                         }
                     }
                     return updatedItem;
@@ -328,7 +350,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                     renderItem={(c) => `${c.firstName} ${c.lastName}`}
                                     getItemKey={(c) => c.id}
                                     value={formData.customerId}
-                                    onChange={(val) => handleSelectChange('customerId', val)}
+                                    onChange={(val, item) => handleSelectChange('customerId', val, item)}
                                     placeholder="Select a customer..."
                                     searchPlaceholder="Search customers..."
                                     initialData={customers}
@@ -361,7 +383,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                     renderItem={(t) => `${t.firstName} ${t.lastName}`}
                                     getItemKey={(t) => t.id}
                                     value={formData.technicianId}
-                                    onChange={(val) => handleSelectChange('technicianId', val)}
+                                    onChange={(val, item) => handleSelectChange('technicianId', val, item)}
                                     placeholder="Assign a technician..."
                                     searchPlaceholder="Search technicians..."
                                     initialData={technicians}
@@ -396,7 +418,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                             renderItem={(p) => `[${p.partNumber}] ${p.name}`}
                                             getItemKey={(p) => p.id}
                                             value={item.partId}
-                                            onChange={(val) => handleItemChange(index, 'partId', val)}
+                                            onChange={(val, item) => handleItemChange(index, 'partId', val, item)}
                                             placeholder="Select part..."
                                             searchPlaceholder="Search parts..."
                                             initialData={parts}

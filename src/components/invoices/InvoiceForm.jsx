@@ -124,12 +124,18 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
-    const handleSelectChange = (name, value) => {
+    const handleSelectChange = (name, value, selectedItem) => {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (name === 'customerId') {
-            const customer = customers.find(c => c.id.toString() === value);
+            const customer = selectedItem || customers.find(c => c.id.toString() === value);
             setSelectedCustomer(customer);
             if (customer) {
+                // Ensure customer is in our local list
+                setCustomers(prev => {
+                    const exists = prev.some(c => c.id.toString() === customer.id.toString());
+                    return exists ? prev : [...prev, customer];
+                });
+                
                 setFormData(prev => ({
                     ...prev,
                     customerName: `${customer.firstName} ${customer.lastName}`,
@@ -192,9 +198,15 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, items: updatedItems }));
     };
 
-    const handlePartSelectChange = (partId) => {
-        const part = parts.find(p => p.id.toString() === partId);
+    const handlePartSelectChange = (partId, selectedPart) => {
+        const part = selectedPart || parts.find(p => p.id.toString() === partId);
         if (part) {
+            // Ensure part is in our local list
+            setParts(prev => {
+                const exists = prev.some(p => p.id.toString() === part.id.toString());
+                return exists ? prev : [...prev, part];
+            });
+
             setNewItem(prev => ({
                 ...prev,
                 itemType: "part",
@@ -311,7 +323,7 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                 renderItem={(c) => `${c.firstName} ${c.lastName}`}
                                 getItemKey={(c) => c.id}
                                 value={formData.customerId}
-                                onChange={(val) => handleSelectChange('customerId', val)}
+                                onChange={(val, item) => handleSelectChange('customerId', val, item)}
                                 placeholder="Select a customer..."
                                 searchPlaceholder="Search customers..."
                                 initialData={customers}
