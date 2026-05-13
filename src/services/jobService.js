@@ -1,230 +1,233 @@
-import api from './api';
+import { api } from './api';
 
-export const jobService = {
-    getAllJobs: (page = 0, size = 10, jobStatus = '', search = '') => {
-        const params = { page, size };
-        if (jobStatus) params.jobStatus = jobStatus;
-        if (search) params.search = search;
-        return api.get('/jobs', { params })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            });
-    },
+/**
+ * Job Service
+ * API calls for job management (CRUD, status changes, notes, etc.)
+ */
 
-    getJobById: (id) =>
-        api.get(`/jobs/${id}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+const BASE_URL = '/jobs';
 
-    getJobLikeJobNumber: (jobNumber) =>
-        api.get(`/jobs/alike/${jobNumber}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Fetch all jobs with optional filters
+ */
+export const fetchJobs = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (filters.date) params.append('date', filters.date);
+    if (filters.bayId) params.append('bayId', filters.bayId);
+    if (filters.techId) params.append('techId', filters.techId);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.customerId) params.append('customerId', filters.customerId);
+    if (filters.dateRange) {
+      params.append('startDate', filters.dateRange.start);
+      params.append('endDate', filters.dateRange.end);
+    }
 
-    getJobByCustomerId: (customerId) =>
-        api.get(`/jobs/customer/${customerId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+    const response = await api.get(`${BASE_URL}?${params.toString()}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    throw error;
+  }
+};
 
-    getJobByMechanicId: (mechanicId) =>
-        api.get(`/jobs/mechanic/${mechanicId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Fetch single job with all relations
+ */
+export const fetchJobById = async (jobId) => {
+  try {
+    const response = await api.get(`${BASE_URL}/${jobId}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error fetching job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    getJobsByStatus: (jobStatus) =>
-        api.get(`/jobs/jobStatus/${jobStatus}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Fetch jobs for a specific date
+ */
+export const fetchJobsByDate = async (date) => {
+  try {
+    const response = await api.get(`${BASE_URL}/day/${date}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error fetching jobs for date ${date}:`, error);
+    throw error;
+  }
+};
 
-    getJobSByVehicleId: (vehicleId) =>
-        api.get(`/jobs/vehicle/${vehicleId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Fetch jobs for a specific week
+ */
+export const fetchJobsByWeek = async (startDate) => {
+  try {
+    const response = await api.get(`${BASE_URL}/week/${startDate}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error fetching jobs for week starting ${startDate}:`, error);
+    throw error;
+  }
+};
 
-    createJob: (jobData) =>
-        api.post('/jobs', jobData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Create a new job
+ */
+export const createJob = async (jobData) => {
+  try {
+    const response = await api.post(BASE_URL, jobData);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error('Error creating job:', error);
+    throw error;
+  }
+};
 
-    updateJob: (id, jobData) =>
-        api.put(`/jobs/${id}`, jobData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Update job (full or partial update)
+ */
+export const updateJob = async (jobId, jobData) => {
+  try {
+    const response = await api.put(`${BASE_URL}/${jobId}`, jobData);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error updating job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    updateJobBuNumber: (jobNumber, jobData) =>
-        api.put(`/jobs/${jobNumber}/by-number`, jobData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Update job status only
+ */
+export const updateJobStatus = async (jobId, status, note = null, changedBy = null) => {
+  try {
+    const payload = { status, changedBy };
+    if (note) payload.note = note;
 
-    deleteJob: (id) =>
-        api.delete(`/jobs/${id}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            })
-            .catch(error => {
-                return {
-                    status: error?.response?.status || 500,
-                    message: error.message,
-                    details: error?.response?.data?.message
-                };
-            }),
+    const response = await api.patch(`${BASE_URL}/${jobId}/status`, payload);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error updating job ${jobId} status:`, error);
+    throw error;
+  }
+};
 
-    assignMechanic: (jobId, mechanicId) =>
-        api.post(`/jobs/${jobId}/assign-mechanic`, { mechanicId })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Delete/cancel job (soft delete)
+ */
+export const deleteJob = async (jobId, cancellationReason = '') => {
+  try {
+    const response = await api.delete(`${BASE_URL}/${jobId}`, {
+      data: { reason: cancellationReason },
+    });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error deleting job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    convertEstimateToJob: (jobId) =>
-        api.post(`/jobs/${jobId}/convert-to-job`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Get job status history
+ */
+export const fetchJobHistory = async (jobId) => {
+  try {
+    const response = await api.get(`${BASE_URL}/${jobId}/history`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error fetching history for job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    createInvoice: (jobId) =>
-        api.post(`/jobs/${jobId}/create-invoice`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Add note to job
+ */
+export const addJobNote = async (jobId, noteData) => {
+  try {
+    const response = await api.post(`${BASE_URL}/${jobId}/notes`, noteData);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error adding note to job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    addItemToJob: (jobId, item) =>
-        api.post(`/jobs/${jobId}/items`, { item })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Delete note from job
+ */
+export const deleteJobNote = async (jobId, noteId) => {
+  try {
+    const response = await api.delete(`${BASE_URL}/${jobId}/notes/${noteId}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error deleting note ${noteId} from job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    addNoteToJob: (jobId, note) =>
-        api.post(`/jobs/${jobId}/notes`, { note })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Reschedule job (change bay/time)
+ */
+export const rescheduleJob = async (jobId, bayId, date, startTime, endTime) => {
+  try {
+    const response = await api.patch(`${BASE_URL}/${jobId}/reschedule`, {
+      bayId,
+      date,
+      startTime,
+      endTime,
+    });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error rescheduling job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    updateJobStatus: (jobId, jobStatus) =>
-        api.post(`/jobs/${jobId}/jobStatus`, { jobStatus })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+/**
+ * Reassign technician on job
+ */
+export const reassignTechnician = async (jobId, technicianId) => {
+  try {
+    const response = await api.patch(`${BASE_URL}/${jobId}/reassign`, {
+      technicianId,
+    });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error reassigning job ${jobId}:`, error);
+    throw error;
+  }
+};
 
-    removeItemFromJob: (jobId, itemId) =>
-        api.delete(`/jobs/${jobId}/items/${itemId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-}
+/**
+ * Duplicate job (create copy for another day)
+ */
+export const duplicateJob = async (jobId, newDate) => {
+  try {
+    const response = await api.post(`${BASE_URL}/${jobId}/duplicate`, {
+      date: newDate,
+    });
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error duplicating job ${jobId}:`, error);
+    throw error;
+  }
+};
+
+export default {
+  fetchJobs,
+  fetchJobById,
+  fetchJobsByDate,
+  fetchJobsByWeek,
+  createJob,
+  updateJob,
+  updateJobStatus,
+  deleteJob,
+  fetchJobHistory,
+  addJobNote,
+  deleteJobNote,
+  rescheduleJob,
+  reassignTechnician,
+  duplicateJob,
+};

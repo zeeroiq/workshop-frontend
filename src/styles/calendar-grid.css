@@ -1,0 +1,469 @@
+/**
+ * Calendar Grid CSS for Day and Week Views
+ * Responsive CSS Grid layout for bays x hours/days
+ * Sticky headers, scrollable body, flexible columns
+ */
+
+:root {
+  /* Grid dimensions */
+  --grid-header-height: 2.5rem;
+  --grid-row-header-width: 8rem;
+  --grid-cell-min-width: 3.5rem;
+  --grid-cell-min-height: 4rem;
+
+  /* Colors */
+  --grid-border-color: #e5e7eb;
+  --grid-bg-color: #ffffff;
+  --grid-header-bg: #f9fafb;
+  --grid-hover-bg: #f3f4f6;
+
+  /* Z-indexes */
+  --grid-header-z: 10;
+  --grid-row-header-z: 9;
+  --grid-corner-z: 11;
+}
+
+/* Day/Week Grid Container */
+.workshop-calendar-grid {
+  display: grid;
+  height: 100%;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  background-color: var(--grid-bg-color);
+  border: 1px solid var(--grid-border-color);
+  border-radius: 0.5rem;
+}
+
+/* Grid Wrapper - holds headers and body */
+.calendar-grid-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ===== HEADERS ===== */
+
+/* Column headers (hours or days) */
+.calendar-grid-column-headers {
+  display: grid;
+  grid-template-columns:
+    var(--grid-row-header-width)
+    repeat(auto-fit, minmax(var(--grid-cell-min-width), 1fr));
+  grid-auto-flow: column;
+  position: sticky;
+  top: 0;
+  z-index: var(--grid-header-z);
+  background-color: var(--grid-header-bg);
+  border-bottom: 2px solid var(--grid-border-color);
+  height: var(--grid-header-height);
+  overflow-y: hidden;
+  overflow-x: auto;
+}
+
+/* Corner cell (top-left, row headers label) */
+.calendar-grid-corner-header {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: var(--grid-corner-z);
+  background-color: var(--grid-header-bg);
+  border-right: 2px solid var(--grid-border-color);
+  border-bottom: 2px solid var(--grid-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  width: var(--grid-row-header-width);
+  height: var(--grid-header-height);
+}
+
+/* Individual column header (hour or day) */
+.calendar-grid-header-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-right: 1px solid var(--grid-border-color);
+  min-width: var(--grid-cell-min-width);
+  color: #374151;
+}
+
+.calendar-grid-header-cell:last-child {
+  border-right: none;
+}
+
+/* Header cell for today (highlighted) */
+.calendar-grid-header-cell.today {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 700;
+}
+
+/* ===== ROW HEADERS (BAYS / TECHNICIANS) ===== */
+
+/* Row headers wrapper (left side, scrolls with body) */
+.calendar-grid-row-headers {
+  position: sticky;
+  left: 0;
+  z-index: var(--grid-row-header-z);
+  background-color: var(--grid-header-bg);
+  border-right: 2px solid var(--grid-border-color);
+  display: flex;
+  flex-direction: column;
+  width: var(--grid-row-header-width);
+}
+
+/* Individual row header (bay or tech name) */
+.calendar-grid-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--grid-border-color);
+  min-height: var(--grid-cell-min-height);
+  background-color: var(--grid-header-bg);
+  transition: background-color 0.2s ease;
+}
+
+.calendar-grid-row-header:hover {
+  background-color: var(--grid-hover-bg);
+}
+
+/* Row header label content */
+.calendar-grid-row-header-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.calendar-grid-row-header-name {
+  font-weight: 700;
+  color: #111827;
+  truncate;
+}
+
+.calendar-grid-row-header-subtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Status dot (active, parts hold, offline) */
+.calendar-grid-row-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.calendar-grid-row-status-dot.active {
+  background-color: #22c55e;
+}
+
+.calendar-grid-row-status-dot.hold {
+  background-color: #f59e0b;
+}
+
+.calendar-grid-row-status-dot.offline {
+  background-color: #9ca3af;
+}
+
+/* ===== GRID BODY ===== */
+
+/* Body wrapper (scrollable area) */
+.calendar-grid-body {
+  display: grid;
+  grid-template-columns:
+    var(--grid-row-header-width)
+    repeat(auto-fit, minmax(var(--grid-cell-min-width), 1fr));
+  grid-auto-rows: minmax(var(--grid-cell-min-height), auto);
+  overflow: auto;
+  background-color: var(--grid-bg-color);
+  position: relative;
+}
+
+/* Grid row (represents a bay or technician) */
+.calendar-grid-row {
+  display: contents;
+}
+
+/* Individual grid cell (bay x hour or day) */
+.calendar-grid-cell {
+  position: relative;
+  border-right: 1px solid var(--grid-border-color);
+  border-bottom: 1px solid var(--grid-border-color);
+  padding: 0.25rem;
+  min-height: var(--grid-cell-min-height);
+  background-color: var(--grid-bg-color);
+  transition: background-color 0.15s ease;
+  overflow: hidden;
+}
+
+/* Grid cell for today's column (today highlighting) */
+.calendar-grid-cell.today {
+  background-color: #f0f9ff;
+}
+
+/* Hover effect on grid cell */
+.calendar-grid-cell:hover {
+  background-color: var(--grid-hover-bg);
+  z-index: 5;
+}
+
+/* Grid cell for empty (clickable for new job) */
+.calendar-grid-cell.empty:hover {
+  background-color: #dbeafe;
+  cursor: pointer;
+  border: 1px dashed #3b82f6;
+}
+
+/* Grid cell with conflict warning */
+.calendar-grid-cell.conflict {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* ===== JOB BLOCKS ===== */
+
+/* Job block container (positioned in grid cell) */
+.job-block {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  overflow: hidden;
+  user-select: none;
+  z-index: 10;
+}
+
+.job-block:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  transform: scale(1.02);
+}
+
+.job-block.dragging {
+  opacity: 0.5;
+  z-index: 50;
+}
+
+/* Job block within table (full width) */
+.job-block-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.job-block-inline:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== CURRENT TIME INDICATOR ===== */
+
+/* Red line showing current time (only on today's date) */
+.current-time-indicator {
+  position: absolute;
+  top: 0;
+  left: var(--grid-row-header-width);
+  right: 0;
+  height: 2px;
+  background-color: #ef4444;
+  z-index: 30;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+  pointer-events: none;
+}
+
+.current-time-indicator::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* ===== LEAVE INDICATOR ===== */
+
+/* Hatched background for technician leave days */
+.leave-day-cell {
+  background: repeating-linear-gradient(
+    45deg,
+    #f3f4f6,
+    #f3f4f6 10px,
+    #e5e7eb 10px,
+    #e5e7eb 20px
+  ) !important;
+  position: relative;
+}
+
+.leave-day-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ===== CAPACITY BAR ===== */
+
+/* Capacity utilisation bar at bottom of cell */
+.cell-capacity-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+.cell-capacity-bar.low {
+  background-color: #639922;
+}
+
+.cell-capacity-bar.medium {
+  background-color: #ef9f27;
+}
+
+.cell-capacity-bar.high {
+  background-color: #e24b4a;
+}
+
+.cell-capacity-bar.full {
+  background-color: #a32d2d;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet view (hide some details) */
+@media (max-width: 1024px) {
+  :root {
+    --grid-cell-min-width: 3rem;
+    --grid-row-header-width: 6rem;
+  }
+
+  .calendar-grid-header-cell {
+    font-size: 0.75rem;
+  }
+
+  .calendar-grid-row-header {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .calendar-grid-row-header-subtitle {
+    display: none;
+  }
+}
+
+/* Mobile view (stack vertically, hide grid) */
+@media (max-width: 640px) {
+  :root {
+    --grid-cell-min-width: 2.5rem;
+    --grid-row-header-width: 5rem;
+    --grid-cell-min-height: 3rem;
+  }
+
+  .calendar-grid-body {
+    grid-template-columns: auto;
+    grid-auto-rows: auto;
+  }
+
+  .calendar-grid-header-cell {
+    font-size: 0.65rem;
+    padding: 0.25rem;
+  }
+
+  .calendar-grid-cell {
+    min-height: 2.5rem;
+  }
+
+  .job-block {
+    font-size: 0.65rem;
+    padding: 0.125rem;
+  }
+}
+
+/* ===== DARK MODE ===== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grid-border-color: #374151;
+    --grid-bg-color: #1f2937;
+    --grid-header-bg: #111827;
+    --grid-hover-bg: #374151;
+  }
+
+  .calendar-grid-header-cell {
+    color: #e5e7eb;
+  }
+
+  .calendar-grid-row-header {
+    background-color: var(--grid-header-bg);
+    color: #e5e7eb;
+  }
+
+  .calendar-grid-row-header-subtitle {
+    color: #9ca3af;
+  }
+
+  .calendar-grid-row-header:hover {
+    background-color: var(--grid-hover-bg);
+  }
+
+  .calendar-grid-header-cell.today {
+    background-color: #0f172a;
+    color: #93c5fd;
+  }
+
+  .calendar-grid-cell.today {
+    background-color: #0f172a;
+  }
+
+  .leave-day-cell {
+    background: repeating-linear-gradient(
+      45deg,
+      #374151,
+      #374151 10px,
+      #4b5563 10px,
+      #4b5563 20px
+    ) !important;
+  }
+
+  .leave-day-label {
+    color: #d1d5db;
+  }
+}
