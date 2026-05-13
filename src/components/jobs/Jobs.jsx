@@ -4,7 +4,7 @@ import JobForm from './JobForm';
 import JobDetails from './JobDetails';
 import JobCalendar from './JobCalendar';
 
-import {jobService} from "@/services/jobService";
+import * as jobService from "@/services/jobService";
 import {toast} from "react-toastify";
 
 const Jobs = () => {
@@ -42,39 +42,39 @@ const Jobs = () => {
             payload.notes = payload.notes || []; // Ensure it's an empty array if no notes
         }
         
-        if (jobData.jobNumber) {
+        if (jobData.id) {
             try {
-                // Update existing job
-                const response = await jobService.updateJobBuNumber(payload.jobNumber, payload);
-                if (response.status === 200 && response.data) {
-                    // On successful update, reload all jobs to ensure data consistency
-                    await jobService.getAllJobs();
+                // Update existing job by id
+                const response = await jobService.updateJob(jobData.id, payload);
+                if ((response?.status >= 200 && response?.status < 300) && response.data) {
+                    // Optionally refresh job list
+                    await jobService.fetchJobs();
                     if (response?.data?.invoiceNumber) {
                         toast.success(`Created invoice ${response.data.invoiceNumber} for job ${response.data.jobNumber}`);
                     } else {
-                        toast.success(`${response.data.jobNumber} updated successfully!`);
+                        toast.success(`${response.data.jobNumber || jobData.id} updated successfully!`);
                     }
                 } else {
-                    toast.error(`Error while updating job: ${response.message}`);
+                    toast.error(`Error while updating job: ${response?.message || 'Unknown error'}`);
                 }
             } catch (error) {
-                console.log(error.response.data.message)
-                toast.error(`Error while updating job: ${error}`);
+                console.error(error?.response?.data || error);
+                toast.error(`Error while updating job: ${error?.message || error}`);
             }
-            // setJobs(jobs.map(job => job.id === jobData.id ? jobData : job));
         } else {
             try {
                 // Create new job
                 const response = await jobService.createJob(payload);
-                if (response.status === 201 && response.data) {
-                    await jobService.getAllJobs(); // Reload to get the new job with all server-generated data
-                    toast.success(`${response.data.jobNumber} created successfully!`);
+                if ((response?.status >= 200 && response?.status < 300) && response.data) {
+                    await jobService.fetchJobs(); // Reload to get the new job with all server-generated data
+                    toast.success(`${response.data.jobNumber || 'Job'} created successfully!`);
                 } else {
-                    toast.error(`Error while creating job: ${response.message}`);
+                    toast.error(`Error while creating job: ${response?.message || 'Unknown error'}`);
                 }
 
             } catch (error) {
-                toast.error(`Error while creating job: ${error}`);
+                console.error(error?.response?.data || error);
+                toast.error(`Error while creating job: ${error?.message || error}`);
             }
         }
         setActiveView('list');

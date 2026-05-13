@@ -12,7 +12,8 @@ import {
 import {formatDateAsEnUS} from "../helper/utils";
 import {getStatusBadge} from "./helper/utils";
 import {JOB_FILTER_OPTIONS} from "./helper/constants";
-import {jobService} from "@/services/jobService";
+import * as jobService from "@/services/jobService";
+import { invoiceService } from '@/services/invoiceService';
 import {toast} from "react-toastify";
 import {
     Card,
@@ -51,25 +52,24 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         setLoading(true);
         try {
             let response;
-            if (searchTerm) {
-                response = await jobService.getJobLikeJobNumber(searchTerm);
-                if (response?.data) {
-                    setJobs(response.data.content.map(transformJobData));
-                    setTotalPages(response.data.totalPages || 1);
-                } else {
-                    setJobs([]);
-                    setTotalPages(1);
-                }
+            const jobStatus = activeTab === 'all' ? '' : activeTab.toUpperCase().replaceAll('-', '_');
+            const filters = { page: currentPage, size: 10, status: jobStatus };
+            if (searchTerm) filters.search = searchTerm;
+            response = await jobService.fetchJobs(filters);
+
+            // Expecting backend to return paginated object or array
+            if (Array.isArray(response)) {
+                setJobs(response.map(transformJobData));
+                setTotalPages(1);
+            } else if (response?.content) {
+                setJobs(response.content.map(transformJobData));
+                setTotalPages(response.totalPages || 1);
+            } else if (response?.data?.content) {
+                setJobs(response.data.content.map(transformJobData));
+                setTotalPages(response.data.totalPages || 1);
             } else {
-                const jobStatus = activeTab === 'all' ? '' : activeTab.toUpperCase().replaceAll('-', '_');
-                response = await jobService.getAllJobs(currentPage, 10, jobStatus, searchTerm);
-                if (response?.data?.content?.length > 0) {
-                    setJobs(response.data.content.map(transformJobData));
-                    setTotalPages(response.data.totalPages || 1);
-                } else {
-                    setJobs([]);
-                    setTotalPages(1);
-                }
+                setJobs([]);
+                setTotalPages(1);
             }
         } catch (error) {
             console.error('Error loading jobs:', error);
@@ -129,10 +129,10 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
 
     const createInvoice = async (jobId) => {
         try {
-            const response = await jobService.createInvoice(jobId);
-            if (response?.status === 200 || response?.data?.success && response.data) {
-                toast.dark(`${response.data.jobNumber} updated`);
-                toast.dark(`Created Invoice ${response.data.invoiceNumber}`);
+            const response = await invoiceService.createInvoiceFromJob(jobId);
+            if (response?.status === 200 || response?.status === 201) {
+                toast.dark(`Created Invoice`);
+                // Optionally reload jobs or invoice list
             } else {
                 toast.error("Failed to create invoice");
             }

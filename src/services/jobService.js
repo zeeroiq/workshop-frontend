@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 
 /**
  * Job Service
@@ -13,7 +13,10 @@ const BASE_URL = '/jobs';
 export const fetchJobs = async (filters = {}) => {
   try {
     const params = new URLSearchParams();
-    
+
+    if (filters.page !== undefined && filters.page !== null) params.append('page', filters.page);
+    if (filters.size !== undefined && filters.size !== null) params.append('size', filters.size);
+    if (filters.search) params.append('search', filters.search);
     if (filters.date) params.append('date', filters.date);
     if (filters.bayId) params.append('bayId', filters.bayId);
     if (filters.techId) params.append('techId', filters.techId);

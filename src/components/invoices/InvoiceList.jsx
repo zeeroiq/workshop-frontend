@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote } from 'lucide-react';
 import { invoiceService } from '@/services/invoiceService';
-import { jobService } from '@/services/jobService';
 import { INVOICE_STATUS_OPTIONS } from './constants/invoiceConstants';
 import { toast } from "react-toastify";
 import {
