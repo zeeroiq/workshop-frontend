@@ -9,6 +9,7 @@ import CustomerForm from './components/customers/CustomerForm';
 import CustomerDetails from './components/customers/CustomerDetails';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import LandingPage from './components/landing/LandingPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { authService } from './services/authService';
 import 'react-toastify/dist/ReactToastify.css';
@@ -27,6 +28,7 @@ import UserForm from "@/components/workshop/users/UserForm";
 import RoleForm from "@/components/workshop/roles/RoleForm";
 
 import {ThemeProvider} from './components/common/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 function AppContent() {
     const [user, setUser] = useState(null);
@@ -39,11 +41,20 @@ function AppContent() {
     }, [location]);
 
     useEffect(() => {
-        if (authService.isAuthenticated()) {
-            const userData = authService.getUser();
-            setUser(userData);
-        }
-        setLoading(false);
+        const checkAuth = () => {
+            if (authService.isAuthenticated()) {
+                const userData = authService.getUser();
+                setUser(userData);
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        };
+        
+        checkAuth();
+        
+        window.addEventListener('storage', checkAuth);
+        return () => window.removeEventListener('storage', checkAuth);
     }, []);
 
     const toggleSidebarExpansion = () => {
@@ -60,17 +71,20 @@ function AppContent() {
         </div>);
     }
 
-    return (<div className="flex h-screen bg-background">
+    return (<div className={cn("flex bg-background", user ? "h-screen" : "min-h-screen")}>
         {user && <Sidebar isExpanded={sidebarExpanded} onClose={closeSidebar}/>}
         <div className="flex flex-col flex-1">
             {user && <Header onToggleSidebar={toggleSidebarExpansion}/>}
             <div
-                className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${user && (sidebarExpanded ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20')}`}>
-                <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16">
+                className={cn(
+                    "flex flex-col flex-1 transition-all duration-300 ease-in-out",
+                    user && (sidebarExpanded ? "ml-0 md:ml-64" : "ml-0 md:ml-20")
+                )}>
+                <main className={cn("flex-1", user ? "overflow-y-auto p-4 md:p-6 pt-16" : "")}>
                     <Routes>
                         <Route path="/login" element={user ? <Navigate to="/" replace/> : <Login/>}/>
                         <Route path="/register" element={user ? <Navigate to="/" replace/> : <Register/>}/>
-                        <Route path="/" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
+                        <Route path="/" element={user ? <ProtectedRoute><Dashboard/></ProtectedRoute> : <LandingPage/>}/>
                         <Route path="/customers" element={<ProtectedRoute><CustomerList/></ProtectedRoute>}/>
                         <Route path="/customers/new" element={<ProtectedRoute><CustomerForm/></ProtectedRoute>}/>
                         <Route path="/customers/edit/:id"
