@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Bell, UserCircle, LogOut, Menu, Wrench, Settings } from 'lucide-react';
 import { authService } from '@/services/authService';
 import { workshopService } from '@/services/workshopService';
-import { useNavigate, Link } from 'react-router-dom';
+import { getAuthenticatedUrl } from "@/utils/storage";
+import { useNavigate, Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from '@/components/ui/button';
 import {
@@ -66,7 +67,7 @@ const Header = ({ onToggleSidebar }) => {
                 </Button>
                 <div className="flex items-center gap-2">
                     {workshopInfo.logoUrl ? (
-                        <img src={workshopInfo.logoUrl} alt="Logo" className="h-8 w-8 object-contain rounded" />
+                        <img src={getAuthenticatedUrl(workshopInfo.logoUrl)} alt="Logo" className="h-8 w-8 object-contain rounded" />
                     ) : (
                         <div className="bg-primary p-1 rounded hidden sm:flex">
                             <Wrench size={16} className="text-primary-foreground" />

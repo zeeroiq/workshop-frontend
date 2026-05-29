@@ -25,6 +25,13 @@ export const inventoryService = {
     updateStock: (id, stockData) => api.patch(`${BASE_URL}/parts/${id}/stock`, stockData).then(handleResponse),
     getLowStockParts: (config = {}) => api.get(`${BASE_URL}/parts/low-stock`, config).then(handleResponse),
     searchParts: (query, config = {}) => api.get(`${BASE_URL}/parts/search`, { params: { q: query }, ...config }).then(handleResponse),
+    uploadPartImage: (file) => {
+        const formData = new FormData();
+        formData.append("image", file);
+        return api.post(`${BASE_URL}/parts/image`, formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
+    },
 
     // Purchase Orders endpoints
     getPurchaseOrders: (params = {}, config = {}) => api.get(`${BASE_URL}/purchase-orders`, { params, ...config }).then(handleResponse),

@@ -5,7 +5,8 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { AlertCircle, CheckCircle2, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
+import { getAuthenticatedUrl } from "@/utils/storage";
 
 const Settings = () => {
     const [settings, setSettings] = useState({
@@ -108,7 +109,7 @@ const Settings = () => {
                     <CardContent className="flex flex-col items-center">
                         <div className="w-full aspect-square border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center mb-4 overflow-hidden bg-gray-50">
                             {logoPreview ? (
-                                <img src={logoPreview} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
+                                <img src={getAuthenticatedUrl(logoPreview)} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
                             ) : (
                                 <Upload className="h-12 w-12 text-gray-300" />
                             )}
