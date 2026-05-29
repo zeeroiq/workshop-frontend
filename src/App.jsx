@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Dashboard from './components/dashboard/Dashboard';
 import CustomerList from './components/customers/CustomerList';
 import CustomerForm from './components/customers/CustomerForm';
 import CustomerDetails from './components/customers/CustomerDetails';
 import Login from './components/auth/Login';
-import Register from './components/auth/Register';
 import LandingPage from './components/landing/LandingPage';
 import MainLayout from './components/common/MainLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -70,7 +69,6 @@ function AppContent() {
             <Routes>
                 {/* Public routes without layout */}
                 <Route path="/login" element={user ? <Navigate to="/" replace/> : <Login/>}/>
-                <Route path="/register" element={user ? <Navigate to="/" replace/> : <Register/>}/>
                 <Route path="/" element={user ? <Navigate to="/dashboard" replace/> : <LandingPage/>}/>
 
                 {/* Protected routes with MainLayout */}

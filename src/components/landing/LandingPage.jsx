@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { onboardingService } from '@/services/onboardingService';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/card';
 import { Rocket, Shield, Clock, Wrench, Package, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import LoginModal from '@/components/auth/LoginModal';
 
 const LandingPage = () => {
   const [formData, setFormData] = useState({
@@ -79,7 +79,11 @@ const LandingPage = () => {
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Features</a>
               <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Pricing</a>
-              <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Sign In</Link>
+              <LoginModal trigger={
+                <button className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors cursor-pointer bg-transparent border-none">
+                  Sign In
+                </button>
+              } />
               <Button asChild variant="default" className={cn("bg-indigo-600 hover:bg-indigo-700 text-white border-transparent")}>
                 <a href="#onboard">Get Started</a>
               </Button>

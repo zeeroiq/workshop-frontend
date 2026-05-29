@@ -55,7 +55,7 @@ const Header = ({ onToggleSidebar }) => {
 
     const handleLogout = () => {
         authService.logout();
-        navigate('/');
+        window.location.href = '/';
     };
 
     return (
