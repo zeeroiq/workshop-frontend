@@ -17,7 +17,7 @@ const LoginModal = ({ trigger }) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-center">Login to Workshop Management</DialogTitle>
+          <DialogTitle className="text-2xl text-center">Login to Your Workshop</DialogTitle>
           <DialogDescription className="text-center">
             Enter your credentials to access your account
           </DialogDescription>

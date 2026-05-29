@@ -125,7 +125,7 @@ function AppContent() {
 
 function App() {
     return (
-        <ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
             <Router>
                 <AppContent />
             </Router>
