@@ -38,7 +38,7 @@ const Login = () => {
                 authService.setUser(user);
 
                 toast.success('Login successful!');
-                navigate('/');
+                navigate('/dashboard');
             } else {
                 toast.error(response.data.message || 'Login failed');
             }

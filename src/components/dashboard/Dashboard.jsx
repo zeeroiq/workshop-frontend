@@ -13,6 +13,7 @@ import {
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import { dashboardService } from '@/services/dashboardService';
+import { authService } from '@/services/authService';
 import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -41,6 +42,7 @@ const Dashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('monthly');
+    const user = authService.getUser();
 
     useEffect(() => {
         fetchDashboardStats();
@@ -66,7 +68,6 @@ const Dashboard = () => {
             }
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
-            toast.error('Error fetching dashboard stats:', error);
         } finally {
             setLoading(false);
         }
@@ -84,8 +85,11 @@ const Dashboard = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold">Dashboard</h1>
-                    <p className="text-muted-foreground">Welcome back! Here's what's happening with your workshop today.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Welcome to <span className="text-primary font-semibold">{user?.workshopName}</span>. 
+                        Here's your operational overview.
+                    </p>
                 </div>
                 <div className="w-full md:w-auto">
                     <Select value={timeRange} onValueChange={setTimeRange}>
@@ -148,9 +152,11 @@ const Dashboard = () => {
 
             <div className="grid gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
                         <CardTitle>Recent Activity</CardTitle>
-                        <Button variant="link" asChild><Link to="/activity">View All</Link></Button>
+                        <Button variant="ghost" size="sm" asChild>
+                            <Link to="/activity" className="text-xs font-medium">View All</Link>
+                        </Button>
                     </CardHeader>
                     <CardContent>
                         <RecentActivity />
@@ -162,12 +168,42 @@ const Dashboard = () => {
                         <CardTitle>Quick Actions</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 gap-4">
-                        <Button asChild variant="outline"><Link to="/customers/new"><Users className="mr-2 h-4 w-4" />Add Customer</Link></Button>
-                        <Button asChild variant="outline"><Link to="/jobs/new"><Wrench className="mr-2 h-4 w-4" />Create Job</Link></Button>
-                        <Button asChild variant="outline"><Link to="/invoices/new"><FileText className="mr-2 h-4 w-4" />Create Invoice</Link></Button>
-                        <Button asChild variant="outline"><Link to="/inventory"><AlertTriangle className="mr-2 h-4 w-4" />Check Inventory</Link></Button>
-                        <Button asChild variant="outline"><Link to="/calendar"><Calendar className="mr-2 h-4 w-4" />View Calendar</Link></Button>
-                        <Button asChild variant="outline"><Link to="/reports"><LineChart className="mr-2 h-4 w-4" />Generate Reports</Link></Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link to="/customers/new">
+                                <Users className="h-5 w-5" />
+                                <span className="text-xs">Add Customer</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link to="/jobs/new">
+                                <Wrench className="h-5 w-5" />
+                                <span className="text-xs">Create Job</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link to="/invoices/new">
+                                <FileText className="h-5 w-5" />
+                                <span className="text-xs">Create Invoice</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link to="/inventory">
+                                <AlertTriangle className="h-5 w-5" />
+                                <span className="text-xs">Check Inventory</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link to="/calendar">
+                                <Calendar className="h-5 w-5" />
+                                <span className="text-xs">Calendar</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link to="/reports">
+                                <LineChart className="h-5 w-5" />
+                                <span className="text-xs">Reports</span>
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
