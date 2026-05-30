@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { onboardingService } from '@/services/onboardingService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useLocation } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -43,6 +44,18 @@ const LandingPage = () => {
     phone: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === '#onboard') {
+      const element = document.getElementById('onboard');
+      if (element) {
+        setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -274,7 +287,7 @@ const LandingPage = () => {
                   description="Keep car owners informed with automated notifications when tasks like 'Brake Pad Replaced' are finished."
                 />
                 <BillingPerk 
-                  icon={<FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+                  icon={<FileText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
                   title="Instant Digital Job Cards" 
                   description="Replace messy paperwork with clear, itemized digital invoices (Invoice #C2048)."
                 />

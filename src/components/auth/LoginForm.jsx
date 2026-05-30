@@ -4,15 +4,17 @@ import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Chrome } from 'lucide-react';
 
-const LoginForm = () => {
+const LoginForm = ({ onSuccess, onRedirect }) => {
     const [formData, setFormData] = useState({
         username: '',
         password: ''
     });
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const handleChange = (e) => {
         setFormData({
@@ -35,6 +37,7 @@ const LoginForm = () => {
                 authService.setUser(user);
 
                 toast.success('Login successful!');
+                if (onSuccess) onSuccess();
                 window.location.href = '/dashboard';
             } else {
                 toast.error(response.data.message || 'Login failed');
@@ -46,6 +49,26 @@ const LoginForm = () => {
             toast.error(errorMessage);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOnboardRedirect = (e) => {
+        e.preventDefault();
+        if (onRedirect) onRedirect();
+        
+        if (location.pathname === '/') {
+            const element = document.getElementById('onboard');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+                window.location.hash = 'onboard';
+            }
+        } else {
+            navigate('/#onboard');
+            // Small timeout to allow navigation then scroll if the hash effect isn't enough
+            setTimeout(() => {
+                const element = document.getElementById('onboard');
+                if (element) element.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
         }
     };
 
@@ -102,18 +125,23 @@ const LoginForm = () => {
                     <span className="w-full border-t border-slate-800"></span>
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-transparent px-2 text-slate-500 font-bold">Or continue with</span>
+                    <span className="bg-[#111827] px-2 text-slate-500 font-bold">Or continue with</span>
                 </div>
             </div>
 
             <div className="flex justify-center">
-                <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-slate-700 bg-[#1e293b] hover:bg-slate-700 text-white transition-all hover:scale-110 active:scale-95">
+                <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-12 w-12 rounded-full border-slate-700 bg-[#1e293b] hover:bg-slate-700 text-white transition-all hover:scale-110 active:scale-95"
+                    onClick={handleOnboardRedirect}
+                >
                     <Chrome className="h-5 w-5" />
                 </Button>
             </div>
 
             <p className="text-center text-sm font-medium text-slate-400">
-                New User? <Link to="/#onboard" className="text-indigo-400 font-bold hover:text-indigo-300 underline-offset-4 hover:underline transition-all">Sign Up</Link>
+                New User? <button onClick={handleOnboardRedirect} className="text-indigo-400 font-bold hover:text-indigo-300 underline-offset-4 hover:underline transition-all bg-transparent border-none p-0">Sign Up</button>
             </p>
         </div>
     );

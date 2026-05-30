@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,10 @@ import {
 import LoginForm from './LoginForm';
 
 const LoginModal = ({ trigger }) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
@@ -36,7 +38,7 @@ const LoginModal = ({ trigger }) => {
               </DialogDescription>
             </DialogHeader>
             <div className="max-w-sm mx-auto w-full">
-                <LoginForm />
+                <LoginForm onSuccess={() => setOpen(false)} onRedirect={() => setOpen(false)} />
             </div>
           </div>
         </div>
