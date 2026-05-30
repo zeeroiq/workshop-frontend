@@ -96,7 +96,7 @@ const LandingPage = () => {
                 <Wrench className="w-6 h-6 text-slate-900" />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-2xl font-black text-white tracking-tight">YourWorkshop</span>
+                <span className="text-2xl font-black text-white tracking-tight">Vishwakarma Workshop</span>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Workshop Intelligence</span>
               </div>
             </div>
@@ -356,7 +356,7 @@ const LandingPage = () => {
                           id="email"
                           name="email"
                           type="email"
-                          placeholder="john@yourworkshop.com"
+                          placeholder="john@workshop.com"
                           value={formData.email}
                           onChange={handleChange}
                           required
@@ -439,7 +439,7 @@ const LandingPage = () => {
             <div className="bg-slate-700 p-1.5 rounded-lg">
               <Wrench className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-black text-white tracking-tighter uppercase">YourWorkshop</span>
+            <span className="text-lg font-black text-white tracking-tighter uppercase">Vishwakarma Workshop</span>
           </div>
           <div className="flex gap-10">
             <a href="#" className="text-xs font-bold text-slate-500 hover:text-emerald-400 uppercase tracking-widest transition-colors">Product</a>
@@ -448,7 +448,7 @@ const LandingPage = () => {
             <a href="#" className="text-xs font-bold text-slate-500 hover:text-emerald-400 uppercase tracking-widest transition-colors">Contact</a>
           </div>
           <div className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">
-            &copy; 2026 YourWorkshop SaaS. All rights reserved.
+            &copy; 2026 Vishwakarma Workshop SaaS. All rights reserved.
           </div>
         </footer>
       </section>
