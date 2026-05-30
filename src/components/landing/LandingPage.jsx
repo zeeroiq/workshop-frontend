@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import {
   Card,
   CardHeader,
@@ -16,13 +17,11 @@ import {
 } from '@/components/ui/card';
 import { 
   Rocket, 
-  Shield, 
   Wrench, 
   Barcode, 
   LayoutDashboard, 
   ArrowRight, 
   CheckCircle2, 
-  Mail,
   Zap,
   Box,
   TrendingUp,
@@ -83,7 +82,6 @@ const LandingPage = () => {
         authService.setToken(token);
         authService.setUser(user);
         toast.success('Workshop registered and logged in successfully!');
-        // Redirect to dashboard
         window.location.href = '/dashboard';
       } else {
         toast.success('Workshop registered successfully! Please sign in.');
@@ -112,6 +110,13 @@ const LandingPage = () => {
 
   return (
     <div className="bg-background text-foreground min-h-screen font-sans selection:bg-emerald-500/30 selection:text-emerald-500">
+      <Helmet>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Preload LCP candidate */}
+        <link rel="preload" href="/optimized/5.jpg" as="image" fetchpriority="high" />
+      </Helmet>
+
       <ThemeToggle className="fixed top-4 right-4 z-[100] shadow-lg border-border" />
       
       {/* Header */}
@@ -146,7 +151,6 @@ const LandingPage = () => {
 
       {/* 1. HERO SECTION */}
       <section className="relative pt-20 pb-32 overflow-hidden bg-background">
-        {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[100px]" />
@@ -180,17 +184,26 @@ const LandingPage = () => {
             <div className="mt-20 lg:mt-0 lg:col-span-6 relative">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative rounded-2xl overflow-hidden border border-border bg-card shadow-2xl">
+                <div className="relative rounded-2xl overflow-hidden border border-border bg-card shadow-2xl aspect-video">
                   <video 
                     autoPlay 
                     loop 
                     muted 
                     playsInline
+                    preload="metadata"
                     className="w-full h-full object-cover"
-                    poster="/5.jpeg"
+                    poster="/optimized/5.webp"
                   >
-                    <source src="/animate.mp4" type="video/mp4" />
-                    <img src="/5.jpeg" alt="Mechanic working on car parts" className="w-full h-full object-cover" />
+                    <source src="/optimized/animate-optimized.mp4" type="video/mp4" />
+                    {/* Fallback image with high fetch priority as it is likely the LCP candidate */}
+                    <img 
+                      src="/optimized/5.webp"
+                      alt="Mechanic working on car parts" 
+                      className="w-full h-full object-cover" 
+                      fetchpriority="high"
+                      width="1280"
+                      height="720"
+                    />
                   </video>
                   <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent"></div>
                   <div className="absolute bottom-6 left-6 flex items-center gap-3">
@@ -216,19 +229,25 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
             <FeatureCard 
-              image="/8.jpeg"
+              image="/optimized/8.webp"
+              width="800"
+              height="600"
               icon={<Barcode className="w-6 h-6 text-emerald-950" />}
               title="Precision Barcode Scanning"
               description="Instantly check stock levels, part numbers, and locations with robust hardware integration."
             />
             <FeatureCard 
-              image="/7.jpeg"
+              image="/optimized/7.webp"
+              width="800"
+              height="600"
               icon={<LayoutDashboard className="w-6 h-6 text-emerald-950" />}
               title="Digital Parts Dashboard"
               description="A crystal-clear UI designed specifically for complex mechanical inventories, gears, and components."
             />
             <FeatureCard 
-              image="/2.jpeg"
+              image="/optimized/2.webp"
+              width="800"
+              height="600"
               icon={<TrendingUp className="w-6 h-6 text-emerald-950" />}
               title="Smart Queue & Conveyor Tracking"
               description="Visualize order pipelines and fulfillment routes automatically."
@@ -244,8 +263,11 @@ const LandingPage = () => {
             <div className="relative order-2 lg:order-1">
               <div className="absolute -inset-4 bg-emerald-500/10 rounded-3xl blur-2xl"></div>
               <img 
-                src="/automate.jpeg" 
+                src="/optimized/automate.webp"
                 alt="Automation in workshop" 
+                width="1200"
+                height="800"
+                loading="lazy"
                 className="relative rounded-2xl border border-border shadow-2xl transform lg:-rotate-2 hover:rotate-0 transition-transform duration-700"
               />
             </div>
@@ -312,8 +334,11 @@ const LandingPage = () => {
             <div className="relative mt-16 lg:mt-0">
               <div className="absolute -inset-4 bg-blue-500/10 rounded-3xl blur-2xl"></div>
               <img 
-                src="/billing-3.jpeg" 
+                src="/optimized/billing-3.webp"
                 alt="Customer smartphone view" 
+                width="600"
+                height="1000"
+                loading="lazy"
                 className="relative rounded-3xl border border-border shadow-2xl transform lg:rotate-2 hover:rotate-0 transition-transform duration-700 mx-auto max-w-sm"
               />
             </div>
@@ -325,8 +350,11 @@ const LandingPage = () => {
       <section className="relative py-40 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="/happy customer.jpeg" 
+            src="/optimized/happy customer.webp"
             alt="Happy Customer" 
+            width="1920"
+            height="1080"
+            loading="lazy"
             className="w-full h-full object-cover opacity-50 dark:opacity-60"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
@@ -359,7 +387,6 @@ const LandingPage = () => {
       <section id="onboard" className="py-32 bg-background scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-[3rem] overflow-hidden bg-card border border-border p-8 sm:p-16 lg:p-24 shadow-2xl">
-            {/* Background pattern */}
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <Box className="w-64 h-64 text-emerald-500" />
             </div>
@@ -528,10 +555,10 @@ const LandingPage = () => {
   );
 };
 
-const FeatureCard = ({ image, icon, title, description }) => (
+const FeatureCard = ({ image, width, height, icon, title, description }) => (
   <div className="group relative p-1 rounded-[2rem] bg-card border border-border hover:border-emerald-500/50 transition-all duration-500 overflow-hidden shadow-xl">
     <div className="relative h-64 overflow-hidden rounded-[1.8rem]">
-        <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <img src={image} alt={title} width={width} height={height} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
         <div className="absolute bottom-6 left-6 bg-emerald-500 p-3 rounded-2xl shadow-xl shadow-emerald-500/20 transform group-hover:rotate-12 transition-transform">
             {icon}
