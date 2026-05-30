@@ -1,97 +1,32 @@
 import api from './api';
 
-const BASE_URL = '/manage/1';
+const BASE_URL = '/manage';
 
 export const workshopMgmtService = {
-    listAll: () => {
-        return api.get(`${BASE_URL}/users`)
-            .then(response => {
-                // Handle the API response structure
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            });
+    // User management
+    listUsers: (workshopId) => {
+        return api.get(`${BASE_URL}/${workshopId || 1}/users`)
+            .then(response => response.data.data);
     },
 
-    create: (customerData) =>
-        api.post(`${BASE_URL}/users`, customerData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    update: (id, customerData) =>
-        api.put(`${BASE_URL}/users/${id}`, customerData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    delete: (id) =>
-        api.delete(`${BASE_URL}/users/${id}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    listAllRoles: () => {
-        return api.get(`${BASE_URL}/roles`)
-            .then(response => {
-                // The user said this returns an array of strings.
-                if (response?.data?.success) {
-                    // const rolesString = response.data.data.roles;
-                    // const rolesArray = rolesString ? rolesString.split(',') : [];
-                    return {
-                        ...response,
-                        data: response.data.data.roles
-                    };
-                }
-                return response;
-            });
+    createUser: (workshopId, userData) => {
+        return api.post(`${BASE_URL}/${workshopId || 1}/users`, userData)
+            .then(response => response.data);
     },
 
-    createRole: (roleName) =>
-        api.post(`${BASE_URL}/roles`, { name: roleName })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+    // Role & Permission management
+    listRoles: (workshopId) => {
+        return api.get(`${BASE_URL}/${workshopId || 1}/roles`)
+            .then(response => response.data.data.roles);
+    },
 
-    deleteRole: (roleName) =>
-        api.delete(`${BASE_URL}/roles/${roleName}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            })
+    listAllPermissions: () => {
+        return api.get(`${BASE_URL}/permissions`)
+            .then(response => response.data.data);
+    },
 
-
+    getPermissionsForRole: (roleName) => {
+        return api.get(`${BASE_URL}/roles/${roleName}/permissions`)
+            .then(response => response.data.data);
+    }
 };

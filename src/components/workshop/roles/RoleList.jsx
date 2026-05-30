@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { CardHeader, CardTitle } from '@/components/ui/card';
+import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { Shield, Eye } from 'lucide-react';
 import { workshopMgmtService } from '@/services/workshopMgmtService';
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { Badge } from "@/components/ui/badge";
 
-const RoleList = ({ onCreate, onRoleDeleted }) => {
+const RoleList = ({ onViewPermissions }) => {
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -14,9 +15,10 @@ const RoleList = ({ onCreate, onRoleDeleted }) => {
     const fetchRoles = async () => {
         setLoading(true);
         try {
-            const response = await workshopMgmtService.listAllRoles();
-            setRoles(response.data || []);
+            const data = await workshopMgmtService.listRoles();
+            setRoles(data || []);
         } catch (err) {
+            console.error('Error loading roles:', err);
             setError(err);
         } finally {
             setLoading(false);
@@ -27,65 +29,68 @@ const RoleList = ({ onCreate, onRoleDeleted }) => {
         fetchRoles();
     }, []);
 
-    const handleDelete = async (roleName) => {
-        if (window.confirm(`Are you sure you want to delete the role "${roleName}"?`)) {
-            try {
-                await workshopMgmtService.deleteRole(roleName);
-                onRoleDeleted();
-                fetchRoles(); // Refetch roles after deletion
-            } catch (err) {
-                setError(err);
-                alert(`Failed to delete role: ${err.message}`);
-            }
-        }
-    };
-
-    if (loading) {
-        return <LoadingSpinner />;
-    }
+    if (loading) return <LoadingSpinner />;
 
     if (error) {
-        return <div className="text-red-500 text-center p-4">Error loading roles: {error.message}</div>;
+        return <div className="text-red-500 text-center p-4 border rounded bg-red-50">Error loading roles: {error.message}</div>;
     }
 
     return (
         <>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Roles</CardTitle>
-                <Button onClick={onCreate}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Role
-                </Button>
-            </CardHeader>
-            {roles.length === 0 ? (
-                <div className="text-center p-4">
-                    No roles found.
-                    <Button variant="link" onClick={onCreate}>Add a new role</Button>
+            <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <CardTitle>System Roles</CardTitle>
                 </div>
-            ) : (
+                <CardDescription>
+                    Predefined roles with fixed permission sets. Use these to control access for your staff.
+                </CardDescription>
+            </CardHeader>
+            <div className="p-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
+                            <TableHead>Role Name</TableHead>
+                            <TableHead>Description</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {roles.map(role => (
                             <TableRow key={role}>
-                                <TableCell>{role}</TableCell>
+                                <TableCell className="font-medium">
+                                    <Badge variant="outline" className="capitalize">
+                                        {role.replace('_', ' ').toLowerCase()}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground text-sm">
+                                    {getRoleDescription(role)}
+                                </TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(role)}>
-                                        <Trash2 className="h-4 w-4" />
+                                    <Button variant="ghost" size="sm" onClick={() => onViewPermissions(role)}>
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View Permissions
                                     </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            )}
+            </div>
         </>
     );
+};
+
+const getRoleDescription = (role) => {
+    switch(role) {
+        case 'ADMIN': return 'Full system access and workshop management.';
+        case 'MANAGER': return 'Manage daily operations, reports, and staff users.';
+        case 'MECHANIC': return 'View assigned jobs and update vehicle service status.';
+        case 'RECEPTIONIST': return 'Handle customer intake, vehicle registration, and payments.';
+        case 'SERVICE_ADVISOR': return 'Create jobs, manage customer interaction and estimates.';
+        case 'CUSTOMER': return 'View own vehicle status and service history.';
+        default: return 'Custom system role.';
+    }
 };
 
 export default RoleList;

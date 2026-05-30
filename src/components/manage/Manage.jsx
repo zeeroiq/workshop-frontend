@@ -3,7 +3,7 @@ import { Users, Shield } from 'lucide-react';
 import UserList from '@/components/workshop/users/UserList';
 import UserForm from '@/components/workshop/users/UserForm';
 import RoleList from '@/components/workshop/roles/RoleList';
-import RoleForm from '@/components/workshop/roles/RoleForm';
+import RolePermissions from '@/components/workshop/roles/RolePermissions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -11,6 +11,7 @@ const Manage = () => {
     const [userView, setUserView] = useState('list');
     const [roleView, setRoleView] = useState('list');
     const [selectedUser, setSelectedUser] = useState(null);
+    const [selectedRole, setSelectedRole] = useState(null);
     const [activeTab, setActiveTab] = useState('users');
     const [userListKey, setUserListKey] = useState(Date.now());
     const [roleListKey, setRoleListKey] = useState(Date.now());
@@ -34,23 +35,15 @@ const Manage = () => {
         setUserListKey(Date.now()); // Force re-render of UserList
     };
 
-    const handleCreateRole = () => {
-        setRoleView('form');
+    const handleViewPermissions = (role) => {
+        setSelectedRole(role);
+        setRoleView('permissions');
     };
 
-    const handleRoleFormCancel = () => {
+    const handlePermissionsBack = () => {
         setRoleView('list');
+        setSelectedRole(null);
     };
-
-    const handleRoleFormSave = () => {
-        setRoleView('list');
-        setRoleListKey(Date.now()); // Force re-render of RoleList
-        setUserListKey(Date.now()); // Force re-render of UserList to update roles dropdown
-    };
-
-    const handleRoleDeleted = () => {
-        setUserListKey(Date.now()); // Force re-render of UserList to update roles dropdown
-    }
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -72,11 +65,11 @@ const Manage = () => {
     const renderRoleContent = () => {
         switch (roleView) {
             case 'list':
-                return <RoleList key={roleListKey} onCreate={handleCreateRole} onRoleDeleted={handleRoleDeleted} />;
-            case 'form':
-                return <RoleForm onCancel={handleRoleFormCancel} onSave={handleRoleFormSave} />;
+                return <RoleList key={roleListKey} onViewPermissions={handleViewPermissions} />;
+            case 'permissions':
+                return <RolePermissions roleName={selectedRole} onBack={handlePermissionsBack} />;
             default:
-                return <RoleList key={roleListKey} onCreate={handleCreateRole} onRoleDeleted={handleRoleDeleted} />;
+                return <RoleList key={roleListKey} onViewPermissions={handleViewPermissions} />;
         }
     };
 
@@ -85,7 +78,7 @@ const Manage = () => {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Manage</h1>
-                    <p className="text-muted-foreground">Manage users and roles.</p>
+                    <p className="text-muted-foreground">Manage workshop staff users and view system roles.</p>
                 </div>
             </div>
 

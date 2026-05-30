@@ -1,106 +1,33 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '@/services/authService';
-import { toast } from 'react-toastify';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
+import LoginForm from './LoginForm';
 
 const Login = () => {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        try {
-            const response = await authService.login(formData.username, formData.password);
-
-            // Handle the new API response structure
-            if (response?.data?.success) {
-                const { token, ...user } = response.data.data;
-
-                authService.setToken(token);
-                authService.setUser(user);
-
-                toast.success('Login successful!');
-                navigate('/');
-            } else {
-                toast.error(response.data.message || 'Login failed');
-            }
-        } catch (error) {
-            // Handle different error response formats
-            const errorMessage = error.response?.data?.message ||
-                error.response?.data?.error ||
-                'Login failed';
-            toast.error(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
-        <div className="flex items-center justify-center min-h-screen bg-background p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl text-center">Login to Workshop Management</CardTitle>
-                    <CardDescription className="text-center">
+        <div className="flex items-center justify-center min-h-screen bg-[#0a0f1c] p-4 relative overflow-hidden">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="/login.png" 
+                    alt="Workshop Background" 
+                    className="w-full h-full object-cover opacity-20"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#0a0f1c] via-[#0a0f1c]/80 to-transparent"></div>
+            </div>
+
+            {/* Background Accent Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px] z-0" />
+            <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-purple-500/10 rounded-full blur-[100px] z-0" />
+
+            <Card className="w-full max-w-md bg-[#111827]/90 border-slate-800 shadow-2xl rounded-2xl relative z-10 backdrop-blur-xl">
+                <CardHeader className="space-y-2 pt-8 pb-4">
+                    <CardTitle className="text-3xl font-black text-center text-white tracking-tight">Login to Your Workshop</CardTitle>
+                    <CardDescription className="text-center text-slate-400 font-medium">
                         Enter your credentials to access your account
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
-                            <Input
-                                id="username"
-                                name="username"
-                                type="text"
-                                placeholder="john.doe"
-                                value={formData.username}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Logging in...' : 'Login'}
-                        </Button>
-                    </form>
-
-                    <p className="mt-4 text-center text-sm">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="text-primary hover:underline">
-                            Register here
-                        </Link>
-                    </p>
+                <CardContent className="pb-10">
+                    <LoginForm />
                 </CardContent>
             </Card>
         </div>

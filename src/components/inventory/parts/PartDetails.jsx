@@ -14,6 +14,7 @@ import {
     FaPercentage
 } from 'react-icons/fa';
 import { formatDate } from "../Utils";
+import { getAuthenticatedUrl } from "@/utils/storage";
 
 const PartDetails = ({ part, onBack, onEdit }) => {
     console.log("Part Details:", part);
@@ -165,7 +166,7 @@ const PartDetails = ({ part, onBack, onEdit }) => {
                 {/*Image of the product*/}
                 <div className="p-5 border border-border rounded-lg">
                     <h3 className="text-lg font-semibold mb-4">Part Image</h3>
-                    <img src={part.imageUrl !='' ? part.imageUrl  : 'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg'} alt="Part" width={150} height={150} className="mt-4 rounded-md border border-border" />
+                    <img src={part.imageUrl !== "" ? getAuthenticatedUrl(part.imageUrl)  : 'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg'} alt="Part" width={150} height={150} className="mt-4 rounded-md border border-border" />
                 </div>
 
                 {/* Dates */}

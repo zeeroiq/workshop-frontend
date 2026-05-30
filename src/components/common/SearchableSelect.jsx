@@ -176,9 +176,7 @@ const SearchableSelect = ({
     useEffect(() => {
         if (value) {
             const found = items.find(item => getItemKey(item).toString() === value.toString());
-            if (found) {
-                setSelectedItem(found);
-            }
+            setSelectedItem(found || null);
         } else {
             setSelectedItem(null);
         }

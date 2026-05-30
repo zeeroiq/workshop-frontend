@@ -254,6 +254,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
     };
 
     const addScannedPartItem = (partData) => {
+        setParts(prevParts => {
+            if (!prevParts.some(p => p.id.toString() === partData.id.toString())) {
+                return [...prevParts, partData];
+            }
+            return prevParts;
+        });
         setFormData(prev => ({
             ...prev,
             items: [...prev.items, {
@@ -446,7 +452,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                     <Input name="quantity" type="number" pattern="[0-9]*" value={item.quantity} step="1" min="0" onChange={(e) => {
                                         const newItems = [...formData.items];
                                         newItems[index] = {...newItems[index], quantity: e.target.value};
-                                        setFormData({ ...formData, items: newItems });
+                                        setFormData(prev => ({ ...prev, items: newItems }));
                                     }} placeholder="Qty" />
                                 </div>
                                 <div className="col-span-2 space-y-2">

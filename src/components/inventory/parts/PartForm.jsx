@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaSave, FaTimes, FaUpload } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
-import { uploadImageToCloudinary } from '@/services/uploadService';
-import { toast } from 'react-toastify';
+
+import { toast } from "react-toastify";
+import { getAuthenticatedUrl } from "@/utils/storage";
 import PartCatalog from './PartCatalog';
 
 const Input = ({ name, label, value, onChange, error, type = "text", children, ...props }) => (
@@ -156,7 +157,8 @@ const PartForm = ({ part, onSave, onCancel }) => {
             const formData = new FormData();
             formData.append("image", selectedImage);
             console.log("formData",formData)
-            const imageUrl = await uploadImageToCloudinary(selectedImage);
+            const response = await inventoryService.uploadPartImage(selectedImage);
+            const imageUrl = response.data;
             console.log("url", imageUrl);
             setFormData(prev => ({ ...prev, imageUrl : imageUrl }));
             toast.success('Image uploaded successfully!');
@@ -288,7 +290,7 @@ const PartForm = ({ part, onSave, onCancel }) => {
                         <Input name="imageUrl" label="Part Image" onChange={handleFileChange} error={errors.imageUrl} type='file'/>
                         <FaUpload onClick={handleUploadImage} className="cursor-pointer mt-9" />
                     </div>
-                    <img src={formData.imageUrl !='' ? formData.imageUrl  : 'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg'} alt="Part" width={150} height={150} className="mt-4 rounded-md border border-border" />
+                    <img src={formData.imageUrl !== "" ? getAuthenticatedUrl(formData.imageUrl)  : 'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg'} alt="Part" width={150} height={150} className="mt-4 rounded-md border border-border" />
                 </div>
 
                 <div className="flex justify-end space-x-4">
