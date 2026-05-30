@@ -48,55 +48,66 @@ const Sidebar = ({ isExpanded, onClose }) => {
         <>
             <div
                 className={cn(
-                    'fixed inset-0 bg-black/50 z-30 md:hidden',
+                    'fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden',
                     isExpanded ? 'block' : 'hidden'
                 )}
                 onClick={onClose}
             ></div>
             <aside
                 className={cn(
-                    'fixed top-0 left-0 h-full bg-card border-r z-40 transform transition-all duration-300 ease-in-out overflow-hidden',
+                    'fixed top-0 left-0 h-full bg-card border-r border-border z-40 transform transition-all duration-300 ease-in-out overflow-hidden',
                     isExpanded ? 'w-64' : 'w-0 md:w-20'
                 )}
             >
-                <div className="flex items-center justify-between p-4 border-b h-16">
-                    {isExpanded && <h2 className="text-lg font-semibold"></h2>}
-                    <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose}>
+                <div className='flex items-center justify-between p-6 border-b border-border h-20'>
+                    <div className='flex items-center gap-2.5'>
+                        <div className='bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20'>
+                            <Wrench className='w-5 h-5 text-emerald-950' />
+                        </div>
+                        {isExpanded && (
+                            <div className='flex flex-col leading-none'>
+                                <span className='text-lg font-black text-foreground tracking-tight'>YourWorkshop</span>
+                            </div>
+                        )}
+                    </div>
+                    <Button variant='ghost' size='icon' className='md:hidden text-muted-foreground' onClick={onClose}>
                         <X size={20} />
                     </Button>
                 </div>
-                <nav className="p-2">
+                <nav className='p-3'>
                     <TooltipProvider>
-                        <ul>
+                        <ul className='space-y-1.5'>
                             {menuItems.map(item => (
                                 <li key={item.label}>
                                     {item.subItems ? (
                                         <>
                                             <div
                                                 className={cn(
-                                                    'flex items-center justify-between p-3 rounded-md text-sm font-medium transition-colors cursor-pointer',
-                                                    'hover:bg-muted'
+                                                    'flex items-center justify-between p-3 rounded-xl text-sm font-semibold transition-all cursor-pointer',
+                                                    manageOpen ? 'bg-accent/50 text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
                                                 )}
                                                 onClick={handleManageClick}
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    {item.icon}
+                                                <div className='flex items-center gap-3'>
+                                                    <span className={cn('transition-colors', manageOpen ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500')}>
+                                                        {item.icon}
+                                                    </span>
                                                     {isExpanded && <span>{item.label}</span>}
                                                 </div>
-                                                {isExpanded && <ChevronDown size={16} className={cn('transition-transform', manageOpen && 'rotate-180')} />}
+                                                {isExpanded && <ChevronDown size={16} className={cn('transition-transform opacity-50', manageOpen && 'rotate-180')} />}
                                             </div>
                                             {
                                                 manageOpen && isExpanded && (
-                                                    <ul className="pl-8">
+                                                    <ul className='mt-1 space-y-1 border-l border-border ml-6 pl-4'>
                                                         {item.subItems.map(subItem => (
                                                             <li key={subItem.path}>
                                                                 <Link
                                                                     to={subItem.path}
                                                                     className={cn(
-                                                                        'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
+                                                                        'flex items-center gap-3 p-2.5 rounded-xl text-sm font-medium transition-all',
                                                                         location.pathname === subItem.path
-                                                                            ? 'bg-primary text-primary-foreground'
-                                                                            : 'hover:bg-muted'
+                                                                            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
+                                                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
                                                                     )}
                                                                 >
                                                                     {subItem.icon}
@@ -114,19 +125,21 @@ const Sidebar = ({ isExpanded, onClose }) => {
                                                 <Link
                                                     to={item.path}
                                                     className={cn(
-                                                        'flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-colors',
+                                                        'flex items-center gap-3 p-3 rounded-xl text-sm font-semibold transition-all',
                                                         location.pathname === item.path
-                                                            ? 'bg-primary text-primary-foreground'
-                                                            : 'hover:bg-muted',
+                                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] border border-emerald-500/20'
+                                                            : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground',
                                                         !isExpanded && 'justify-center'
                                                     )}
                                                 >
-                                                    {item.icon}
+                                                    <span className={cn('transition-colors', location.pathname === item.path ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500')}>
+                                                        {item.icon}
+                                                    </span>
                                                     {isExpanded && <span>{item.label}</span>}
                                                 </Link>
                                             </TooltipTrigger>
                                             {!isExpanded && (
-                                                <TooltipContent side="right">
+                                                <TooltipContent side='right' className='bg-popover border-border text-popover-foreground'>
                                                     <p>{item.label}</p>
                                                 </TooltipContent>
                                             )}
@@ -138,8 +151,8 @@ const Sidebar = ({ isExpanded, onClose }) => {
                     </TooltipProvider>
                 </nav>
                 {isExpanded && (
-                    <div className="absolute bottom-0 left-0 w-full p-4 border-t">
-                        <p className="text-sm text-muted-foreground">Workshop Management v1.0</p>
+                    <div className='absolute bottom-0 left-0 w-full p-6 border-t border-border bg-card/50 backdrop-blur-md'>
+                        <p className='text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60'>Workshop Management v1.0</p>
                     </div>
                 )}
             </aside>

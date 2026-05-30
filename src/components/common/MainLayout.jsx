@@ -10,7 +10,7 @@ const MainLayout = ({
   onCloseSidebar 
 }) => {
   return (
-    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300 font-['Plus_Jakarta_Sans',sans-serif]">
       <Sidebar isExpanded={sidebarExpanded} onClose={onCloseSidebar} />
       
       <div className="flex flex-col flex-1">
@@ -20,7 +20,7 @@ const MainLayout = ({
           "flex flex-col flex-1 transition-all duration-300 ease-in-out",
           sidebarExpanded ? "ml-0 md:ml-64" : "ml-0 md:ml-20"
         )}>
-          <main className="flex-1 p-4 md:p-6 pt-6">
+          <main className="flex-1 p-4 md:p-8 pt-6">
             {children}
           </main>
         </div>
