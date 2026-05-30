@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { onboardingService } from '@/services/onboardingService';
+import { authService } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -75,16 +76,26 @@ const LandingPage = () => {
 
     setIsSubmitting(true);
     try {
-      await onboardingService.registerWorkshop(formData);
-      toast.success('Workshop registered successfully! Please sign in.');
-      setFormData({
-        workshopName: '',
-        fullName: '',
-        email: '',
-        password: '',
-        phone: '',
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const response = await onboardingService.registerWorkshop(formData);
+      
+      if (response?.success && response?.data) {
+        const { token, ...user } = response.data;
+        authService.setToken(token);
+        authService.setUser(user);
+        toast.success('Workshop registered and logged in successfully!');
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      } else {
+        toast.success('Workshop registered successfully! Please sign in.');
+        setFormData({
+            workshopName: '',
+            fullName: '',
+            email: '',
+            password: '',
+            phone: '',
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (error) {
       console.error('Onboarding error:', error);
       toast.error(error.response?.data?.message || 'Failed to register workshop. Please try again.');
