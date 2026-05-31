@@ -179,7 +179,7 @@ const Dashboard = () => {
                         <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Mission Control</CardTitle>
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Accelerated Operational Tasks</p>
                     </CardHeader>
-                    <CardContent className="p-6 grid grid-cols-2 gap-4">
+                    <CardContent className="p-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-2">
                         <QuickAction 
                             to="/customers/new" 
                             icon={<Users className="h-5 w-5" />} 
@@ -224,9 +224,9 @@ const Dashboard = () => {
 };
 
 const QuickAction = ({ to, icon, label, color }) => (
-    <Button asChild variant="outline" className="h-24 flex-col gap-3 bg-background border-border rounded-xl transition-all duration-300 hover:bg-accent hover:-translate-y-1 group hover:text-inherit" style={{ color: "inherit" }}>
+    <Button asChild variant="outline" className="w-full h-24 flex-col items-center justify-center gap-3 bg-background border-border rounded-xl text-center transition-all duration-300 hover:bg-accent hover:-translate-y-1 group hover:text-inherit" style={{ color: "inherit" }}>
         <Link to={to} className={color}>
-            <div className="p-2 rounded-lg bg-muted group-hover:bg-transparent transition-colors">
+            <div className="p-2 rounded-lg bg-muted group-hover:bg-transparent transition-colors mx-auto">
                 {icon}
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>

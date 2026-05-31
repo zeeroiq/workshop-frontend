@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Edit, Trash, Eye, Plus, Search, Car, User } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
@@ -23,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
 
 const VehicleList = () => {
+    const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -124,8 +126,20 @@ const VehicleList = () => {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                vehicles.map((vehicle) => (
-                                    <TableRow key={vehicle.id}>
+                            vehicles.map((vehicle) => (
+                                <TableRow
+                                    key={vehicle.id}
+                                    className="cursor-pointer"
+                                    onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            navigate(`/vehicles/${vehicle.id}`);
+                                        }
+                                    }}
+                                    tabIndex={0}
+                                    role="button"
+                                >
                                         <TableCell>
                                             <div className="font-medium">{vehicle.make} {vehicle.model}</div>
                                             <div className="text-sm text-muted-foreground">{vehicle.year}</div>
@@ -148,12 +162,15 @@ const VehicleList = () => {
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button variant="outline" size="icon" asChild>
-                                                    <Link to={`/vehicles/${vehicle.id}`}><Eye className="h-4 w-4" /></Link>
+                                                    <Link to={`/vehicles/${vehicle.id}`} onClick={(e) => e.stopPropagation()}><Eye className="h-4 w-4" /></Link>
                                                 </Button>
                                                 <Button variant="outline" size="icon" asChild>
-                                                    <Link to={`/vehicles/edit/${vehicle.id}`}><Edit className="h-4 w-4" /></Link>
+                                                    <Link to={`/vehicles/edit/${vehicle.id}`} onClick={(e) => e.stopPropagation()}><Edit className="h-4 w-4" /></Link>
                                                 </Button>
-                                                <Button variant="destructive" size="icon" onClick={() => handleDelete(vehicle.id)}>
+                                                <Button variant="destructive" size="icon" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(vehicle.id);
+                                                }}>
                                                     <Trash className="h-4 w-4" />
                                                 </Button>
                                             </div>

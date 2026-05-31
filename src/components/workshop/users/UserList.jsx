@@ -56,7 +56,19 @@ const UserList = ({ onEdit, onCreate }) => {
                     </TableHeader>
                     <TableBody>
                         {users.map(user => (
-                            <TableRow key={user.id}>
+                            <TableRow
+                                key={user.id}
+                                className="cursor-pointer"
+                                onClick={() => onEdit(user)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        onEdit(user);
+                                    }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                            >
                                 <TableCell className="font-medium">
                                     <div>{user.firstName} {user.lastName}</div>
                                     <div className="text-xs text-muted-foreground">@{user.username}</div>
@@ -75,7 +87,10 @@ const UserList = ({ onEdit, onCreate }) => {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" onClick={() => onEdit(user)}>
+                                    <Button variant="ghost" size="sm" onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(user);
+                                    }}>
                                         <Edit className="h-4 w-4" />
                                     </Button>
                                 </TableCell>

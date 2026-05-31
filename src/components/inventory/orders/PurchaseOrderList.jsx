@@ -135,7 +135,19 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                         orders.map(order => {
                             const isDisabled = order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED';
                             return (
-                                <TableRow key={order.id}>
+                                <TableRow
+                                    key={order.id}
+                                    className="cursor-pointer"
+                                    onClick={() => onViewDetails(order)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            onViewDetails(order);
+                                        }
+                                    }}
+                                    tabIndex={0}
+                                    role="button"
+                                >
                                     <TableCell className="font-medium">{order.orderNumber}</TableCell>
                                     <TableCell>{order.supplierName}</TableCell>
                                     <TableCell>{formatDate(order.orderDate)}</TableCell>
@@ -148,7 +160,10 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex flex-wrap items-center justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="icon" className="text-primary hover:text-primary/80" onClick={() => onViewDetails(order)} aria-label={`View order ${order.orderNumber}`}>
+                                            <Button type="button" variant="ghost" size="icon" className="text-primary hover:text-primary/80" onClick={(e) => {
+                                                e.stopPropagation();
+                                                onViewDetails(order);
+                                            }} aria-label={`View order ${order.orderNumber}`}>
                                                 <FaEye />
                                             </Button>
                                             <Button
@@ -156,7 +171,10 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                                                 variant="ghost"
                                                 size="icon"
                                                 className="text-blue-500 hover:text-blue-700"
-                                                onClick={() => !isDisabled && onEdit(order)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (!isDisabled) onEdit(order);
+                                                }}
                                                 disabled={isDisabled}
                                                 title={isDisabled ? `Cannot edit ${order.status.toLowerCase()} order` : "Edit Order"}
                                                 aria-label={`Edit order ${order.orderNumber}`}

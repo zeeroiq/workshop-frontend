@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Edit, Trash, Eye, Plus, Search, Filter } from 'lucide-react';
 import { customerService } from '@/services/customerService';
 import { toast } from 'react-toastify';
@@ -23,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
 
 const CustomerList = () => {
+    const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -131,7 +133,19 @@ const CustomerList = () => {
                                     </TableRow>
                                 ) : (
                                     customers.map((customer) => (
-                                        <TableRow key={customer.id}>
+                                        <TableRow
+                                            key={customer.id}
+                                            className="cursor-pointer"
+                                            onClick={() => navigate(`/customers/${customer.id}`)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter' || event.key === ' ') {
+                                                    event.preventDefault();
+                                                    navigate(`/customers/${customer.id}`);
+                                                }
+                                            }}
+                                            tabIndex={0}
+                                            role="button"
+                                        >
                                             <TableCell className="font-medium">{customer.firstName} {customer.lastName}</TableCell>
                                             <TableCell>{customer.phone}</TableCell>
                                             <TableCell>{customer.email || '-'}</TableCell>
@@ -141,12 +155,15 @@ const CustomerList = () => {
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Button variant="outline" size="icon" asChild>
-                                                        <Link to={`/customers/${customer.id}`}><Eye className="h-4 w-4" /></Link>
+                                                        <Link to={`/customers/${customer.id}`} onClick={(e) => e.stopPropagation()}><Eye className="h-4 w-4" /></Link>
                                                     </Button>
                                                     <Button variant="outline" size="icon" asChild>
-                                                        <Link to={`/customers/edit/${customer.id}`}><Edit className="h-4 w-4" /></Link>
+                                                        <Link to={`/customers/edit/${customer.id}`} onClick={(e) => e.stopPropagation()}><Edit className="h-4 w-4" /></Link>
                                                     </Button>
-                                                    <Button variant="destructive" size="icon" onClick={() => handleDelete(customer.id)}>
+                                                    <Button variant="destructive" size="icon" onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(customer.id);
+                                                    }}>
                                                         <Trash className="h-4 w-4" />
                                                     </Button>
                                                 </div>
@@ -164,7 +181,19 @@ const CustomerList = () => {
                             <p className="text-center text-muted-foreground py-8">No customers found.</p>
                         ) : (
                             customers.map((customer) => (
-                                <Card key={customer.id}>
+                                <Card
+                                    key={customer.id}
+                                    className="cursor-pointer"
+                                    onClick={() => navigate(`/customers/${customer.id}`)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            navigate(`/customers/${customer.id}`);
+                                        }
+                                    }}
+                                    tabIndex={0}
+                                    role="button"
+                                >
                                     <CardHeader>
                                         <CardTitle>{customer.firstName} {customer.lastName}</CardTitle>
                                     </CardHeader>
@@ -174,12 +203,15 @@ const CustomerList = () => {
                                         <p className="text-sm text-muted-foreground"><strong>Vehicles:</strong> <Badge variant="secondary">{customer.vehicleCount || 0}</Badge></p>
                                         <div className="flex items-center justify-end gap-2 pt-4">
                                             <Button variant="outline" size="icon" asChild>
-                                                <Link to={`/customers/${customer.id}`}><Eye className="h-4 w-4" /></Link>
+                                                <Link to={`/customers/${customer.id}`} onClick={(e) => e.stopPropagation()}><Eye className="h-4 w-4" /></Link>
                                             </Button>
                                             <Button variant="outline" size="icon" asChild>
-                                                <Link to={`/customers/edit/${customer.id}`}><Edit className="h-4 w-4" /></Link>
+                                                <Link to={`/customers/edit/${customer.id}`} onClick={(e) => e.stopPropagation()}><Edit className="h-4 w-4" /></Link>
                                             </Button>
-                                            <Button variant="destructive" size="icon" onClick={() => handleDelete(customer.id)}>
+                                            <Button variant="destructive" size="icon" onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(customer.id);
+                                            }}>
                                                 <Trash className="h-4 w-4" />
                                             </Button>
                                         </div>

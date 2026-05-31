@@ -226,7 +226,19 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                         </TableRow>
                                     ) : (
                                         filteredAndSearchedInvoices.map(invoice => (
-                                            <TableRow key={invoice.id}>
+                                            <TableRow
+                                                key={invoice.id}
+                                                className="cursor-pointer"
+                                                onClick={() => onViewInvoice(invoice)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                        event.preventDefault();
+                                                        onViewInvoice(invoice);
+                                                    }
+                                                }}
+                                                tabIndex={0}
+                                                role="button"
+                                            >
                                                 <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                                                 <TableCell className="font-medium text-center">{invoice.jobNumber === null ? '-' : invoice.jobNumber}</TableCell>
                                                 <TableCell>{invoice.customerName}</TableCell>
@@ -240,23 +252,23 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <Button variant="outline" size="icon" onClick={() => onViewInvoice(invoice)}><Eye className="h-4 w-4" /></Button>
+                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onViewInvoice(invoice); }}><Eye className="h-4 w-4" /></Button>
                                                         {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                            <Button variant="outline" size="icon" onClick={() => onEditInvoice(invoice)}><Edit className="h-4 w-4" /></Button>
+                                                            <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onEditInvoice(invoice); }}><Edit className="h-4 w-4" /></Button>
                                                         )}
                                                         {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                            <Button variant="outline" size="icon" onClick={() => onAddPayment(invoice)}><Banknote className="h-4 w-4" /></Button>
+                                                            <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onAddPayment(invoice); }}><Banknote className="h-4 w-4" /></Button>
                                                         )}
                                                         {invoice.status === 'DRAFT' && (
                                                             <>
-                                                                <Button variant="outline" size="icon" onClick={() => handleSendInvoice(invoice.id)}><Send className="h-4 w-4" /></Button>
-                                                                <Button variant="destructive" size="icon" onClick={() => handleDeleteInvoice(invoice.id)}><Trash className="h-4 w-4" /></Button>
+                                                                <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); handleSendInvoice(invoice.id); }}><Send className="h-4 w-4" /></Button>
+                                                                <Button variant="destructive" size="icon" onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(invoice.id); }}><Trash className="h-4 w-4" /></Button>
                                                             </>
                                                         )}
                                                         {invoice.status === 'SENT' && (
-                                                            <Button variant="destructive" size="icon" onClick={() => handleCancelInvoice(invoice.id)}><Trash className="h-4 w-4" /></Button>
+                                                            <Button variant="destructive" size="icon" onClick={(e) => { e.stopPropagation(); handleCancelInvoice(invoice.id); }}><Trash className="h-4 w-4" /></Button>
                                                         )}
-                                                        <Button variant="outline" size="icon" onClick={() => downloadInvoice(invoice.id)}><TextSearch className="h-4 w-4" /></Button>
+                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); downloadInvoice(invoice.id); }}><TextSearch className="h-4 w-4" /></Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

@@ -46,8 +46,16 @@ const PartScannerButton = ({ onPartScanned, onPartAlreadyExists }) => {
 
     return (
         <>
-            <Button type="button" size="sm" variant="outline" onClick={() => setScannerOpen(true)}>
-                <BsQrCode className="mr-2" />Scan Part
+            <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setScannerOpen(true)}
+                aria-label="Scan part"
+                className="w-auto"
+            >
+                <BsQrCode className="h-4 w-4" />
+                <span className="hidden sm:inline">Scan Part</span>
             </Button>
             <Dialog open={scannerOpen} onOpenChange={setScannerOpen}>
                 <DialogContent>

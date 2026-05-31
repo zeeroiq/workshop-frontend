@@ -221,7 +221,19 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                                         </TableRow>
                                     ) : (
                                         jobs.map(job => (
-                                            <TableRow key={job.jobNumber}>
+                                            <TableRow
+                                                key={job.jobNumber}
+                                                className="cursor-pointer"
+                                                onClick={() => onViewJob(job)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                        event.preventDefault();
+                                                        onViewJob(job);
+                                                    }
+                                                }}
+                                                tabIndex={0}
+                                                role="button"
+                                            >
                                                 <TableCell className="font-medium">{job.jobNumber}</TableCell>
                                                 <TableCell>{job.customer}</TableCell>
                                                 <TableCell>
@@ -240,10 +252,10 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <Button variant="outline" size="icon" onClick={() => onViewJob(job)}><Eye className="h-4 w-4" /></Button>
-                                                        <Button variant="outline" size="icon" onClick={() => onEditJob(job)}><Edit className="h-4 w-4" /></Button>
-                                                        <Button variant="destructive" size="icon" onClick={() => onDeleteJob(job.id)}><Trash className="h-4 w-4" /></Button>
-                                                        <Button variant="outline" size="icon" onClick={() => createInvoice(job.id)}><FileText className="h-4 w-4" /></Button>
+                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onViewJob(job); }}><Eye className="h-4 w-4" /></Button>
+                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onEditJob(job); }}><Edit className="h-4 w-4" /></Button>
+                                                        <Button variant="destructive" size="icon" onClick={(e) => { e.stopPropagation(); onDeleteJob(job.id); }}><Trash className="h-4 w-4" /></Button>
+                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); createInvoice(job.id); }}><FileText className="h-4 w-4" /></Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

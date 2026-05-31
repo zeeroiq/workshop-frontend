@@ -176,7 +176,18 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                     ) : (
                         suppliers.map((supplier) => (
                             <React.Fragment key={supplier.id}>
-                                <TableRow>
+                                <TableRow
+                                    className="cursor-pointer"
+                                    onClick={() => onViewDetails(supplier)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            onViewDetails(supplier);
+                                        }
+                                    }}
+                                    tabIndex={0}
+                                    role="button"
+                                >
                                     <TableCell>
                                         <div className="font-medium">{supplier.name}</div>
                                         <div className="text-muted-foreground">{supplier.email}</div>
@@ -188,7 +199,10 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                                     <TableCell>{getStatusBadge(supplier.status)}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => toggleRowExpansion(supplier.id)} aria-label={`Toggle details for ${supplier.name}`}>
+                                            <Button type="button" variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleRowExpansion(supplier.id);
+                                            }} aria-label={`Toggle details for ${supplier.name}`}>
                                                 <FaEllipsisV />
                                             </Button>
                                         </div>
@@ -214,13 +228,22 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                                                 )}
                                             </div>
                                             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                                                <Button type="button" variant="outline" onClick={() => onViewDetails(supplier)}>
+                                                <Button type="button" variant="outline" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onViewDetails(supplier);
+                                                }}>
                                                     <FaEye className="mr-2" /> View
                                                 </Button>
-                                                <Button type="button" variant="outline" onClick={() => onEdit(supplier)}>
+                                                <Button type="button" variant="outline" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEdit(supplier);
+                                                }}>
                                                     <FaEdit className="mr-2" /> Edit
                                                 </Button>
-                                                <Button type="button" variant="destructive" onClick={() => handleDeleteClick(supplier)}>
+                                                <Button type="button" variant="destructive" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteClick(supplier);
+                                                }}>
                                                     <FaTrash className="mr-2" /> Delete
                                                 </Button>
                                             </div>

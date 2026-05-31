@@ -57,7 +57,19 @@ const RoleList = ({ onViewPermissions }) => {
                     </TableHeader>
                     <TableBody>
                         {roles.map(role => (
-                            <TableRow key={role}>
+                            <TableRow
+                                key={role}
+                                className="cursor-pointer"
+                                onClick={() => onViewPermissions(role)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        onViewPermissions(role);
+                                    }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                            >
                                 <TableCell className="font-medium">
                                     <Badge variant="outline" className="capitalize">
                                         {role.replace('_', ' ').toLowerCase()}
@@ -67,7 +79,10 @@ const RoleList = ({ onViewPermissions }) => {
                                     {getRoleDescription(role)}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" onClick={() => onViewPermissions(role)}>
+                                    <Button variant="ghost" size="sm" onClick={(e) => {
+                                        e.stopPropagation();
+                                        onViewPermissions(role);
+                                    }}>
                                         <Eye className="mr-2 h-4 w-4" />
                                         View Permissions
                                     </Button>

@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FaSearch, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 
-const PartsDataTable = ({ columns, data }) => {
+const PartsDataTable = ({ columns, data, onRowClick }) => {
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
     const [pagination, setPagination] = useState({
@@ -52,6 +52,12 @@ const PartsDataTable = ({ columns, data }) => {
             return partNumber.includes(search) || name.includes(search) || category.includes(search) || location.includes(search);
         },
     });
+
+    const handleRowActivate = (row) => {
+        if (onRowClick) {
+            onRowClick(row.original);
+        }
+    };
 
     return (
         <div>
@@ -98,6 +104,16 @@ const PartsDataTable = ({ columns, data }) => {
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && 'selected'}
+                                    className={onRowClick ? 'cursor-pointer' : ''}
+                                    onClick={onRowClick ? () => handleRowActivate(row) : undefined}
+                                    onKeyDown={onRowClick ? (event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            handleRowActivate(row);
+                                        }
+                                    } : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    role={onRowClick ? 'button' : undefined}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>

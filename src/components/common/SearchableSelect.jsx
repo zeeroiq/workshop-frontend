@@ -1,13 +1,14 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import { Check, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import LoadingSpinner from './LoadingSpinner';
-import {toast} from 'react-toastify';
+import {cn} from "@/lib/utils";
 
 const DEBOUNCE_DELAY = 800;
 const INITIAL_PAGE_SIZE = 10;
-const VIRTUAL_LIST_HEIGHT = 300;
 
 /**
  * SearchableSelect Component
@@ -209,14 +210,15 @@ const SearchableSelect = ({
         }
     };
 
-    const handleValueChange = (val) => {
-        const item = items.find(i => getItemKey(i).toString() === val);
-        if (item) {
-            setSelectedItem(item);
+    const handleValueChange = (val, item) => {
+        const selected = item || items.find(i => getItemKey(i).toString() === val);
+        if (selected) {
+            setSelectedItem(selected);
         }
         if (onChange) {
-            onChange(val, item);
+            onChange(val, selected);
         }
+        setIsOpen(false);
     };
 
     const filteredItems = useMemo(() => {
@@ -230,64 +232,93 @@ const SearchableSelect = ({
     }, [items, searchQuery, renderItem]);
 
     return (
-        <div className={className.container}>
+        <div className={className?.container}>
             {label && <Label className="mb-1 block">{label}</Label>}
-            <Select value={value?.toString() || ''} onValueChange={handleValueChange} onOpenChange={handleOpenChange} disabled={disabled}>
-                <SelectTrigger className="w-full">
-                    <SelectValue>
-                        {selectedItemText}
-                    </SelectValue>
-                </SelectTrigger>
-                <SelectContent className={className.content}>
-                    <div className="p-2 sticky top-0 bg-popover z-10">
+            <Popover open={isOpen} onOpenChange={handleOpenChange}>
+                <PopoverTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={disabled}
+                        aria-haspopup="listbox"
+                        aria-expanded={isOpen}
+                        className={cn(
+                            "w-full justify-between gap-3 bg-background text-left font-normal",
+                            !value && "text-muted-foreground"
+                        )}
+                    >
+                        <span className="min-w-0 flex-1 truncate">{selectedItemText}</span>
+                        <ChevronDown className={cn("h-4 w-4 shrink-0 opacity-50 transition-transform", isOpen && "rotate-180")} />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                    align="start"
+                    sideOffset={8}
+                    onOpenAutoFocus={(event) => {
+                        event.preventDefault();
+                        setTimeout(() => inputRef.current?.focus(), 0);
+                    }}
+                    className={cn(
+                        "w-[calc(100vw-1rem)] p-0 sm:w-96",
+                        className?.content
+                    )}
+                >
+                    <div className="space-y-3 p-3">
                         <Input
                             ref={inputRef}
                             placeholder={searchPlaceholder}
                             value={searchQuery}
                             onChange={handleSearch}
-                            className="mb-2"
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}
-                            onKeyDown={(e) => {
-                                // Stop propagation for ALL keys to prevent Radix typeahead
-                                e.stopPropagation();
-                            }}
+                            className="h-11"
+                            autoComplete="off"
                         />
-                    </div>
 
-                    <div
-                        ref={contentRef}
-                        onScroll={handleContentScroll}
-                        className="overflow-y-auto"
-                        style={{ maxHeight: VIRTUAL_LIST_HEIGHT }}
-                    >
-                        {filteredItems.length === 0 && !isLoading ? (
-                            <div className="text-center py-4 text-sm text-muted-foreground">
-                                No items found
-                            </div>
-                        ) : (
-                            filteredItems.map((item) => {
-                                const itemKey = getItemKey(item).toString();
-                                return (
-                                    <SelectItem key={itemKey} value={itemKey}>
-                                        {renderItem(item)}
-                                    </SelectItem>
-                                );
-                            })
-                        )}
-                        {isLoading && (
-                            <div className="flex justify-center py-2">
-                                <LoadingSpinner size="sm" />
-                            </div>
-                        )}
-                        {!hasMore && items.length > 0 && !isLoading && (
-                            <div className="text-center py-2 text-xs text-muted-foreground">
-                                No more items
-                            </div>
-                        )}
+                        <div
+                            ref={contentRef}
+                            onScroll={handleContentScroll}
+                            className="max-h-[min(24rem,calc(100dvh-10rem))] overflow-y-auto rounded-md border border-border/60 bg-background/80"
+                            role="listbox"
+                        >
+                            {filteredItems.length === 0 && !isLoading ? (
+                                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                                    No items found
+                                </div>
+                            ) : (
+                                filteredItems.map((item) => {
+                                    const itemKey = getItemKey(item).toString();
+                                    const isSelected = value?.toString() === itemKey;
+                                    return (
+                                        <button
+                                            key={itemKey}
+                                            type="button"
+                                            role="option"
+                                            aria-selected={isSelected}
+                                            onClick={() => handleValueChange(itemKey, item)}
+                                            className={cn(
+                                                "flex w-full items-center justify-between gap-3 border-b border-border/60 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-accent focus:bg-accent focus:outline-none",
+                                                isSelected && "bg-accent/60 text-foreground"
+                                            )}
+                                        >
+                                            <span className="min-w-0 flex-1 truncate">{renderItem(item)}</span>
+                                            {isSelected && <Check className="h-4 w-4 shrink-0 text-emerald-500" />}
+                                        </button>
+                                    );
+                                })
+                            )}
+                            {isLoading && (
+                                <div className="flex justify-center py-3">
+                                    <LoadingSpinner size="sm" />
+                                </div>
+                            )}
+                            {!hasMore && items.length > 0 && !isLoading && (
+                                <div className="px-4 py-3 text-center text-xs text-muted-foreground">
+                                    No more items
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </SelectContent>
-            </Select>
+                </PopoverContent>
+            </Popover>
         </div>
     );
 };

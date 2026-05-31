@@ -122,13 +122,22 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 const part = row.original;
                 return (
                     <div className="flex items-center space-x-2">
-                        <button className="text-primary hover:text-primary/80" onClick={() => onViewDetails(part)}>
+                        <button type="button" className="text-primary hover:text-primary/80" onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDetails(part);
+                        }}>
                             <FaEye />
                         </button>
-                        <button className="text-blue-500 hover:text-blue-700" onClick={() => onEdit(part)}>
+                        <button type="button" className="text-blue-500 hover:text-blue-700" onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(part);
+                        }}>
                             <FaEdit />
                         </button>
-                        <button className="text-red-500 hover:text-red-700" onClick={() => handleDeleteClick(part)}>
+                        <button type="button" className="text-red-500 hover:text-red-700" onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(part);
+                        }}>
                             <FaTrash />
                         </button>
                     </div>
@@ -153,10 +162,11 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         <div className="bg-card p-4 rounded-lg">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-xl font-semibold">Parts Inventory</h3>
-                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <div className="flex w-full flex-row flex-nowrap items-center justify-end gap-2 sm:w-auto">
                     <PartScannerModal onPartAction={handlePartAction} />
-                    <Button className="w-full text-md font-medium sm:w-auto" variant="default" size="lg" onClick={onCreate}>
-                        <FaPlus className="mr-2" /> Add Part
+                    <Button className="w-auto text-md font-medium" variant="default" size="lg" onClick={onCreate} aria-label="Add part">
+                        <FaPlus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Add Part</span>
                     </Button>
                 </div>
             </div>
@@ -180,6 +190,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
             <PartsDataTable
                 columns={columns}
                 data={filteredParts}
+                onRowClick={onViewDetails}
             />
 
             {deleteDialogOpen && (

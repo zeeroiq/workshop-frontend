@@ -93,7 +93,15 @@ const PartScannerModal = ({ onPartAction }) => {
             if (!open) resetState();
         }}>
             <DialogTrigger asChild>
-                <Button className="text-md font-medium" variant="default" size="lg"><BsQrCode /> Scan Part QR/Barcode</Button>
+                <Button
+                    className="w-auto text-md font-medium"
+                    variant="default"
+                    size="lg"
+                    aria-label="Scan part QR or barcode"
+                >
+                    <BsQrCode className="h-4 w-4" />
+                    <span className="hidden sm:inline">Scan Part QR/Barcode</span>
+                </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
