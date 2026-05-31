@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import PaginationComponent from "@/components/common/PaginationComponent";
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
@@ -84,10 +86,10 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     };
 
     const STATUS_CLASSES = {
-        ACTIVE: 'bg-green-100 text-green-800',
-        INACTIVE: 'bg-red-100 text-red-800',
-        SUSPENDED: 'bg-orange-100 text-orange-800',
-        DELETED: 'bg-brown-100 text-brown-800',
+        ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        INACTIVE: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        SUSPENDED: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+        DELETED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
     };
 
     const humanizeStatus = (s) => (s || '')
@@ -97,7 +99,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
 
     const getStatusBadge = (status) => {
         const key = (status || '').toUpperCase();
-        const statusClass = STATUS_CLASSES[key] || 'bg-gray-100 text-gray-800';
+        const statusClass = STATUS_CLASSES[key] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
         return (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
                 {humanizeStatus(key)}
@@ -111,17 +113,17 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
 
     return (
         <div className="bg-card p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                     <h2 className="text-xl font-semibold">Suppliers</h2>
                     <p className="text-muted-foreground">Manage your supplier information</p>
                 </div>
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
+                <Button className="w-full sm:w-auto" onClick={onCreate}>
                     <FaPlus className="mr-2" /> Add Supplier
-                </button>
+                </Button>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div className="relative w-full md:w-1/2">
                     <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
                     <input
@@ -129,15 +131,15 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                         placeholder="Search suppliers..."
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
+                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full focus:ring-2 focus:ring-primary outline-none transition-all"
                     />
                 </div>
-                <div className="relative">
-                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
+                <div className="relative w-full md:w-auto">
+                    <FaFilter className="absolute top-3 left-3 text-muted-foreground pointer-events-none" />
                     <select
                         value={statusFilter}
                         onChange={handleStatusFilterChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
+                        className="bg-input pl-10 pr-8 py-2 rounded-md appearance-none w-full outline-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
                     >
                         <option value="all">All Statuses</option>
                         <option value="ACTIVE">Active</option>
@@ -149,64 +151,71 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop View */}
+            <div className="hidden lg:block overflow-x-auto rounded-md border border-border/50">
                 <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground uppercase">
+                    <thead className="bg-muted/50 text-muted-foreground uppercase text-xs tracking-wider">
                         <tr>
-                            <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Contact</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
+                            <th className="px-6 py-4 font-semibold">Name</th>
+                            <th className="px-6 py-4 font-semibold">Contact</th>
+                            <th className="px-6 py-4 font-semibold">Status</th>
+                            <th className="px-6 py-4 text-right font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-border/50">
                         {suppliers.map((supplier) => (
                             <React.Fragment key={supplier.id}>
-                                <tr className="border-b border-border hover:bg-muted/50">
+                                <tr className="hover:bg-muted/30 transition-colors">
                                     <td className="px-6 py-4">
-                                        <div className="font-medium">{supplier.name}</div>
-                                        <div className="text-muted-foreground">{supplier.email}</div>
+                                        <div className="font-medium text-primary">{supplier.name}</div>
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                            <FaEnvelope className="text-[10px]" /> {supplier.email}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div>{supplier.contactPerson}</div>
-                                        <div className="text-muted-foreground">{supplier.phone}</div>
+                                        <div className="font-medium">{supplier.contactPerson}</div>
+                                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                            <FaPhone className="text-[10px]" /> {supplier.phone}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">{getStatusBadge(supplier.status)}</td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="text-muted-foreground hover:text-primary" onClick={() => toggleRowExpansion(supplier.id)}>
+                                        <Button variant="ghost" size="icon" onClick={() => toggleRowExpansion(supplier.id)}>
                                             <FaEllipsisV />
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                                 {expandedRow === supplier.id && (
-                                    <tr className="bg-muted/20">
-                                        <td colSpan="4" className="p-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div>
-                                                    <h4 className="font-semibold">Address</h4>
-                                                    <p>{supplier.address}</p>
+                                    <tr className="bg-muted/10">
+                                        <td colSpan="4" className="p-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <div className="space-y-2">
+                                                    <h4 className="text-xs uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-2">
+                                                        <FaMapMarkerAlt /> Address
+                                                    </h4>
+                                                    <p className="text-sm">{supplier.address || 'No address provided'}</p>
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-semibold">Payment Terms</h4>
-                                                    <p>{supplier.paymentTerm}</p>
+                                                <div className="space-y-2">
+                                                    <h4 className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Payment Terms</h4>
+                                                    <p className="text-sm">{supplier.paymentTerm || 'Standard'}</p>
                                                 </div>
                                                 {supplier.notes && (
-                                                    <div>
-                                                        <h4 className="font-semibold">Notes</h4>
-                                                        <p>{supplier.notes}</p>
+                                                    <div className="space-y-2">
+                                                        <h4 className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Notes</h4>
+                                                        <p className="text-sm italic text-muted-foreground">{supplier.notes}</p>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex justify-end space-x-2 mt-4">
-                                                <button className="text-primary hover:text-primary/80 flex items-center" onClick={() => onViewDetails(supplier)}>
-                                                    <FaEye className="mr-1" /> View
-                                                </button>
-                                                <button className="text-blue-500 hover:text-blue-700 flex items-center" onClick={() => onEdit(supplier)}>
-                                                    <FaEdit className="mr-1" /> Edit
-                                                </button>
-                                                <button className="text-red-500 hover:text-red-700 flex items-center" onClick={() => handleDeleteClick(supplier)}>
-                                                    <FaTrash className="mr-1" /> Delete
-                                                </button>
+                                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/50">
+                                                <Button variant="outline" size="sm" onClick={() => onViewDetails(supplier)}>
+                                                    <FaEye className="mr-2" /> View Details
+                                                </Button>
+                                                <Button variant="outline" size="sm" onClick={() => onEdit(supplier)} className="text-blue-500 hover:text-blue-600">
+                                                    <FaEdit className="mr-2" /> Edit
+                                                </Button>
+                                                <Button variant="outline" size="sm" onClick={() => handleDeleteClick(supplier)} className="text-destructive hover:text-destructive/90">
+                                                    <FaTrash className="mr-2" /> Delete
+                                                </Button>
                                             </div>
                                         </td>
                                     </tr>
@@ -215,40 +224,97 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                         ))}
                     </tbody>
                 </table>
+            </div>
 
-                {suppliers.length === 0 && (
-                    <div className="text-center py-16">
+            {/* Mobile/Tablet View */}
+            <div className="lg:hidden space-y-4">
+                {suppliers.length === 0 ? (
+                    <div className="text-center py-16 bg-muted/20 rounded-lg">
                         <h3 className="text-lg font-semibold">No suppliers found</h3>
                         <p className="text-muted-foreground mb-4">Try adjusting your search or add a new supplier.</p>
-                        <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center mx-auto" onClick={onCreate}>
+                        <Button onClick={onCreate}>
                             <FaPlus className="mr-2" /> Add Supplier
-                        </button>
+                        </Button>
                     </div>
+                ) : (
+                    suppliers.map((supplier) => (
+                        <Card key={supplier.id} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+                            <CardHeader className="pb-2">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <CardTitle className="text-lg font-bold">{supplier.name}</CardTitle>
+                                        <p className="text-sm text-primary font-medium">{supplier.contactPerson}</p>
+                                    </div>
+                                    {getStatusBadge(supplier.status)}
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div className="space-y-1">
+                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Phone</p>
+                                        <p className="font-medium flex items-center gap-2">
+                                            <FaPhone className="text-[10px]" /> {supplier.phone}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Email</p>
+                                        <p className="font-medium flex items-center gap-2 truncate">
+                                            <FaEnvelope className="text-[10px]" /> {supplier.email}
+                                        </p>
+                                    </div>
+                                    <div className="col-span-2 space-y-1">
+                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Address</p>
+                                        <p className="font-medium line-clamp-2">{supplier.address || '-'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-border/50">
+                                    <Button variant="outline" size="sm" onClick={() => onViewDetails(supplier)} className="flex-1 min-w-[80px]">
+                                        <FaEye className="mr-2" /> View
+                                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => onEdit(supplier)} className="flex-1 min-w-[80px] text-blue-500">
+                                        <FaEdit className="mr-2" /> Edit
+                                    </Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(supplier)} className="flex-1 min-w-[80px]">
+                                        <FaTrash className="mr-2" />
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
                 )}
             </div>
-            {totalPages > 1  && (
-            <div className="mt-4 flex justify-center">
-                <PaginationComponent
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                />
-            </div>
+
+            {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
             )}
+
             {deleteDialogOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-card p-6 rounded-lg shadow-lg">
-                        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-                        <p>Are you sure you want to delete supplier "{supplierToDelete?.name}"?</p>
-                        <div className="flex justify-end mt-6 space-x-4">
-                            <button className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md" onClick={() => setDeleteDialogOpen(false)}>
-                                Cancel
-                            </button>
-                            <button className="bg-destructive text-destructive-foreground hover:bg-destructive/80 px-4 py-2 rounded-md" onClick={handleDeleteConfirm}>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+                        <CardHeader>
+                            <CardTitle className="text-destructive flex items-center gap-2">
+                                <FaTrash className="text-lg" /> Confirm Delete
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">Are you sure you want to delete supplier <span className="font-bold text-foreground">"{supplierToDelete?.name}"</span>? This action cannot be undone.</p>
+                            <div className="flex justify-end mt-8 gap-3">
+                                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button variant="destructive" onClick={handleDeleteConfirm}>
+                                    Delete Supplier
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </div>

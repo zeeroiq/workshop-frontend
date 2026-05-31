@@ -15,7 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const Header = ({ onToggleSidebar }) => {
+const Header = ({ onToggleSidebar, sidebarExpanded }) => {
     const navigate = useNavigate();
     const user = authService.getUser();
     const [workshopInfo, setWorkshopInfo] = useState({
@@ -40,7 +40,6 @@ const Header = ({ onToggleSidebar }) => {
             fetchWorkshopInfo();
         }
 
-        // Listen for settings updates
         const handleSettingsUpdate = (event) => {
             if (event.detail) {
                 setWorkshopInfo({
@@ -60,41 +59,43 @@ const Header = ({ onToggleSidebar }) => {
     };
 
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between p-4 border-b bg-card/80 backdrop-blur-md">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="md:flex">
+        <header className="sticky top-0 z-40 flex items-center justify-between p-3 md:p-4 border-b bg-card/80 backdrop-blur-md">
+            <div className="flex items-center gap-2 md:gap-4">
+                <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="flex">
                     <Menu size={20} />
                 </Button>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 overflow-hidden">
                     {workshopInfo.logoUrl ? (
-                        <img src={getAuthenticatedUrl(workshopInfo.logoUrl)} alt="Logo" className="h-8 w-8 object-contain rounded" />
+                        <img src={getAuthenticatedUrl(workshopInfo.logoUrl)} alt="Logo" className="h-7 w-7 md:h-8 md:w-8 object-contain rounded" />
                     ) : (
-                        <div className="bg-primary p-1 rounded hidden sm:flex">
-                            <Wrench size={16} className="text-primary-foreground" />
+                        <div className="bg-primary p-1 rounded hidden xs:flex">
+                            <Wrench size={14} className="text-primary-foreground md:w-4 md:h-4" />
                         </div>
                     )}
-                    <span className="font-bold text-lg tracking-tight hidden sm:block">
+                    <span className="font-bold text-sm md:text-lg tracking-tight truncate max-w-[120px] sm:max-w-none">
                         {workshopInfo.name}
                     </span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4">
-                <ThemeToggle />
+            <div className="flex items-center gap-1 md:gap-4">
+                <div className="hidden xs:flex">
+                    <ThemeToggle />
+                </div>
 
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell size={20} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
+                <Button variant="ghost" size="icon" className="relative hidden xs:flex">
+                    <Bell size={18} className="md:w-5 md:h-5" />
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 md:w-2 md:h-2 bg-destructive rounded-full" />
                     <span className="sr-only">Notifications</span>
                 </Button>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-3 px-2 hover:bg-muted transition-colors">
-                            <UserCircle size={24} className="text-muted-foreground" />
-                            <div className="text-left hidden md:block">
-                                <p className="text-sm font-semibold leading-none">{user?.firstName} {user?.lastName}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                        <Button variant="ghost" className="flex items-center gap-2 md:gap-3 px-1 md:px-2 hover:bg-muted transition-colors">
+                            <UserCircle size={20} className="text-muted-foreground md:w-6 md:h-6" />
+                            <div className="text-left hidden sm:block">
+                                <p className="text-xs md:text-sm font-semibold leading-none">{user?.firstName} {user?.lastName}</p>
+                                <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
                                     {user?.roles?.[0]?.replace('ROLE_', '') || 'User'}
                                 </p>
                             </div>
@@ -108,6 +109,12 @@ const Header = ({ onToggleSidebar }) => {
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild className="cursor-pointer lg:hidden">
+                            <div className="flex items-center justify-between w-full px-2 py-1.5">
+                                <span className="text-sm">Theme</span>
+                                <ThemeToggle />
+                            </div>
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild className="cursor-pointer">
                             <Link to="/settings" className="flex items-center w-full">
                                 <Settings className="mr-2 h-4 w-4" />

@@ -78,7 +78,7 @@ const VehicleList = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold">Vehicles</h1>
                     <p className="text-muted-foreground">Manage your workshop vehicles</p>
@@ -105,64 +105,127 @@ const VehicleList = () => {
                     </form>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Vehicle</TableHead>
-                                <TableHead>Owner</TableHead>
-                                <TableHead>VIN</TableHead>
-                                <TableHead>License Plate</TableHead>
-                                <TableHead>Mileage</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {vehicles.length === 0 ? (
+                    {/* Desktop View */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan="6" className="h-24 text-center">
-                                        No vehicles found.
-                                    </TableCell>
+                                    <TableHead>Vehicle</TableHead>
+                                    <TableHead>Owner</TableHead>
+                                    <TableHead>VIN</TableHead>
+                                    <TableHead>License Plate</TableHead>
+                                    <TableHead>Mileage</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ) : (
-                                vehicles.map((vehicle) => (
-                                    <TableRow key={vehicle.id}>
-                                        <TableCell>
-                                            <div className="font-medium">{vehicle.make} {vehicle.model}</div>
-                                            <div className="text-sm text-muted-foreground">{vehicle.year}</div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {vehicle.customerName ? (
-                                                <Link to={`/customers/${vehicle.customerId}`} className="flex items-center gap-2 hover:underline">
-                                                    <User className="h-4 w-4" />
-                                                    {vehicle.customerName}
-                                                </Link>
-                                            ) : (
-                                                'No owner'
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{vehicle.vin || '-'}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{vehicle.licensePlate}</Badge>
-                                        </TableCell>
-                                        <TableCell>{vehicle.currentMileage?.toLocaleString() || '0'} miles</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button variant="outline" size="icon" asChild>
-                                                    <Link to={`/vehicles/${vehicle.id}`}><Eye className="h-4 w-4" /></Link>
-                                                </Button>
-                                                <Button variant="outline" size="icon" asChild>
-                                                    <Link to={`/vehicles/edit/${vehicle.id}`}><Edit className="h-4 w-4" /></Link>
-                                                </Button>
-                                                <Button variant="destructive" size="icon" onClick={() => handleDelete(vehicle.id)}>
-                                                    <Trash className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {vehicles.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan="6" className="h-24 text-center">
+                                            No vehicles found.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : (
+                                    vehicles.map((vehicle) => (
+                                        <TableRow key={vehicle.id}>
+                                            <TableCell>
+                                                <div className="font-medium">{vehicle.make} {vehicle.model}</div>
+                                                <div className="text-sm text-muted-foreground">{vehicle.year}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {vehicle.customerName ? (
+                                                    <Link to={`/customers/${vehicle.customerId}`} className="flex items-center gap-2 hover:underline">
+                                                        <User className="h-4 w-4" />
+                                                        {vehicle.customerName}
+                                                    </Link>
+                                                ) : (
+                                                    'No owner'
+                                                )}
+                                            </TableCell>
+                                            <TableCell>{vehicle.vin || '-'}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{vehicle.licensePlate}</Badge>
+                                            </TableCell>
+                                            <TableCell>{vehicle.currentMileage?.toLocaleString() || '0'} miles</TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button variant="outline" size="icon" asChild>
+                                                        <Link to={`/vehicles/${vehicle.id}`}><Eye className="h-4 w-4" /></Link>
+                                                    </Button>
+                                                    <Button variant="outline" size="icon" asChild>
+                                                        <Link to={`/vehicles/edit/${vehicle.id}`}><Edit className="h-4 w-4" /></Link>
+                                                    </Button>
+                                                    <Button variant="destructive" size="icon" onClick={() => handleDelete(vehicle.id)}>
+                                                        <Trash className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="md:hidden space-y-4">
+                        {vehicles.length === 0 ? (
+                            <p className="text-center text-muted-foreground py-8">No vehicles found.</p>
+                        ) : (
+                            vehicles.map((vehicle) => (
+                                <Card key={vehicle.id} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <CardTitle className="text-lg">{vehicle.make} {vehicle.model}</CardTitle>
+                                                <p className="text-sm text-muted-foreground">{vehicle.year}</p>
+                                            </div>
+                                            <Badge variant="outline" className="font-mono">{vehicle.licensePlate}</Badge>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div className="space-y-1">
+                                                <p className="text-muted-foreground">Owner</p>
+                                                {vehicle.customerName ? (
+                                                    <Link to={`/customers/${vehicle.customerId}`} className="flex items-center gap-1 font-medium hover:underline text-primary">
+                                                        <User className="h-3 w-3" />
+                                                        {vehicle.customerName}
+                                                    </Link>
+                                                ) : (
+                                                    <p className="font-medium">No owner</p>
+                                                )}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-muted-foreground">Mileage</p>
+                                                <p className="font-medium">{vehicle.currentMileage?.toLocaleString() || '0'} miles</p>
+                                            </div>
+                                            <div className="space-y-1 col-span-2">
+                                                <p className="text-muted-foreground">VIN</p>
+                                                <p className="font-mono text-xs break-all">{vehicle.vin || '-'}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/50">
+                                            <Button variant="outline" size="sm" asChild className="flex-1">
+                                                <Link to={`/vehicles/${vehicle.id}`} className="flex items-center justify-center gap-2">
+                                                    <Eye className="h-4 w-4" /> View
+                                                </Link>
+                                            </Button>
+                                            <Button variant="outline" size="sm" asChild className="flex-1">
+                                                <Link to={`/vehicles/edit/${vehicle.id}`} className="flex items-center justify-center gap-2">
+                                                    <Edit className="h-4 w-4" /> Edit
+                                                </Link>
+                                            </Button>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(vehicle.id)} className="flex-1">
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 

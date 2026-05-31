@@ -169,9 +169,12 @@ const CustomerList = () => {
                                         <CardTitle>{customer.firstName} {customer.lastName}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-2">
-                                        <p className="text-sm text-muted-foreground"><strong>Phone:</strong> {customer.phone}</p>
-                                        <p className="text-sm text-muted-foreground"><strong>Email:</strong> {customer.email || '-'}</p>
-                                        <p className="text-sm text-muted-foreground"><strong>Vehicles:</strong> <Badge variant="secondary">{customer.vehicleCount || 0}</Badge></p>
+                                        <div className="text-sm text-muted-foreground"><strong>Phone:</strong> {customer.phone}</div>
+                                        <div className="text-sm text-muted-foreground"><strong>Email:</strong> {customer.email || '-'}</div>
+                                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                            <strong>Vehicles:</strong> 
+                                            <Badge variant="secondary">{customer.vehicleCount || 0}</Badge>
+                                        </div>
                                         <div className="flex items-center justify-end gap-2 pt-4">
                                             <Button variant="outline" size="icon" asChild>
                                                 <Link to={`/customers/${customer.id}`}><Eye className="h-4 w-4" /></Link>
