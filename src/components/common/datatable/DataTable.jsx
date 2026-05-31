@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 
 const DataTable = ({ columns, data, setData }) => {
@@ -52,8 +53,9 @@ const DataTable = ({ columns, data, setData }) => {
     });
 
     return (
-        <div className='space-y-4'>
-            <div className='rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden shadow-sm'>
+        <div className='space-y-6'>
+            {/* Desktop View: Table */}
+            <div className='hidden md:block rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden shadow-sm'>
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -121,26 +123,66 @@ const DataTable = ({ columns, data, setData }) => {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Mobile View: Cards */}
+            <div className='md:hidden space-y-4'>
+                {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                        <Card key={row.id} className='border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden'>
+                            <CardContent className='p-4 space-y-4'>
+                                {row.getVisibleCells().map((cell) => {
+                                    const header = cell.column.columnDef.header;
+                                    const isActions = cell.column.id === 'actions' || (typeof header === 'string' && header.toLowerCase().includes('actions'));
+                                    
+                                    if (isActions) {
+                                        return (
+                                            <div key={cell.id} className='pt-4 border-t border-border/50 flex justify-end gap-2'>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={cell.id} className='flex justify-between items-start gap-4'>
+                                            <span className='text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70 shrink-0 mt-1'>
+                                                {typeof header === 'string' ? header : cell.column.id}
+                                            </span>
+                                            <div className='text-sm font-bold text-foreground text-right'>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </CardContent>
+                        </Card>
+                    ))
+                ) : (
+                    <div className='text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border/50'>
+                        <p className='text-muted-foreground font-medium'>No entries available.</p>
+                    </div>
+                )}
+            </div>
+
             <div className='flex items-center justify-between px-2'>
-                <div className='text-xs text-muted-foreground font-medium'>
-                    Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                <div className='text-[10px] font-black uppercase tracking-widest text-muted-foreground'>
+                    P. {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
                 </div>
                 <div className='flex items-center space-x-2'>
                     <Button
                         variant='outline'
-                        className='h-8 w-8 p-0 rounded-lg border-border/50 hover:bg-accent hover:text-accent-foreground disabled:opacity-50'
+                        className='h-9 px-4 rounded-xl border-border/50 font-bold text-xs shadow-sm disabled:opacity-30'
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
-                        <ChevronLeft className='h-4 w-4' />
+                        <ChevronLeft className='h-4 w-4 mr-1' /> Previous
                     </Button>
                     <Button
                         variant='outline'
-                        className='h-8 w-8 p-0 rounded-lg border-border/50 hover:bg-accent hover:text-accent-foreground disabled:opacity-50'
+                        className='h-9 px-4 rounded-xl border-border/50 font-bold text-xs shadow-sm disabled:opacity-30'
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
-                        <ChevronRight className='h-4 w-4' />
+                        Next <ChevronRight className='h-4 w-4 ml-1' />
                     </Button>
                 </div>
             </div>
@@ -159,7 +201,7 @@ function Filter({ column }) {
                 value={(columnFilterValue ?? '')}
                 onChange={e => column.setFilterValue(e.target.value)}
                 placeholder={`Search...`}
-                className='h-8 pl-9 bg-muted/20 border-border/40 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 transition-all text-xs'
+                className='h-8 pl-9 bg-muted/20 border-border/40 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 transition-all text-[10px] font-bold'
             />
         </div>
     );

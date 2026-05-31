@@ -10,7 +10,7 @@ import PurchaseOrderForm from './orders/PurchaseOrderForm';
 import PurchaseOrderDetails from './orders/PurchaseOrderDetails';
 import SupplierDetails from "./suppliers/SupplierDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Inventory = () => {
     const [currentView, setCurrentView] = useState('list');
@@ -29,9 +29,9 @@ const Inventory = () => {
     };
 
     const handleCreate = (initialData = null) => {
-    setEditItem(initialData);
-    setCurrentView('form');
-};
+        setEditItem(initialData);
+        setCurrentView('form');
+    };
 
     const handleBackToList = () => {
         setCurrentView('list');
@@ -51,19 +51,6 @@ const Inventory = () => {
         setSelectedItem(null);
         setEditItem(null);
     };
-
-    const renderContent = (tab) => {
-        switch (tab) {
-            case 'parts':
-                return renderPartViews();
-            case 'suppliers':
-                return renderSupplierViews();
-            case 'orders':
-                return renderPurchaseOrderViews();
-            default:
-                return null;
-        }
-    }
 
     const renderPartViews = () => {
         switch (currentView) {
@@ -105,38 +92,41 @@ const Inventory = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 max-w-[1600px] mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold">Inventory Management</h1>
-                    <p className="text-muted-foreground">Manage your parts, suppliers, and purchase orders.</p>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">Inventory Management</h1>
+                    <p className="text-sm md:text-base text-muted-foreground font-medium">Stock levels, procurement & logistics intelligence.</p>
                 </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="parts"><List className="mr-2 h-4 w-4" /> Parts</TabsTrigger>
-                    <TabsTrigger value="suppliers"><Users className="mr-2 h-4 w-4" /> Suppliers</TabsTrigger>
-                    <TabsTrigger value="orders"><Truck className="mr-2 h-4 w-4" /> Purchase Orders</TabsTrigger>
+                <TabsList className="w-full sm:w-auto">
+                    <TabsTrigger value="parts" className="flex-1 sm:flex-none"><List className="mr-2 h-4 w-4" /> Parts</TabsTrigger>
+                    <TabsTrigger value="suppliers" className="flex-1 sm:flex-none"><Users className="mr-2 h-4 w-4" /> Suppliers</TabsTrigger>
+                    <TabsTrigger value="orders" className="flex-1 sm:flex-none"><Truck className="mr-2 h-4 w-4" /> Purchase Orders</TabsTrigger>
                 </TabsList>
-                <TabsContent value="parts">
-                    <Card>
-                        <CardContent className="pt-6">
-                            {renderContent('parts')}
+                
+                <TabsContent value="parts" className="mt-6">
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardContent className="p-0 sm:p-6">
+                            {renderPartViews()}
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="suppliers">
-                    <Card>
-                        <CardContent className="pt-6">
-                            {renderContent('suppliers')}
+                
+                <TabsContent value="suppliers" className="mt-6">
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardContent className="p-0 sm:p-6">
+                            {renderSupplierViews()}
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="orders">
-                    <Card>
-                        <CardContent className="pt-6">
-                            {renderContent('orders')}
+                
+                <TabsContent value="orders" className="mt-6">
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardContent className="p-0 sm:p-6">
+                            {renderPurchaseOrderViews()}
                         </CardContent>
                     </Card>
                 </TabsContent>
