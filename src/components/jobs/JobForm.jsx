@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {FaPlus, FaSave, FaTimes, FaTrash, FaCalendar} from 'react-icons/fa';
+import {FaPlus, FaSave, FaTimes, FaTrash, FaCalendar, FaWrench, FaUser, FaClipboardList, FaClock} from 'react-icons/fa';
 import {customerService} from "@/services/customerService";
 import {userService} from "@/services/userService";
 import {inventoryService} from "@/services/inventoryService";
@@ -20,7 +20,7 @@ import SearchableSelect from '../common/SearchableSelect';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils"; // Assuming this path for cn utility
+import { cn } from "@/lib/utils";
 
 const JobForm = ({ job, onSave, onCancel }) => {
     const isEdit = Boolean(job?.id);
@@ -28,13 +28,13 @@ const JobForm = ({ job, onSave, onCancel }) => {
         customerName: '',
         customerId: '',
         vehicle: '',
-        selectedVehicleLicense: '', // Changed from vehicleId
+        selectedVehicleLicense: '',
         license: '',
         service: '',
         technicianId: '',
         technician: '',
         status: 'estimate-pending',
-        estimatedCompletion: '', // This will be YYYY-MM-DDTHH:MM string
+        estimatedCompletion: '',
         cost: 0,
         description: '',
         notes: [],
@@ -48,8 +48,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
     const [saving, setSaving] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedCustomerVehicles, setSelectedCustomerVehicles] = useState(null);
-    const [calendarDate, setCalendarDate] = useState(undefined); // State for the shadcn calendar component
-    const [timeInput, setTimeInput] = useState(''); // State for the time input
+    const [calendarDate, setCalendarDate] = useState(undefined);
+    const [timeInput, setTimeInput] = useState('');
 
     useEffect(() => {
         const loadJobData = async () => {
@@ -59,12 +59,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 setCurrentUser(userInfo);
 
                 const [techRes, partsRes, custRes] = await Promise.all([
-                    userService.getByRole("MECHANIC", 0, 10),
+                    userService.getByRole("MECHANIC", 0, 100),
                     inventoryService.getParts({
                         page: 0,
-                        size: 10
+                        size: 100
                     }),
-                    customerService.getAll(0, 10)
+                    customerService.getAll(0, 100)
                 ]);
 
                 const technicians = techRes?.data || [];
@@ -92,25 +92,23 @@ const JobForm = ({ job, onSave, onCancel }) => {
                     const customerForVehicles = customers.find(c => c.id.toString() === job.customerId?.toString());
                     setSelectedCustomerVehicles(customerForVehicles);
 
-                    // Find the vehicle using job.vehicleId, then get its licensePlate
                     const vehicleFromJob = customerForVehicles?.vehicles?.find(v => v.licensePlate === job.license || v.id.toString() === job.vehicleId?.toString());
 
                     const initialEstimatedCompletionDate = job.estimatedCompletion ? new Date(job.estimatedCompletion) : undefined;
-                    setCalendarDate(initialEstimatedCompletionDate); // Set calendar date
-                    const initialTimeInput = job.estimatedCompletion ? job.estimatedCompletion.substring(11, 16) : ''; // Extract time
+                    setCalendarDate(initialEstimatedCompletionDate);
+                    const initialTimeInput = job.estimatedCompletion ? job.estimatedCompletion.substring(11, 16) : '';
                     setTimeInput(initialTimeInput);
 
                     setFormData({
                         ...job,
                         customerId: job.customerId?.toString(),
                         technicianId: job.technicianId?.toString(),
-                        // Set selectedVehicleLicense based on the found vehicle's licensePlate
                         selectedVehicleLicense: vehicleFromJob ? vehicleFromJob.licensePlate : '',
                         customerName: customerForVehicles ? `${customerForVehicles.firstName} ${customerForVehicles.lastName}` : '',
                         vehicle: vehicleFromJob ? `${vehicleFromJob.year} ${vehicleFromJob.make} ${vehicleFromJob.model}` : '',
                         license: vehicleFromJob ? vehicleFromJob.licensePlate : '',
                         technician: technicians.find(t => t.id.toString() === job.technicianId?.toString())?.firstName || job.technician,
-                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '', // Keep original string format for formData
+                        estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '',
                         items: job.items?.map(item => {
                             const newItem = { ...item, discount: item.discount || 0 };
                             if (newItem.type === 'PART') {
@@ -159,141 +157,80 @@ const JobForm = ({ job, onSave, onCancel }) => {
         if (name === 'customerId') {
             setLoading(true);
             try {
-                // If we have the selectedItem from SearchableSelect, we might still want to fetch detailed info with vehicles
-                // though SearchableSelect might only have basic info.
                 const detailedCustomerRes = await customerService.getWithVehicles(value);
                 const detailedCustomer = detailedCustomerRes.data;
-
-                if (detailedCustomer) {
-                    // Update the customers list with the detailed customer info, adding it if it doesn't exist
-                    setCustomers(prev => {
-                        const exists = prev.some(c => c.id.toString() === detailedCustomer.id.toString());
-                        if (exists) {
-                            return prev.map(c => c.id.toString() === detailedCustomer.id.toString() ? detailedCustomer : c);
-                        }
-                        return [...prev, detailedCustomer];
-                    });
-                    setSelectedCustomerVehicles(detailedCustomer);
-
-                    // Reset vehicle selection
-                    setFormData(prev => ({
-                        ...prev,
-                        customerId: value,
-                        customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`,
-                        selectedVehicleLicense: '',
-                        vehicle: '',
-                        license: ''
-                    }));
-                } else {
-                    setSelectedCustomerVehicles(null);
-                    setFormData(prev => ({ ...prev, selectedVehicleLicense: '', vehicle: '', license: '' }));
-                }
+                setSelectedCustomerVehicles(detailedCustomer);
+                setFormData(prev => ({
+                    ...prev,
+                    customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`,
+                    selectedVehicleLicense: '',
+                    vehicle: '',
+                    license: ''
+                }));
             } catch (error) {
                 toast.error("Failed to load customer vehicles.");
-                setSelectedCustomerVehicles(null);
             } finally {
                 setLoading(false);
             }
         }
 
         if (name === 'selectedVehicleLicense') {
-            // Use the already fetched selectedCustomerVehicles
             const vehicle = selectedCustomerVehicles?.vehicles?.find(v => v.licensePlate === value);
             if (vehicle) {
-                setFormData(prev => ({ ...prev, vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, license: vehicle.licensePlate }));
+                setFormData(prev => ({
+                    ...prev,
+                    selectedVehicleLicense: value,
+                    vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+                    license: vehicle.licensePlate
+                }));
             }
         }
-
-        if (name === 'technicianId') {
-            // Use selectedItem if available from SearchableSelect
-            const tech = selectedItem || technicians.find(t => t.id.toString() === value);
-            if (tech) {
-                setTechnicians(prev => {
-                    const exists = prev.some(t => t.id.toString() === tech.id.toString());
-                    return exists ? prev : [...prev, tech];
-                });
-                setFormData(prev => ({ ...prev, technician: `${tech.firstName} ${tech.lastName}` }));
-            }
-        }
-    };
-
-    const handleItemChange = (index, field, value, selectedItem) => {
-        setFormData(prev => {
-            const updatedItems = prev.items.map((item, i) => {
-                if (i === index) {
-                    const updatedItem = { ...item, [field]: value };
-                    if (field === 'partId') {
-                        // Use selectedItem if provided, otherwise fallback to finding in parts list
-                        const selectedPart = selectedItem || parts.find(p => p.id.toString() === value);
-                        if (selectedPart) {
-                            updatedItem.description = selectedPart.name;
-                            updatedItem.rate = selectedPart.sellingPrice;
-                            
-                            // Also ensure this part is in our local parts list for future lookups
-                            setParts(prevParts => {
-                                if (!prevParts.some(p => p.id.toString() === selectedPart.id.toString())) {
-                                    return [...prevParts, selectedPart];
-                                }
-                                return prevParts;
-                            });
-                        }
-                    }
-                    return updatedItem;
-                }
-                return item;
-            });
-            return { ...prev, items: updatedItems };
-        });
     };
 
     const handleAddItem = (type) => {
-        setFormData(prev => ({
-            ...prev,
-            items: [...prev.items, { type, description: '', quantity: 1, rate: 0, discount: 0 }]
-        }));
-    };
-
-    const addScannedPartItem = (partData) => {
-        setParts(prevParts => {
-            if (!prevParts.some(p => p.id.toString() === partData.id.toString())) {
-                return [...prevParts, partData];
-            }
-            return prevParts;
-        });
-        setFormData(prev => ({
-            ...prev,
-            items: [...prev.items, {
-                type: 'PART',
-                partId: partData.id.toString(),
-                description: partData.name,
-                quantity: 1,
-                rate: partData.sellingPrice,
-                discount: 0
-            }]
-        }));
-    };
-
-    const isPartAlreadyInJob = (partData) => {
-        return formData.items.some(item => item.partId === partData.id.toString());
+        const newItem = {
+            type,
+            description: '',
+            quantity: 1,
+            rate: 0,
+            discount: 0,
+            partId: type === 'PART' ? '' : null,
+            partNumber: ''
+        };
+        setFormData(prev => ({ ...prev, items: [...prev.items, newItem] }));
     };
 
     const handleRemoveItem = (index) => {
-        setFormData(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
+        setFormData(prev => ({
+            ...prev,
+            items: prev.items.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleItemChange = (index, field, value) => {
+        const newItems = [...formData.items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        
+        if (field === 'partId' && newItems[index].type === 'PART') {
+            const part = parts.find(p => p.id.toString() === value);
+            if (part) {
+                newItems[index].description = part.name;
+                newItems[index].partNumber = part.partNumber;
+                newItems[index].rate = part.sellingPrice;
+                newItems[index].discount = part.isDiscounted ? part.discount : 0;
+            }
+        }
+        
+        setFormData(prev => ({ ...prev, items: newItems }));
     };
 
     const handleTimeChange = (e) => {
         const newTime = e.target.value;
         setTimeInput(newTime);
-        if (calendarDate && newTime) {
+        if (calendarDate) {
             const formattedDate = format(calendarDate, "yyyy-MM-dd");
-            setFormData(prev => ({ ...prev, estimatedCompletion: `${formattedDate}T${newTime}` }));
-        } else if (!newTime) {
-            if (!calendarDate) {
-                setFormData(prev => ({ ...prev, estimatedCompletion: '' }));
-            } else {
-                const formattedDate = format(calendarDate, "yyyy-MM-dd");
-                setFormData(prev => ({ ...prev, estimatedCompletion: `${formattedDate}T00:00` })); // Default time if cleared
-            }
+            const newEstimatedCompletion = `${formattedDate}T${newTime || '00:00'}`;
+            setFormData(prev => ({ ...prev, estimatedCompletion: newEstimatedCompletion }));
         }
     };
 
@@ -301,241 +238,271 @@ const JobForm = ({ job, onSave, onCancel }) => {
         e.preventDefault();
         setSaving(true);
         try {
-            // Find the vehicleId from the selectedVehicleLicense for the payload
-            const selectedCustomer = customers.find(c => c.id.toString() === formData.customerId);
-            const selectedVehicle = selectedCustomer?.vehicles.find(v => v.licensePlate === formData.selectedVehicleLicense);
-
-            const payload = {
-                ...formData,
-                vehicleId: selectedVehicle?.id?.toString(),
-                license: formData.selectedVehicleLicense,
-                cost: Number.parseFloat(formData.cost),
-                technician: technicians.find(t => t.id.toString() === formData.technicianId)?.firstName || formData.technician,
-                customerName: customers.find(c => c.id.toString() === formData.customerId)?.firstName || formData.customerName,
-                items: formData.items.map(item => ({
-                    ...item,
-                    quantity: Number.parseInt(item.quantity),
-                    rate: Number.parseFloat(item.rate),
-                    discount: Number.parseFloat(item.discount || 0)
-                }))
-            };
-            await onSave(payload);
+            if (isEdit) {
+                await onSave(formData);
+            } else {
+                await onSave(formData);
+            }
         } catch (error) {
-            toast.error("Failed to save job.");
+            console.error('Error saving job:', error);
         } finally {
             setSaving(false);
         }
     };
 
-    // Fetcher functions for SearchableSelect
-    const fetchCustomers = useCallback(async (page, pageSize, search, options = {}) => {
-        const params = { page, size: pageSize };
-        if (search) params.search = search;
-        return await customerService.getAll(params.page, params.size, params.search, { signal: options.signal });
-    }, []);
-
-    const fetchTechnicians = useCallback(async (page, pageSize, search, options = {}) => {
-        const params = { page, size: pageSize, role: "MECHANIC" };
-        if (search) params.search = search;
-        return await userService.getByRole(params.role, params.page, params.size, params.search, { signal: options.signal });
-    }, []);
-
-    const fetchParts = useCallback(async (page, pageSize, search, options = {}) => {
-        const params = { page, size: pageSize };
-        if (search) params.search = search;
-        return await inventoryService.getParts({ ...params, signal: options.signal });
-    }, []);
-
-    if (loading) return <LoadingSpinner />;
+    if (loading && !isEdit) return <LoadingSpinner />;
 
     return (
-        <div className="container mx-auto py-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>{isEdit ? `${formData.jobNumber}` : 'Create New Job'}</CardTitle>
-                         <div className="flex space-x-2">
-                            <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
-                            <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Job'}</Button>
-                        </div>
+        <div className="space-y-6 max-w-5xl mx-auto pb-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">{isEdit ? 'Modify Service Job' : 'Initialize Service Job'}</h1>
+                    <p className="text-muted-foreground font-medium text-sm md:text-base">Configure work order parameters and itemized service logs.</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={onCancel} className="h-10 font-bold uppercase tracking-widest text-xs">
+                        <FaTimes className="mr-2" /> Abort
+                    </Button>
+                    <Button type="submit" form="job-form" disabled={saving} className="h-10 font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20">
+                        <FaSave className="mr-2" /> {saving ? 'Synchronizing...' : 'Commit Job'}
+                    </Button>
+                </div>
+            </div>
+
+            <form id="job-form" onSubmit={handleSubmit} className="space-y-6">
+                {/* Section 1: Customer & Asset Mapping */}
+                <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-card/50">
+                    <CardHeader className="border-b border-border/50 bg-muted/20">
+                        <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                            <FaUser className="text-primary text-xs" /> Asset & Client Profile
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Customer and Vehicle */}
-                        <div className="grid md:grid-cols-2 gap-6">
+                    <CardContent className="p-6 md:p-8 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <SearchableSelect
-                                    label="Customer *"
-                                    fetcher={fetchCustomers}
-                                    renderItem={(c) => `${c.firstName} ${c.lastName}`}
-                                    getItemKey={(c) => c.id}
-                                    value={formData.customerId}
-                                    onChange={(val, item) => handleSelectChange('customerId', val, item)}
-                                    placeholder="Select a customer..."
-                                    searchPlaceholder="Search customers..."
-                                    initialData={customers}
-                                />
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Primary Client Account *</Label>
+                                <Select value={formData.customerId} onValueChange={val => handleSelectChange('customerId', val)}>
+                                    <SelectTrigger className="h-11 bg-background/50 font-bold"><SelectValue placeholder="Select customer..." /></SelectTrigger>
+                                    <SelectContent>
+                                        {customers.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.firstName} {c.lastName} • {c.phone}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Vehicle *</Label>
-                                <Select name="selectedVehicleLicense" value={formData.selectedVehicleLicense} onValueChange={val => handleSelectChange('selectedVehicleLicense', val)} required disabled={!formData.customerId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a vehicle..." />
-                                    </SelectTrigger>
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Service Asset (Vehicle) *</Label>
+                                <Select value={formData.selectedVehicleLicense} onValueChange={val => handleSelectChange('selectedVehicleLicense', val)} disabled={!selectedCustomerVehicles}>
+                                    <SelectTrigger className="h-11 bg-background/50 font-bold"><SelectValue placeholder={selectedCustomerVehicles ? "Select vehicle..." : "Select client first"} /></SelectTrigger>
                                     <SelectContent>
-                                        {
-                                            selectedCustomerVehicles?.vehicles?.map(v => <SelectItem key={v.licensePlate} value={v.licensePlate}>{v.year} {v.make} {v.model} ({v.licensePlate})</SelectItem>)
-                                        }
+                                        {selectedCustomerVehicles?.vehicles?.map(v => (
+                                            <SelectItem key={v.licensePlate} value={v.licensePlate}>
+                                                {v.year} {v.make} {v.model} • {v.licensePlate}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
                         </div>
-                        {/* Service Details */}
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label>Service *</Label>
-                                <Input name="service" value={formData.service} onChange={handleChange} required />
-                            </div>
-                            <div className="space-y-2">
-                                <SearchableSelect
-                                    label="Technician"
-                                    fetcher={fetchTechnicians}
-                                    renderItem={(t) => `${t.firstName} ${t.lastName}`}
-                                    getItemKey={(t) => t.id}
-                                    value={formData.technicianId}
-                                    onChange={(val, item) => handleSelectChange('technicianId', val, item)}
-                                    placeholder="Assign a technician..."
-                                    searchPlaceholder="Search technicians..."
-                                    initialData={technicians}
-                                />
-                            </div>
-                        </div>
                         <div className="space-y-2">
-                            <Label>Service Description</Label>
-                            <Textarea name="description" value={formData.description} onChange={handleChange} />
+                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Initial Diagnostic Notes</Label>
+                            <Textarea name="description" value={formData.description} onChange={handleChange} rows="2" className="bg-background/50 font-medium pt-3" placeholder="Describe the reported issues or service requirements..." />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Parts & Labor</CardTitle>
-                        <div className="space-x-2">
-                            <PartScannerButton onPartScanned={addScannedPartItem} onPartAlreadyExists={isPartAlreadyInJob} />
-                            <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('PART')}><FaPlus className="mr-2" />Part</Button>
-                            <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('LABOR')}><FaPlus className="mr-2" />Labor</Button>
+                {/* Section 2: Itemized Work Order */}
+                <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-card/50 overflow-hidden">
+                    <CardHeader className="border-b border-border/50 bg-muted/20 flex flex-row items-center justify-between">
+                        <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                            <FaClipboardList className="text-primary text-xs" /> Service Log & Parts
+                        </CardTitle>
+                        <div className="flex gap-2">
+                            <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('LABOR')} className="h-8 font-black uppercase tracking-tighter text-[10px]">
+                                <FaPlus className="mr-1" /> Labor
+                            </Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('PART')} className="h-8 font-black uppercase tracking-tighter text-[10px]">
+                                <FaPlus className="mr-1" /> Part
+                            </Button>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        {
-                            formData.items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                                <div className="col-span-4 space-y-2">
-                                    {
-                                        item.type === 'PART' ? (
-                                        <SearchableSelect
-                                            fetcher={fetchParts}
-                                            renderItem={(p) => `[${p.partNumber}] ${p.name}`}
-                                            getItemKey={(p) => p.id}
-                                            value={item.partId}
-                                            onChange={(val, item) => handleItemChange(index, 'partId', val, item)}
-                                            placeholder="Select part..."
-                                            searchPlaceholder="Search parts..."
-                                            initialData={parts}
-                                            disabled={!!item.id}
-                                        />
-                                    ) : (
-                                        <Input name="description" value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} placeholder="Labor description" disabled={!!item.id} />
-                                    )
-                                    }
+                    <CardContent className="p-0">
+                        {/* Desktop Table View */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-muted/50 border-b border-border/50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest opacity-60">Entry Type</th>
+                                        <th className="px-6 py-3 text-left text-[10px] font-black uppercase tracking-widest opacity-60">Description / Resource</th>
+                                        <th className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest opacity-60">Units</th>
+                                        <th className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Unit Rate</th>
+                                        <th className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Subtotal</th>
+                                        <th className="px-6 py-3 w-10"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/30">
+                                    {formData.items.map((item, index) => (
+                                        <tr key={index} className="hover:bg-muted/10 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <span className={cn("px-2 py-0.5 rounded text-[10px] font-black tracking-widest uppercase", item.type === 'LABOR' ? "bg-blue-500/10 text-blue-500" : "bg-emerald-500/10 text-emerald-500")}>
+                                                    {item.type}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {item.type === 'PART' ? (
+                                                    <Select value={item.partId} onValueChange={val => handleItemChange(index, 'partId', val)}>
+                                                        <SelectTrigger className="h-9 bg-background/30 font-bold border-none shadow-none"><SelectValue placeholder="Select Part..." /></SelectTrigger>
+                                                        <SelectContent>
+                                                            {parts.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name} • {p.partNumber} (Stock: {p.quantityInStock})</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                    <Input value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} className="h-9 bg-background/30 font-bold border-none shadow-none" placeholder="Labor task description..." />
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className="h-9 w-20 mx-auto bg-background/30 font-bold text-center border-none shadow-none" />
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Input type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} disabled={item.type === 'PART'} className="h-9 w-24 ml-auto bg-background/30 font-bold text-right border-none shadow-none" />
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-black text-foreground">
+                                                ₹{((item.quantity || 0) * (item.rate || 0)).toFixed(2)}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10">
+                                                    <FaTrash className="h-3 w-3" />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Card-style items */}
+                        <div className="lg:hidden divide-y divide-border/30">
+                            {formData.items.length === 0 && (
+                                <div className="p-10 text-center text-muted-foreground italic text-sm">No items logged yet.</div>
+                            )}
+                            {formData.items.map((item, index) => (
+                                <div key={index} className="p-4 space-y-4 bg-muted/5">
+                                    <div className="flex justify-between items-start">
+                                        <span className={cn("px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase", item.type === 'LABOR' ? "bg-blue-500/10 text-blue-500" : "bg-emerald-500/10 text-emerald-500")}>
+                                            {item.type}
+                                        </span>
+                                        <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} className="h-7 w-7 text-destructive">
+                                            <FaTrash className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                        {item.type === 'PART' ? (
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] uppercase font-bold opacity-50">Select Inventory Resource</Label>
+                                                <Select value={item.partId} onValueChange={val => handleItemChange(index, 'partId', val)}>
+                                                    <SelectTrigger className="h-10 bg-background/50 font-bold"><SelectValue placeholder="Select Part..." /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {parts.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name} (Stock: {p.quantityInStock})</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] uppercase font-bold opacity-50">Labor Task Description</Label>
+                                                <Input value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} className="h-10 bg-background/50 font-bold" placeholder="e.g. Engine Oil Analysis" />
+                                            </div>
+                                        )}
+                                        
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] uppercase font-bold opacity-50">Quantity</Label>
+                                                <Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className="h-10 bg-background/50 font-bold" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] uppercase font-bold opacity-50">Unit Rate</Label>
+                                                <Input type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)} disabled={item.type === 'PART'} className="h-10 bg-background/50 font-bold text-right" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center pt-2 border-t border-border/30">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Subtotal</span>
+                                        <span className="text-sm font-black text-emerald-500">₹{((item.quantity || 0) * (item.rate || 0)).toFixed(2)}</span>
+                                    </div>
                                 </div>
-                                <div className="col-span-2 space-y-2">
-                                    <Input name="quantity" type="number" pattern="[0-9]*" value={item.quantity} step="1" min="0" onChange={(e) => {
-                                        const newItems = [...formData.items];
-                                        newItems[index] = {...newItems[index], quantity: e.target.value};
-                                        setFormData(prev => ({ ...prev, items: newItems }));
-                                    }} placeholder="Qty" />
-                                </div>
-                                <div className="col-span-2 space-y-2">
-                                    <Input name="rate" type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)}
-                                           placeholder="Rate" disabled={item.type === 'PART' || !!item.id} />
-                                </div>
-                                {/*<div className="col-span-1 space-y-2">*/}
-                                {/*    <Input name="discount" type="number" value={item.discount} onChange={e => handleItemChange(index, 'discount', e.target.value)}*/}
-                                {/*           placeholder="Discount %" />*/}
-                                {/*</div>*/}
-                                <div className="col-span-2 justify-self-center pt-3">₹{(((item.quantity || 0) * (item.rate || 0)) * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
-                                <div className="col-span-2 justify-self-center pt-3">
-                                    <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!item.id}>
-                                        <FaTrash />
-                                    </Button>
-                                </div>
-                            </div>
-                                ))
-                        }
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader><CardTitle>Schedule & Pricing</CardTitle></CardHeader>
-                    <CardContent className="grid md:grid-cols-3 gap-6">
-                        <div className="space-y-2">
-                            <Label>Status</Label>
-                            <Select name="status" value={formData.status} onValueChange={val => handleSelectChange('status', val)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    {jobStatuses.map(s => <SelectItem key={s} value={s}>{toUpperCase_space(s)}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Est. Completion *</Label>
-                            <div className="flex gap-2"> {/* Use flex to place date and time side-by-side */}
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-full justify-start text-left font-normal",
-                                                !calendarDate && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <FaCalendar className="mr-2 h-4 w-4" />
-                                            {calendarDate ? format(calendarDate, "PPP") : <span>Pick a date</span>} {/* Display only date */}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={calendarDate}
-                                            onSelect={(selectedDate) => {
-                                                setCalendarDate(selectedDate);
-                                                if (selectedDate) {
-                                                    const formattedDate = format(selectedDate, "yyyy-MM-dd");
-                                                    const newEstimatedCompletion = `${formattedDate}T${timeInput || '00:00'}`;
-                                                    setFormData(prev => ({ ...prev, estimatedCompletion: newEstimatedCompletion }));
-                                                } else {
-                                                    setFormData(prev => ({ ...prev, estimatedCompletion: '' }));
-                                                }
-                                            }}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                                <Input
-                                    type="time"
-                                    value={timeInput}
-                                    onChange={handleTimeChange}
-                                    required={!!calendarDate} // Require time if a date is selected
-                                    className="w-auto"
-                                />
+                {/* Section 3: Personnel & Schedule */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2 border-border/50 shadow-lg backdrop-blur-sm bg-card/50">
+                        <CardHeader className="border-b border-border/50 bg-muted/20">
+                            <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                                <FaClock className="text-primary text-xs" /> Execution & Logistics
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Assigned Technician Analyst *</Label>
+                                    <Select value={formData.technicianId} onValueChange={val => handleSelectChange('technicianId', val)}>
+                                        <SelectTrigger className="h-11 bg-background/50 font-bold"><SelectValue placeholder="Select Technician..." /></SelectTrigger>
+                                        <SelectContent>
+                                            {technicians.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.firstName} {t.lastName}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">System Operational Status</Label>
+                                    <Select value={formData.status} onValueChange={val => handleSelectChange('status', val)}>
+                                        <SelectTrigger className="h-11 bg-background/50 font-bold uppercase tracking-widest"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {jobStatuses.map(s => <SelectItem key={s} value={s}>{toUpperCase_space(s)}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Job Estimate</Label>
-                            <Input value={`₹ ${formData.cost.toFixed(2)}`} disabled />
-                        </div>
-                    </CardContent>
-                </Card>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Projected Completion Node *</Label>
+                                <div className="flex flex-col gap-3">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="outline" className={cn("h-11 w-full justify-start text-left font-bold bg-background/50", !calendarDate && "text-muted-foreground")}>
+                                                <FaCalendar className="mr-2 h-4 w-4 opacity-50" />
+                                                {calendarDate ? format(calendarDate, "PPP") : <span>Deployment Date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 border-border/50 bg-card">
+                                            <Calendar
+                                                mode="single"
+                                                selected={calendarDate}
+                                                onSelect={(date) => {
+                                                    setCalendarDate(date);
+                                                    if (date) {
+                                                        const formatted = format(date, "yyyy-MM-dd");
+                                                        setFormData(prev => ({ ...prev, estimatedCompletion: `${formatted}T${timeInput || '00:00'}` }));
+                                                    }
+                                                }}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <div className="relative">
+                                        <FaClock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground opacity-50" />
+                                        <Input type="time" value={timeInput} onChange={handleTimeChange} className="h-11 pl-10 bg-background/50 font-bold" />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-primary/5 flex flex-col justify-center text-center p-8">
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-2">Aggregate Service Valuation</p>
+                        <h2 className="text-5xl font-black tracking-tighter text-foreground">₹{formData.cost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        <p className="text-[10px] font-bold text-muted-foreground mt-4 italic">Estimated metrics based on current log entries.</p>
+                    </Card>
+                </div>
             </form>
         </div>
     );

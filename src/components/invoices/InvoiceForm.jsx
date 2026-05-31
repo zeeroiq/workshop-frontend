@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {FaPlus, FaSave, FaTimes, FaTrash} from 'react-icons/fa';
+import {FaPlus, FaSave, FaTimes, FaTrash, FaFileInvoice, FaUser, FaClipboardList, FaPercent, FaCoins, FaInfoCircle} from 'react-icons/fa';
 import {invoiceService} from '@/services/invoiceService';
 import {INVOICE_STATUS} from './constants/invoiceConstants';
 import {customerService} from "@/services/customerService";
@@ -14,6 +14,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/c
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import PartScannerButton from '../common/PartScannerButton';
 import SearchableSelect from '../common/SearchableSelect';
+import {cn} from "@/lib/utils";
 
 const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const isEdit = Boolean(invoice && invoice.id);
@@ -32,7 +33,6 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         status: INVOICE_STATUS.DRAFT
     });
     const [newItem, setNewItem] = useState({ description: '', quantity: 1, unitPrice: 0, taxRate: 0, partId: null, discount: 0, isDiscountEditable: true });
-    const [errors, setErrors] = useState({});
     const [customers, setCustomers] = useState([]);
     const [parts, setParts] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -41,24 +41,19 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     const [originalItemCount, setOriginalItemCount] = useState(0);
 
     useEffect(() => {
-        const loadCustomers = async () => {
+        const loadInitialData = async () => {
             try {
-                const response = await customerService.getAll(0, 10);
-                setCustomers(response?.data?.content || []);
+                const [custRes, partsRes] = await Promise.all([
+                    customerService.getAll(0, 100),
+                    inventoryService.getParts({page: 0, size: 100})
+                ]);
+                setCustomers(custRes?.data?.content || []);
+                setParts(partsRes?.data?.content || []);
             } catch (error) {
-                toast.error('Failed to fetch customers');
+                toast.error('Failed to load reference data');
             }
         };
-        const loadParts = async () => {
-            try {
-                const response = await inventoryService.getParts({page: 0, size: 10});
-                setParts(response?.data?.content || []);
-            } catch (error) {
-                toast.error('Failed to fetch parts');
-            }
-        };
-        loadCustomers();
-        loadParts();
+        loadInitialData();
     }, []);
 
     useEffect(() => {
@@ -70,65 +65,28 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
     }, [itemType]);
 
     useEffect(() => {
-        // Initialize or update form data when invoice prop changes
         if (invoice && invoice.id) {
-            // Edit Mode: Resolve customer details from the customers list if available
             const customerFromList = customers.find(c => c.id === invoice.customerId);
-
             setFormData(prev => {
-                const updatedFormData = {
+                const updated = {
                     ...prev,
                     ...invoice,
                     invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : '',
                     dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : '',
                     items: invoice.items || [],
                 };
-
                 if (customerFromList) {
                     setSelectedCustomer(customerFromList);
-                    updatedFormData.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
-                    updatedFormData.customerEmail = customerFromList.email;
-                    updatedFormData.customerPhone = customerFromList.phone;
-                    updatedFormData.customerAddress = customerFromList.address;
+                    updated.customerName = `${customerFromList.firstName} ${customerFromList.lastName}`;
+                    updated.customerEmail = customerFromList.email;
+                    updated.customerPhone = customerFromList.phone;
+                    updated.customerAddress = customerFromList.address;
                 }
-                return updatedFormData;
+                return updated;
             });
             setOriginalItemCount(invoice.items?.length || 0);
-        } else if (!invoice) {
-            // Create Mode: Only reset to initial state if the form was previously in edit mode or explicitly reset
-            // We use the presence of invoiceNumber or customerId as a proxy for "dirty" state we might want to clear
-            // but we avoid doing this on every render or list update.
-            // Actually, the initial state is already set in useState. 
-            // We only reset if the invoice prop itself goes from "something" to "null".
-            setFormData(prev => {
-                if (prev.invoiceNumber || prev.customerId) {
-                    return {
-                        invoiceNumber: '',
-                        customerId: '',
-                        customerName: '',
-                        customerEmail: '',
-                        customerPhone: '',
-                        customerAddress: '',
-                        invoiceDate: new Date().toISOString().split('T')[0],
-                        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                        items: [],
-                        notes: '',
-                        terms: '',
-                        status: INVOICE_STATUS.DRAFT
-                    };
-                }
-                return prev;
-            });
-            setSelectedCustomer(null);
-            setOriginalItemCount(0);
         }
-    }, [invoice?.id]); // Only re-run when the invoice ID changes
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-    };
+    }, [invoice?.id, customers]);
 
     const handleSelectChange = (name, value, selectedItem) => {
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -136,12 +94,6 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
             const customer = selectedItem || customers.find(c => c.id.toString() === value);
             setSelectedCustomer(customer);
             if (customer) {
-                // Ensure customer is in our local list
-                setCustomers(prev => {
-                    const exists = prev.some(c => c.id.toString() === customer.id.toString());
-                    return exists ? prev : [...prev, customer];
-                });
-                
                 setFormData(prev => ({
                     ...prev,
                     customerName: `${customer.firstName} ${customer.lastName}`,
@@ -149,93 +101,15 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                     customerPhone: customer.phone,
                     customerAddress: customer.address
                 }));
-            } else {
-                setFormData(prev => ({ ...prev, customerName: '', customerEmail: '', customerPhone: '', customerAddress: '' }));
             }
         }
     };
 
-    const addScannedPartItem = (partData) => {
-        const newItem = {
-            partId: partData.id,
-            partNumber: partData.partNumber,
-            description: partData.name,
-            quantity: 1,
-            unitPrice: partData.mrp,
-            taxRate: 0, // Default tax rate
-            discount: partData.isDiscounted ? partData.discount : 0,
-            isDiscountEditable: !partData.isDiscounted,
-            itemType: 'part'
-        };
-
-        const subtotal = newItem.quantity * newItem.unitPrice;
-        const discountAmount = subtotal * ((newItem.discount || 0) / 100);
-        const subtotalAfterDiscount = subtotal - discountAmount;
-        const taxAmount = subtotalAfterDiscount * (newItem.taxRate / 100);
-        const totalPrice = subtotalAfterDiscount + taxAmount;
-
-        setFormData(prev => ({
-            ...prev,
-            items: [...prev.items, { ...newItem, totalPrice }]
-        }));
-    };
-
-    const isPartAlreadyInInvoice = (partData) => {
-        return formData.items.some(item => item.partId === partData.id);
-    };
-
-    const handleItemChange = (e) => {
-        const { name, value } = e.target;
-        setNewItem(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleItemUpdate = (index, field, value) => {
-        const updatedItems = [...formData.items];
-        const itemToUpdate = { ...updatedItems[index], [field]: value };
-
-        const subtotal = itemToUpdate.quantity * itemToUpdate.unitPrice;
-        const discountAmount = subtotal * ((itemToUpdate.discount || 0) / 100);
-        const subtotalAfterDiscount = subtotal - discountAmount;
-        const taxAmount = subtotalAfterDiscount * (itemToUpdate.taxRate / 100);
-        itemToUpdate.totalPrice = subtotalAfterDiscount + taxAmount;
-
-        updatedItems[index] = itemToUpdate;
-
-        setFormData(prev => ({ ...prev, items: updatedItems }));
-    };
-
-    const handlePartSelectChange = (partId, selectedPart) => {
-        const part = selectedPart || parts.find(p => p.id.toString() === partId);
-        if (part) {
-            // Ensure part is in our local list
-            setParts(prev => {
-                const exists = prev.some(p => p.id.toString() === part.id.toString());
-                return exists ? prev : [...prev, part];
-            });
-
-            setNewItem(prev => ({
-                ...prev,
-                itemType: "part",
-                partId: part.id,
-                partNumber: part.partNumber,
-                description: part.name,
-                unitPrice: part.mrp,
-                discount: part.isDiscounted ? part.discount : 0,
-                isDiscountEditable: !part.isDiscounted,
-            }));
-        }
-    };
-
     const handleAddItem = () => {
-        if (formData.jobNumber && !formData.notes) {
-            toast.error("Please add a note explaining the reason for adding new items.");
+        if ((itemType?.toUpperCase() === 'LABOR' && !newItem.description) || (itemType === 'part' && !newItem.partId)) {
+            toast.error("Please provide entry description/resource.");
             return;
         }
-        if ((itemType?.toUpperCase() === 'LABOR' && !newItem.description) || (itemType === 'part' && !newItem.partId) || newItem.quantity <= 0 || newItem.unitPrice < 0) {
-            toast.error("Please fill all item fields correctly.");
-            return;
-        }
-        
         const subtotal = newItem.quantity * newItem.unitPrice;
         const discountAmount = subtotal * ((newItem.discount || 0) / 100);
         const subtotalAfterDiscount = subtotal - discountAmount;
@@ -259,211 +133,297 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         e.preventDefault();
         setSaving(true);
         try {
-            const invoiceData = { ...formData, totalAmount: calculateTotal() };
+            const payload = { ...formData, totalAmount: calculateTotal() };
             if (isEdit) {
-                await invoiceService.updateInvoice(invoice.id, invoiceData);
+                await invoiceService.updateInvoice(invoice.id, payload);
             } else {
-                await invoiceService.createInvoice(invoiceData);
+                await invoiceService.createInvoice(payload);
             }
             onSave();
         } catch (error) {
-            toast.error("Failed to save invoice.");
+            toast.error("Failed to synchronize invoice data.");
         } finally {
             setSaving(false);
         }
     };
 
-    // Fetcher functions for SearchableSelect
-    const fetchCustomers = useCallback(async (page, pageSize, search, options = {}) => {
-        const params = { page, size: pageSize };
-        if (search) params.search = search;
-        return await customerService.getAll(params.page, params.size, params.search, { signal: options.signal });
+    const fetchCustomers = useCallback(async (page, size, search) => {
+        return await customerService.getAll(page, size, search);
     }, []);
 
-    const fetchParts = useCallback(async (page, pageSize, search, options = {}) => {
-        const params = { page, size: pageSize };
-        if (search) params.search = search;
-        return await inventoryService.getParts({ ...params, signal: options.signal });
+    const fetchParts = useCallback(async (page, size, search) => {
+        return await inventoryService.getParts({ page, size, search });
     }, []);
-
-
-    const getDiscountDisabledState = (item, index) => {
-        const isJobItem = !!formData.jobNumber && index < originalItemCount;
-        // if (!item.partId) { // Is labor
-        //     return true;
-        // }
-        if (isJobItem) {
-            // For items from a job, the discount is editable only for parts (not labor).
-            return !item.partNumber;
-        }
-        // For newly added parts, use the isDiscountEditable flag set during part selection
-        return item.isDiscountEditable === false;
-    };
 
     return (
-        <div className="container mx-auto py-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>{isEdit ? 'Edit Invoice' : 'Create New Invoice'}</CardTitle>
-                        <div className="flex space-x-2">
-                            <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
-                            <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Invoice'}</Button>
-                        </div>
+        <div className="space-y-6 max-w-5xl mx-auto pb-10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">{isEdit ? 'Update Billing Record' : 'Initialize Invoice'}</h1>
+                    <p className="text-muted-foreground font-medium text-sm md:text-base">Generate financial documents for services and parts inventory.</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={onCancel} className="h-10 font-bold uppercase tracking-widest text-xs">
+                        <FaTimes className="mr-2" /> Abort
+                    </Button>
+                    <Button type="submit" form="invoice-form" disabled={saving} className="h-10 font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20">
+                        <FaSave className="mr-2" /> {saving ? 'Synchronizing...' : 'Deploy Invoice'}
+                    </Button>
+                </div>
+            </div>
+
+            <form id="invoice-form" onSubmit={handleSubmit} className="space-y-6">
+                {/* Header Information */}
+                <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-card/50">
+                    <CardHeader className="border-b border-border/50 bg-muted/20">
+                        <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                            <FaFileInvoice className="text-primary text-xs" /> Document Metadata
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Invoice Details */}
-                        <div className="grid md:grid-cols-4 gap-6">
-                            <div className="space-y-2"><Label>Invoice Number</Label><Input value={formData.invoiceNumber || 'Auto-generated'} disabled /></div>
-                            <div className="space-y-2"><Label>Status</Label>
-                                <Select name="status" value={formData.status} onValueChange={val => handleSelectChange('status', val)} disabled>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <CardContent className="p-6 md:p-8 space-y-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Invoice Serial #</Label>
+                                <Input value={formData.invoiceNumber || 'PENDING ASSIGNMENT'} disabled className="h-11 bg-muted/20 font-black tracking-widest" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Payment Status</Label>
+                                <Select value={formData.status} disabled>
+                                    <SelectTrigger className="h-11 bg-muted/20 font-bold uppercase tracking-widest"><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {Object.values(INVOICE_STATUS).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2"><Label>Invoice Date *</Label><Input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleChange} required /></div>
-                            <div className="space-y-2"><Label>Due Date *</Label><Input type="date" name="dueDate" value={formData.dueDate} onChange={handleChange} required /></div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Issue Date *</Label>
+                                <Input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={e => setFormData({...formData, invoiceDate: e.target.value})} required className="h-11 bg-background/50 font-bold" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Maturity Date *</Label>
+                                <Input type="date" name="dueDate" value={formData.dueDate} onChange={e => setFormData({...formData, dueDate: e.target.value})} required className="h-11 bg-background/50 font-bold" />
+                            </div>
                         </div>
-                        {/* Customer Info */}
-                        <div className="space-y-2">
-                            <SearchableSelect
-                                label="Customer *"
-                                fetcher={fetchCustomers}
-                                renderItem={(c) => `${c.firstName} ${c.lastName}`}
-                                getItemKey={(c) => c.id}
-                                value={formData.customerId}
-                                onChange={(val, item) => handleSelectChange('customerId', val, item)}
-                                placeholder="Select a customer..."
-                                searchPlaceholder="Search customers..."
-                                initialData={customers}
-                            />
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div className="space-y-2"><Label>Email</Label><Input name="customerEmail" value={formData.customerEmail} disabled /></div>
-                            <div className="space-y-2"><Label>Phone</Label><Input name="customerPhone" value={formData.customerPhone} disabled /></div>
-                            <div className="space-y-2"><Label>Address</Label><Textarea name="customerAddress" value={formData.customerAddress} disabled rows={3} /></div>
+
+                        <div className="space-y-6 pt-6 border-t border-border/30">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70 flex items-center gap-2">
+                                    <FaUser className="text-[8px]" /> Recipient Client
+                                </Label>
+                                <SearchableSelect
+                                    fetcher={fetchCustomers}
+                                    renderItem={(c) => `${c.firstName} ${c.lastName} • ${c.phone}`}
+                                    getItemKey={(c) => c.id}
+                                    value={formData.customerId}
+                                    onChange={(val, item) => handleSelectChange('customerId', val, item)}
+                                    placeholder="Select a customer profile..."
+                                    className="bg-background/50"
+                                    initialData={customers}
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-bold uppercase opacity-50">Email</Label>
+                                    <p className="text-sm font-medium truncate">{formData.customerEmail || '-'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-bold uppercase opacity-50">Phone</Label>
+                                    <p className="text-sm font-medium">{formData.customerPhone || '-'}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-bold uppercase opacity-50">Address</Label>
+                                    <p className="text-sm font-medium line-clamp-1">{formData.customerAddress || '-'}</p>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Invoice Items</CardTitle>
-                        <div className="flex items-center space-x-4">
-                            <PartScannerButton onPartScanned={addScannedPartItem} onPartAlreadyExists={isPartAlreadyInInvoice} />
-                            <RadioGroup defaultValue="LABOR" onValueChange={setItemType} className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="LABOR" id="r-labor" />
-                                    <Label htmlFor="r-labor">Labor</Label>
+                {/* Billing Items */}
+                <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-card/50 overflow-hidden">
+                    <CardHeader className="border-b border-border/50 bg-muted/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                            <FaClipboardList className="text-primary text-xs" /> Line Items & Logistics
+                        </CardTitle>
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <PartScannerButton onPartScanned={(p) => setNewItem({...newItem, partId: p.id, description: p.name, unitPrice: p.mrp})} />
+                            <RadioGroup value={itemType} onValueChange={setItemType} className="flex items-center space-x-4 bg-background/30 p-1.5 rounded-lg border border-border/50">
+                                <div className="flex items-center space-x-1.5">
+                                    <RadioGroupItem value="LABOR" id="r-labor" className="h-3 w-3" />
+                                    <Label htmlFor="r-labor" className="text-[9px] font-black uppercase cursor-pointer">Labor</Label>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="part" id="r-part" />
-                                    <Label htmlFor="r-part">Part</Label>
+                                <div className="flex items-center space-x-1.5">
+                                    <RadioGroupItem value="part" id="r-part" className="h-3 w-3" />
+                                    <Label htmlFor="r-part" className="text-[9px] font-black uppercase cursor-pointer">Part</Label>
                                 </div>
                             </RadioGroup>
                         </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-12 gap-2 items-end mb-4">
-                            {itemType?.toUpperCase() === 'LABOR' ? (
-                                <div className="col-span-5 space-y-2">
-                                    <Label>Description</Label>
-                                    <Input name="description" value={newItem.description} onChange={handleItemChange} />
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="col-span-3 space-y-2">
+                    <CardContent className="p-0">
+                        {/* Add Item Control */}
+                        <div className="p-6 md:p-8 bg-muted/5 border-b border-border/50">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+                                <div className="lg:col-span-5 space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Entry Description</Label>
+                                    {itemType === 'part' ? (
                                         <SearchableSelect
-                                            label="Part"
                                             fetcher={fetchParts}
-                                            renderItem={(p) => `${p.name} (${p.partNumber}) - In Stock: ${p.quantityInStock}`}
+                                            renderItem={(p) => `${p.name} • ${p.partNumber} (Stock: ${p.quantityInStock})`}
                                             getItemKey={(p) => p.id}
                                             value={newItem.partId || ""}
-                                            onChange={handlePartSelectChange}
-                                            placeholder="Select a part..."
-                                            searchPlaceholder="Search parts..."
+                                            onChange={(val, p) => setNewItem({...newItem, partId: val, description: p?.name, unitPrice: p?.mrp || 0})}
+                                            placeholder="Search parts inventory..."
                                             initialData={parts}
                                         />
+                                    ) : (
+                                        <Input value={newItem.description} onChange={e => setNewItem({...newItem, description: e.target.value})} placeholder="e.g. Engine Calibration" className="h-11 bg-background/50 font-bold" />
+                                    )}
+                                </div>
+                                <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Units</Label>
+                                        <Input type="number" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} min="1" className="h-11 bg-background/50 font-bold text-center" />
                                     </div>
-                                    <div className="col-span-2 space-y-2">
-                                        <Label>Discount (%)</Label>
-                                        <Input type="number" name="discount" value={newItem.discount} onChange={handleItemChange} min="0" max="100" disabled={!newItem.isDiscountEditable} />
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Rate</Label>
+                                        <Input type="number" value={newItem.unitPrice} onChange={e => setNewItem({...newItem, unitPrice: parseFloat(e.target.value)})} disabled={itemType === 'part'} className="h-11 bg-background/50 font-bold text-right" />
                                     </div>
-                                </>
-                            )}
-                            <div className="col-span-1 space-y-2"><Label>Quantity</Label><Input type="number" name="quantity" value={newItem.quantity} onChange={handleItemChange} min="1" /></div>
-                            <div className="col-span-2 space-y-2"><Label>Unit Price</Label><Input type="number" name="unitPrice" value={newItem.unitPrice} onChange={handleItemChange} min="0" disabled={itemType === 'part'} /></div>
-                            <div className="col-span-2 space-y-2"><Label>Tax Rate (%)</Label><Input type="number" name="taxRate" value={newItem.taxRate} onChange={handleItemChange} min="0" /></div>
-                            <div className="col-span-2"><Button type="button" onClick={handleAddItem} className="w-full"><FaPlus className="mr-2" /> Add</Button></div>
+                                </div>
+                                <div className="lg:col-span-3 grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Disc %</Label>
+                                        <div className="relative">
+                                            <FaPercent className="absolute right-3 top-3.5 h-3 w-3 text-muted-foreground opacity-30" />
+                                            <Input type="number" value={newItem.discount} onChange={e => setNewItem({...newItem, discount: parseFloat(e.target.value)})} className="h-11 pr-8 bg-background/50 font-bold text-right" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Tax %</Label>
+                                        <Input type="number" value={newItem.taxRate} onChange={e => setNewItem({...newItem, taxRate: parseFloat(e.target.value)})} className="h-11 bg-background/50 font-bold text-right" />
+                                    </div>
+                                </div>
+                                <div className="lg:col-span-2">
+                                    <Button type="button" onClick={handleAddItem} className="w-full h-11 font-black uppercase tracking-widest text-[10px]">
+                                        <FaPlus className="mr-2" /> Insert Entry
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
-                        <div className="overflow-x-auto">
+
+                        {/* List View */}
+                        <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full text-sm">
-                                <thead className="bg-muted">
+                                <thead className="bg-muted/30 border-b border-border/50">
                                     <tr>
-                                        <th className="px-4 py-2 text-left">Description</th>
-                                        <th className="px-4 py-2 text-right">Qty</th>
-                                        <th className="px-4 py-2 text-right">Price</th>
-                                        <th className="px-4 py-2 text-right">Discount (%)</th>
-                                        <th className="px-4 py-2 text-right">Tax (%)</th>
-                                        <th className="px-4 py-2 text-right">Total</th>
-                                        <th className="px-4 py-2 text-center">Action</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest opacity-60">Entry / Resource</th>
+                                        <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest opacity-60">Qty</th>
+                                        <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Unit Price</th>
+                                        <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Tax / Disc</th>
+                                        <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Total Valuation</th>
+                                        <th className="px-6 py-4 w-10"></th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-border/30">
                                     {formData.items.map((item, index) => (
-                                        <tr key={index} className="border-b">
-                                            <td className="px-4 py-2">{item.itemType.toUpperCase() === 'LABOR' ? item.description : `[${item.partNumber}] ${item.description}`}</td>
-                                            <td className="px-4 py-2 text-right">
-                                                <Input
-                                                    type="number"
-                                                    value={item.quantity || 1}
-                                                    onChange={(e) => handleItemUpdate(index, 'quantity', e.target.value)}
-                                                    className="w-20 text-left inline-flex"
-                                                    min="1"
-                                                />
+                                        <tr key={index} className="hover:bg-muted/10 transition-colors">
+                                            <td className="px-6 py-5">
+                                                <p className="font-bold text-foreground truncate max-w-xs">{item.description}</p>
+                                                {item.partNumber && <p className="text-[9px] font-black tracking-widest text-primary uppercase mt-1">Resource ID: {item.partNumber}</p>}
                                             </td>
-                                            <td className="px-4 py-2 text-right">₹{Number(item.unitPrice).toFixed(2)}</td>
-                                            <td className="px-4 py-2 text-right">
-                                                <Input
-                                                    type="number"
-                                                    value={item.discount || 0}
-                                                    onChange={(e) => handleItemUpdate(index, 'discount', e.target.value)}
-                                                    disabled={getDiscountDisabledState(item, index)}
-                                                    className="w-20 text-left inline-flex"
-                                                />
+                                            <td className="px-6 py-5 text-center font-bold">{item.quantity}</td>
+                                            <td className="px-6 py-5 text-right font-medium opacity-70">₹{item.unitPrice.toFixed(2)}</td>
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-[9px] font-black text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded">-{item.discount}% DISC</span>
+                                                    <span className="text-[9px] font-black text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded">+{item.taxRate}% TAX</span>
+                                                </div>
                                             </td>
-                                            <td className="px-4 py-2 text-right">{item.taxRate}</td>
-                                            <td className="px-4 py-2 text-right font-semibold">₹{Number(item.totalPrice).toFixed(2)}</td>
-                                            {/*<td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!formData.jobNumber && index < originalItemCount}><FaTrash /></Button></td>*/}
-                                            {/*TODO: FOR NOW KEEPING DELETE OPTION ENABLED FROM INVOICE PAGE, would revisit later*/}
-                                            <td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}><FaTrash /></Button></td>
+                                            <td className="px-6 py-5 text-right font-black text-emerald-500">₹{item.totalPrice.toFixed(2)}</td>
+                                            <td className="px-6 py-5 text-center">
+                                                <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} className="h-8 w-8 text-destructive">
+                                                    <FaTrash className="h-3 w-3" />
+                                                </Button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Mobile List View */}
+                        <div className="lg:hidden divide-y divide-border/30">
+                            {formData.items.map((item, index) => (
+                                <div key={index} className="p-4 space-y-4">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="space-y-1 flex-1">
+                                            <p className="font-bold text-sm leading-snug">{item.description}</p>
+                                            {item.partNumber && <p className="text-[9px] font-black tracking-widest text-primary uppercase">{item.partNumber}</p>}
+                                        </div>
+                                        <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} className="h-7 w-7 text-destructive">
+                                            <FaTrash className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 bg-muted/10 p-3 rounded-xl border border-border/50">
+                                        <div className="space-y-0.5">
+                                            <p className="text-[9px] font-black uppercase text-muted-foreground opacity-60">Metrics</p>
+                                            <p className="text-xs font-bold">{item.quantity} Unit(s) @ ₹{item.unitPrice}</p>
+                                        </div>
+                                        <div className="text-right space-y-1">
+                                            <p className="text-[9px] font-black uppercase text-muted-foreground opacity-60">Adjustment</p>
+                                            <div className="flex flex-wrap justify-end gap-1">
+                                                <span className="text-[8px] font-black bg-red-400/10 text-red-400 px-1 rounded">-{item.discount}%</span>
+                                                <span className="text-[8px] font-black bg-blue-400/10 text-blue-400 px-1 rounded">+{item.taxRate}%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center px-1">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Line Total</span>
+                                        <span className="text-base font-black text-emerald-500">₹{item.totalPrice.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader><CardTitle>Additional Information</CardTitle></CardHeader>
-                    <CardContent className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2"><Label>Notes</Label><Textarea name="notes" value={formData.notes} onChange={handleChange} /></div>
-                        <div className="space-y-2"><Label>Terms & Conditions</Label><Textarea name="terms" value={formData.terms} onChange={handleChange} /></div>
-                    </CardContent>
-                </Card>
-                
-                <div className="text-right text-2xl font-bold">
-                    Total: ₹{calculateTotal().toFixed(2)}
+                {/* Footer Intelligence */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2 border-border/50 shadow-lg backdrop-blur-sm bg-card/50">
+                        <CardHeader className="border-b border-border/50 bg-muted/20">
+                            <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                                <FaInfoCircle className="text-primary text-xs" /> Supplemental Intelligence
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6 md:p-8 space-y-6">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Operational Notes</Label>
+                                <Textarea name="notes" value={formData.notes} onChange={handleChange} rows="2" className="bg-background/50 font-medium pt-3" placeholder="Enter internal system notes or specific customer instructions..." />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Regulatory Terms & Conditions</Label>
+                                <Textarea name="terms" value={formData.terms} onChange={handleChange} rows="2" className="bg-background/50 font-medium pt-3" placeholder="Enter payment terms, warranty info, and legal disclaimers..." />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 shadow-lg backdrop-blur-sm bg-emerald-500/5 flex flex-col justify-center text-center p-8">
+                        <div className="space-y-1 mb-6">
+                            <FaCoins className="mx-auto text-emerald-500/30 text-3xl mb-2" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-600/70">Aggregate Document Value</p>
+                        </div>
+                        <h2 className="text-5xl font-black tracking-tighter text-foreground">₹{calculateTotal().toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        <div className="mt-6 flex flex-col gap-2">
+                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4">
+                                <span>Base Revenue</span>
+                                <span>₹{formData.items.reduce((sum, i) => sum + (i.quantity * i.unitPrice), 0).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-red-400 px-4">
+                                <span>Total Adjustments</span>
+                                <span>-₹{formData.items.reduce((sum, i) => sum + ((i.quantity * i.unitPrice) * (i.discount/100)), 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
-                <CardHeader className="flex flex-row justify-end">
-                    <div className="flex space-x-2">
-                        <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
-                        <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Invoice'}</Button>
-                    </div>
-                </CardHeader>
             </form>
         </div>
     );

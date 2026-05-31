@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import {
     FaUserCog,
     FaWrench,
-    FaRupeeSign
+    FaRupeeSign,
+    FaFilter,
+    FaTrophy,
+    FaClock,
+    FaPercentage
 } from 'react-icons/fa';
 import { reportsService } from '@/services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
@@ -33,7 +37,6 @@ const MechanicPerformance = () => {
     const [loading, setLoading] = useState(false);
     const [mechanics, setMechanics] = useState([]);
 
-    // Load mechanics (in a real app, this would come from an API)
     React.useEffect(() => {
         loadMechanics();
     }, []);
@@ -44,17 +47,12 @@ const MechanicPerformance = () => {
             const results = response?.data || [];
             if (response?.status === 200 && results.length > 0) {
                 setMechanics(results);
-            } else {
-                setMechanics([]);
-                console.error('No Technician available in system');
             }
         } catch (error) {
-            toast.error('Failed to fetch technician details');
             console.error('Error fetching technicians:', error);
         }
     }
 
-    // Calculate summary data from the performances array
     const summary = React.useMemo(() => {
         if (!reportData || !reportData.performances) {
             return { totalMechanics: 0, totalJobs: 0, totalRevenue: 0 };
@@ -69,17 +67,12 @@ const MechanicPerformance = () => {
     }, [reportData]);
 
     const handleCriteriaChange = (field, value) => {
-        setCriteria(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setCriteria(prev => ({ ...prev, [field]: value }));
     };
 
     const generateReport = async () => {
         try {
             setLoading(true);
-
-            // Prepare the request body
             const requestBody = {
                 reportType: criteria.reportType,
                 timePeriod: criteria.timePeriod,
@@ -93,7 +86,7 @@ const MechanicPerformance = () => {
             if (response?.status === 200 && response?.data?.success) {
                 setReportData(response.data.data);
             } else {
-                toast.dark('Failed to fetch technician details');
+                toast.dark('Operational data not available for criteria');
             }
         } catch (error) {
             console.error('Error generating mechanic performance report:', error);
@@ -115,144 +108,147 @@ const MechanicPerformance = () => {
     const jobsByTypeConfig = {
         table: {
             columns: [
-                { header: 'Job Type', accessor: 'type' },
-                { header: 'Count', accessor: 'count' },
-                { header: 'Total Hours', accessor: 'totalHours', render: (row) => row.totalHours?.toFixed(1) || '0.0' },
-                { header: 'Total Revenue', accessor: 'totalRevenue', render: (row) => `₹${row.totalRevenue?.toFixed(2) || '0.00'}` },
-                { header: 'Average Time (hrs)', accessor: 'averageTime', render: (row) => row.averageTime?.toFixed(1) || '0.0' }
+                { header: 'Service Classification', accessor: 'type', render: (row) => <span className="font-bold text-primary">{row.type}</span> },
+                { header: 'Throughput', accessor: 'count' },
+                { header: 'Total Man-Hours', accessor: 'totalHours', render: (row) => <span className="font-medium">{row.totalHours?.toFixed(1) || '0.0'} h</span> },
+                { header: 'Revenue Yield', accessor: 'totalRevenue', render: (row) => <span className="font-black text-emerald-500">₹{row.totalRevenue?.toFixed(2) || '0.00'}</span> },
+                { header: 'Avg Duration', accessor: 'averageTime', render: (row) => <span className="text-[10px] opacity-60 italic">{row.averageTime?.toFixed(1) || '0.0'} h / unit</span> }
             ]
         },
         pie: { dataKey: 'count', nameKey: 'type' },
-        bar: { xAxisKey: 'type', bars: [{ dataKey: 'count', name: 'Job Count' }] }
+        bar: { xAxisKey: 'type', bars: [{ dataKey: 'count', name: 'Job Volume' }] }
     };
 
     return (
-        <div className="container mx-auto py-6">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold">Mechanic Performance Report</h3>
+        <div className="p-4 md:p-8 space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                        <FaTrophy className="text-xl" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold tracking-tight text-foreground">Personnel Performance Audit</h3>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Efficiency & Revenue Intelligence</p>
+                    </div>
+                </div>
                 <ExportControls getCriteria={getExportCriteria} />
             </div>
 
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle>Report Filters</CardTitle>
+            <Card className="border-border/50 bg-muted/5">
+                <CardHeader className="pb-4 border-b border-border/30">
+                    <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                        <FaFilter className="text-xs opacity-50" /> Analytical Filters
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-wrap items-end gap-4">
-                    <div className="flex-1 min-w-[180px]">
-                        <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
-                    </div>
+                <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Time Horizon</Label>
+                            <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
+                        </div>
 
-                    <div className="flex-1 min-w-[180px] space-y-2">
-                        <Label>
-                            <FaUserCog className="inline-block mr-2" /> Mechanic
-                        </Label>
-                        <Select
-                            value={criteria.mechanicId}
-                            onValueChange={(value) => handleCriteriaChange('mechanicId', value)}
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest opacity-70">Target Analyst (Technician)</Label>
+                            <Select
+                                value={criteria.mechanicId}
+                                onValueChange={(value) => handleCriteriaChange('mechanicId', value)}
+                            >
+                                <SelectTrigger className="bg-background/50 h-11">
+                                    <SelectValue placeholder="All Mechanics" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Global Fleet Analysis</SelectItem>
+                                    {mechanics.map(mechanic => (
+                                        <SelectItem key={mechanic.id} value={mechanic.id.toString()}>
+                                            {mechanic.firstName} {mechanic.lastName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <Button
+                            className="w-full font-black uppercase tracking-widest text-xs h-11 shadow-lg shadow-primary/10"
+                            onClick={generateReport}
+                            disabled={loading}
                         >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Mechanic" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Mechanics</SelectItem>
-                                {mechanics.map(mechanic => (
-                                    <SelectItem key={mechanic.id} value={mechanic.id.toString()}>
-                                        {mechanic.firstName} {mechanic.lastName}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                            {loading ? 'Processing...' : 'Run Diagnostics'}
+                        </Button>
                     </div>
-
-                    <Button
-                        className="w-full md:w-auto flex-shrink-0"
-                        onClick={generateReport}
-                        disabled={loading}
-                    >
-                        {loading ? 'Generating...' : 'Generate Report'}
-                    </Button>
                 </CardContent>
             </Card>
 
             {reportData && (
-                <div className="report-results space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Performance Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Total Mechanics</CardTitle>
-                                        <FaUserCog className="text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{summary.totalMechanics || 0}</div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Jobs Completed</CardTitle>
-                                        <FaWrench className="text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{summary.totalJobs || 0}</div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                                        <FaRupeeSign className="text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">₹{summary.totalRevenue?.toFixed(2) || '0.00'}</div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </CardContent>
-                    </Card>
+                <div className="report-results animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                        <MetricCard title="Active Personnel" value={summary.totalMechanics || 0} icon={<FaUserCog />} color="text-primary" />
+                        <MetricCard title="Fulfilled Missions" value={summary.totalJobs || 0} icon={<FaWrench />} color="text-amber-500" />
+                        <MetricCard title="Aggregate Revenue" value={`₹${summary.totalRevenue?.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} icon={<FaRupeeSign />} color="text-emerald-500" />
+                    </div>
 
                     {reportData.performances && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Mechanic Details</CardTitle>
+                        <Card className="border-border/50 shadow-sm overflow-hidden">
+                            <CardHeader className="bg-muted/30 border-b border-border/50">
+                                <CardTitle className="text-sm font-black uppercase tracking-widest">Individual Performance Matrix</CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Mechanic Name</TableHead>
-                                            <TableHead>Completed Jobs</TableHead>
-                                            <TableHead>In-Progress Jobs</TableHead>
-                                            <TableHead>Total Revenue</TableHead>
-                                            <TableHead>Efficiency</TableHead>
-                                            <TableHead>Average Job Time</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {reportData.performances.map((mechanic, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{mechanic.mechanicName}</TableCell>
-                                                <TableCell>{mechanic.completedJobs}</TableCell>
-                                                <TableCell>{mechanic.inProgressJobs}</TableCell>
-                                                <TableCell>₹{mechanic.totalRevenue?.toFixed(2) || '0.00'}</TableCell>
-                                                <TableCell>
-                                                    {mechanic.efficiencyRating ? `${mechanic.efficiencyRating.toFixed(1)}%` : 'N/A'}
-                                                </TableCell>
-                                                <TableCell>{mechanic.averageJobTime ? `${mechanic.averageJobTime.toFixed(1)} hrs` : 'N/A'}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                            <CardContent className="p-0">
+                                {/* Desktop Table */}
+                                <div className="hidden xl:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader className="bg-muted/50">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest opacity-60">Technician Node</th>
+                                                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest opacity-60">Settled Jobs</th>
+                                                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest opacity-60">In-Queue</th>
+                                                <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Total Yield</th>
+                                                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest opacity-60">Efficiency</th>
+                                                <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest opacity-60">Avg Duration</th>
+                                            </tr>
+                                        </TableHeader>
+                                        <TableBody className="divide-y divide-border/30">
+                                            {reportData.performances.map((mechanic, index) => (
+                                                <TableRow key={index} className="hover:bg-muted/30 transition-colors">
+                                                    <TableCell className="px-6 py-4 font-bold text-primary">{mechanic.mechanicName}</TableCell>
+                                                    <TableCell className="px-6 py-4 text-center font-black">{mechanic.completedJobs}</TableCell>
+                                                    <TableCell className="px-6 py-4 text-center font-medium opacity-60">{mechanic.inProgressJobs}</TableCell>
+                                                    <TableCell className="px-6 py-4 text-right font-black text-emerald-500">₹{mechanic.totalRevenue?.toFixed(2) || '0.00'}</TableCell>
+                                                    <TableCell className="px-6 py-4 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                <div className="h-full bg-emerald-500" style={{ width: `${mechanic.efficiencyRating || 0}%` }} />
+                                                            </div>
+                                                            <span className="text-[10px] font-black">{mechanic.efficiencyRating ? `${mechanic.efficiencyRating.toFixed(1)}%` : '0%'}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-4 text-right text-xs font-medium">{mechanic.averageJobTime ? `${mechanic.averageJobTime.toFixed(1)} hrs` : 'N/A'}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                {/* Mobile Cards */}
+                                <div className="xl:hidden divide-y divide-border/30">
+                                    {reportData.performances.map((mechanic, index) => (
+                                        <div key={index} className="p-5 space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-lg font-black text-primary">{mechanic.mechanicName}</p>
+                                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest">Technician Profile</Badge>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <MetricItem label="Settled Jobs" value={mechanic.completedJobs} icon={<FaWrench />} />
+                                                <MetricItem label="In-Queue" value={mechanic.inProgressJobs} icon={<FaClock />} />
+                                                <MetricItem label="Total Yield" value={`₹${mechanic.totalRevenue?.toFixed(2)}`} icon={<FaRupeeSign />} highlight />
+                                                <MetricItem label="Efficiency" value={`${mechanic.efficiencyRating?.toFixed(1) || 0}%`} icon={<FaPercentage />} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     )}
 
                     <DataVisualizer
-                        title="Jobs by Type"
+                        title="Operational Load by Service Type"
                         data={reportData.jobsByType}
                         availableViews={['table', 'pie', 'bar']}
                         viewConfig={jobsByTypeConfig}
@@ -262,5 +258,30 @@ const MechanicPerformance = () => {
         </div>
     );
 };
+
+const MetricCard = ({ title, value, icon, color }) => (
+    <Card className="bg-card border-border/50 shadow-sm overflow-hidden group hover:border-primary/30 transition-all">
+        <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                {title} <span className={cn("opacity-50", color)}>{icon}</span>
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+            <p className={cn("text-2xl font-black tracking-tight", color)}>{value}</p>
+        </CardContent>
+        <div className={cn("absolute bottom-0 left-0 h-0.5 transition-all duration-300 w-0 group-hover:w-full", color.replace('text', 'bg'))} />
+    </Card>
+);
+
+const MetricItem = ({ label, value, icon, highlight }) => (
+    <div className="space-y-1 bg-muted/10 p-2.5 rounded-xl border border-border/50">
+        <p className="text-[8px] font-black uppercase text-muted-foreground opacity-60 flex items-center gap-1.5">
+            {icon} {label}
+        </p>
+        <p className={cn("text-sm font-black", highlight ? "text-emerald-500" : "text-foreground")}>{value}</p>
+    </div>
+);
+
+const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 export default MechanicPerformance;

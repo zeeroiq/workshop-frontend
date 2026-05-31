@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Shield } from 'lucide-react';
+import { Users, Shield, UserPlus, ShieldAlert } from 'lucide-react';
 import UserList from '@/components/workshop/users/UserList';
 import UserForm from '@/components/workshop/users/UserForm';
 import RoleList from '@/components/workshop/roles/RoleList';
@@ -32,7 +32,7 @@ const Manage = () => {
 
     const handleUserFormSave = () => {
         setUserView('list');
-        setUserListKey(Date.now()); // Force re-render of UserList
+        setUserListKey(Date.now());
     };
 
     const handleViewPermissions = (role) => {
@@ -74,29 +74,33 @@ const Manage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Manage</h1>
-                    <p className="text-muted-foreground">Manage workshop staff users and view system roles.</p>
-                </div>
+        <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight">Personnel & Security</h1>
+                <p className="text-sm md:text-base text-muted-foreground font-medium">Manage workshop staff identities and operational permission matrix.</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="users"><Users className="mr-2 h-4 w-4" /> Users</TabsTrigger>
-                    <TabsTrigger value="roles"><Shield className="mr-2 h-4 w-4" /> Roles</TabsTrigger>
+                <TabsList className="w-full sm:w-auto">
+                    <TabsTrigger value="users" className="flex-1 sm:flex-none">
+                        <Users className="mr-2 h-4 w-4" /> Staff Directory
+                    </TabsTrigger>
+                    <TabsTrigger value="roles" className="flex-1 sm:flex-none">
+                        <Shield className="mr-2 h-4 w-4" /> Role Governance
+                    </TabsTrigger>
                 </TabsList>
-                <TabsContent value="users">
-                    <Card>
-                        <CardContent className="pt-6">
+                
+                <TabsContent value="users" className="mt-6 animate-in fade-in duration-300">
+                    <Card className="border-border/50 shadow-sm overflow-hidden bg-card/30 backdrop-blur-sm">
+                        <CardContent className="p-0 sm:p-6">
                             {renderUserContent()}
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="roles">
-                    <Card>
-                        <CardContent className="pt-6">
+                
+                <TabsContent value="roles" className="mt-6 animate-in fade-in duration-300">
+                    <Card className="border-border/50 shadow-sm overflow-hidden bg-card/30 backdrop-blur-sm">
+                        <CardContent className="p-0 sm:p-6">
                             {renderRoleContent()}
                         </CardContent>
                     </Card>
