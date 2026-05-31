@@ -337,6 +337,5 @@ const MetricSummaryCard = ({ title, value, icon, color }) => (
     </Card>
 );
 
-const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 export default FinancialReports;

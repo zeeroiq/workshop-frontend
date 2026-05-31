@@ -283,6 +283,5 @@ const MetricItem = ({ label, value, icon, highlight }) => (
     </div>
 );
 
-const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 export default MechanicPerformance;

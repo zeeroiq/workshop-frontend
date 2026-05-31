@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, ArrowLeft, Car, User, History, StickyNote, Cog, Palette, Hash, Calendar, Gauge, Fingerprint, Activity } from 'lucide-react';
+import { Edit, Trash, ArrowLeft, Car, User, History, StickyNote, Cog, Palette, Hash, Calendar, Gauge, Fingerprint, Activity, Phone, Mail } from "lucide-react";
 import { vehicleService } from '@/services/vehicleService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
