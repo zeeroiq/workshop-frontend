@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -12,15 +12,45 @@ import {
     Settings2,
     X,
     ChevronDown,
-    Shield
+    LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { authService } from '@/services/authService';
 
 const Sidebar = ({ isExpanded, onClose }) => {
     const location = useLocation();
     const [manageOpen, setManageOpen] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(() => {
+        if (typeof window === 'undefined') return true;
+        return window.matchMedia('(min-width: 1024px)').matches;
+    });
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+
+        const mediaQuery = window.matchMedia('(min-width: 1024px)');
+        const handleMediaChange = (event) => setIsDesktop(event.matches);
+
+        setIsDesktop(mediaQuery.matches);
+        mediaQuery.addEventListener('change', handleMediaChange);
+
+        return () => mediaQuery.removeEventListener('change', handleMediaChange);
+    }, []);
+
+    const showLabels = isDesktop || isExpanded;
+
+    const handleNavigate = () => {
+        if (!isDesktop) {
+            onClose?.();
+        }
+    };
+
+    const handleLogout = () => {
+        authService.logout();
+        window.location.href = '/';
+    };
 
     const menuItems = [
         { path: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
@@ -31,6 +61,7 @@ const Sidebar = ({ isExpanded, onClose }) => {
         { path: '/inventory', icon: <Boxes size={20} />, label: 'Inventory' },
         { path: '/invoices', icon: <FileText size={20} />, label: 'Invoices' },
         { path: '/reports', icon: <ChartBar size={20} />, label: 'Reports' },
+        { path: '/settings', icon: <Settings2 size={20} />, label: 'Settings' },
         {
             label: 'Manage',
             icon: <Settings2 size={20} />,
@@ -48,33 +79,39 @@ const Sidebar = ({ isExpanded, onClose }) => {
         <>
             <div
                 className={cn(
-                    'fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden',
-                    isExpanded ? 'block' : 'hidden'
+                    'fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity duration-300 lg:hidden',
+                    isDesktop ? 'hidden' : isExpanded ? 'block' : 'hidden'
                 )}
                 onClick={onClose}
             ></div>
             <aside
                 className={cn(
-                    'fixed top-0 left-0 h-full bg-card border-r border-border z-40 transform transition-all duration-300 ease-in-out overflow-hidden',
-                    isExpanded ? 'w-64' : 'w-0 md:w-20'
+                    'fixed left-0 top-0 z-40 h-full overflow-hidden border-r border-border bg-card transform transition-all duration-300 ease-in-out',
+                    isDesktop
+                        ? 'w-64 translate-x-0'
+                        : isExpanded
+                            ? 'w-72 translate-x-0'
+                            : 'w-72 -translate-x-full'
                 )}
             >
-                <div className='flex items-center justify-between p-6 border-b border-border h-20'>
-                    <div className='flex items-center gap-2.5'>
+                <div className='flex h-20 items-center justify-between border-b border-border p-6'>
+                    <div className='flex min-w-0 items-center gap-2.5'>
                         <div className='bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20'>
                             <Wrench className='w-5 h-5 text-emerald-950' />
                         </div>
-                        {isExpanded && (
+                        {showLabels && (
                             <div className='flex flex-col leading-none'>
                                 <span className='text-lg font-black text-foreground tracking-tight'>YourWorkshop</span>
                             </div>
                         )}
                     </div>
-                    <Button variant='ghost' size='icon' className='md:hidden text-muted-foreground' onClick={onClose}>
-                        <X size={20} />
-                    </Button>
+                    {!isDesktop && (
+                        <Button variant='ghost' size='icon' className='text-muted-foreground lg:hidden' onClick={onClose} aria-label="Close navigation menu">
+                            <X size={20} />
+                        </Button>
+                    )}
                 </div>
-                <nav className='p-3'>
+                <nav className='h-[calc(100dvh-10rem)] overflow-y-auto p-3'>
                     <TooltipProvider>
                         <ul className='space-y-1.5'>
                             {menuItems.map(item => (
@@ -92,12 +129,12 @@ const Sidebar = ({ isExpanded, onClose }) => {
                                                     <span className={cn('transition-colors', manageOpen ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500')}>
                                                         {item.icon}
                                                     </span>
-                                                    {isExpanded && <span>{item.label}</span>}
+                                                    {showLabels && <span>{item.label}</span>}
                                                 </div>
-                                                {isExpanded && <ChevronDown size={16} className={cn('transition-transform opacity-50', manageOpen && 'rotate-180')} />}
+                                                {showLabels && <ChevronDown size={16} className={cn('transition-transform opacity-50', manageOpen && 'rotate-180')} />}
                                             </div>
                                             {
-                                                manageOpen && isExpanded && (
+                                                manageOpen && showLabels && (
                                                     <ul className='mt-1 space-y-1 border-l border-border ml-6 pl-4'>
                                                         {item.subItems.map(subItem => (
                                                             <li key={subItem.path}>
@@ -107,11 +144,12 @@ const Sidebar = ({ isExpanded, onClose }) => {
                                                                         'flex items-center gap-3 p-2.5 rounded-xl text-sm font-medium transition-all',
                                                                         location.pathname === subItem.path
                                                                             ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
-                                                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
+                                                                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
                                                                     )}
-                                                                >
-                                                                    {subItem.icon}
-                                                                    <span>{subItem.label}</span>
+                                                                    onClick={handleNavigate}
+                                                                    >
+                                                                        {subItem.icon}
+                                                                        <span>{subItem.label}</span>
                                                                 </Link>
                                                             </li>
                                                         ))}
@@ -129,16 +167,17 @@ const Sidebar = ({ isExpanded, onClose }) => {
                                                         location.pathname === item.path
                                                             ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] border border-emerald-500/20'
                                                             : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground',
-                                                        !isExpanded && 'justify-center'
+                                                        !showLabels && 'justify-center'
                                                     )}
+                                                    onClick={handleNavigate}
                                                 >
                                                     <span className={cn('transition-colors', location.pathname === item.path ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500')}>
                                                         {item.icon}
                                                     </span>
-                                                    {isExpanded && <span>{item.label}</span>}
+                                                    {showLabels && <span>{item.label}</span>}
                                                 </Link>
                                             </TooltipTrigger>
-                                            {!isExpanded && (
+                                            {!showLabels && (
                                                 <TooltipContent side='right' className='bg-popover border-border text-popover-foreground'>
                                                     <p>{item.label}</p>
                                                 </TooltipContent>
@@ -150,11 +189,21 @@ const Sidebar = ({ isExpanded, onClose }) => {
                         </ul>
                     </TooltipProvider>
                 </nav>
-                {isExpanded && (
-                    <div className='absolute bottom-0 left-0 w-full p-6 border-t border-border bg-card/50 backdrop-blur-md'>
+                <div className='absolute bottom-0 left-0 w-full border-t border-border bg-card/50 p-4 backdrop-blur-md'>
+                    {showLabels ? (
+                        <>
                         <p className='text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60'>Workshop Management v1.0</p>
-                    </div>
-                )}
+                        <Button variant="ghost" className="mt-3 w-full justify-start text-destructive hover:text-destructive" onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Logout
+                        </Button>
+                        </>
+                    ) : (
+                        <Button variant="ghost" size="icon" className="mx-auto text-destructive hover:text-destructive" onClick={handleLogout} aria-label="Logout">
+                            <LogOut className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
             </aside>
         </>
     );

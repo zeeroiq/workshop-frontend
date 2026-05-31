@@ -79,9 +79,9 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-8 max-w-[1600px] mx-auto">
+        <div className="w-full max-w-7xl space-y-8 mx-auto">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-2">
+            <div className="flex flex-col gap-4 pb-2 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-1">
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
@@ -92,10 +92,10 @@ const Dashboard = () => {
                         Welcome back, <span className="text-emerald-600 dark:text-emerald-400 font-bold">{user?.workshopName}</span>. Analyzing live operational metrics.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
                     <div className="relative group">
                         <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger className="w-[180px] bg-background border-border text-foreground font-bold rounded-xl focus:ring-emerald-500/20 transition-all">
+                            <SelectTrigger className="w-full bg-background border-border text-foreground font-bold rounded-xl transition-all focus:ring-emerald-500/20 sm:w-48">
                                 <SelectValue placeholder="Select Range" />
                             </SelectTrigger>
                             <SelectContent className="bg-popover border-border text-popover-foreground">
@@ -157,7 +157,7 @@ const Dashboard = () => {
             <div className="grid gap-8 lg:grid-cols-3">
                 {/* Activity Feed */}
                 <Card className="lg:col-span-2 bg-card border-border rounded-2xl overflow-hidden backdrop-blur-sm shadow-sm">
-                    <CardHeader className="flex flex-row items-center justify-between p-6 border-b border-border/50">
+                    <CardHeader className="flex flex-col gap-3 border-b border-border/50 p-6 sm:flex-row sm:items-center sm:justify-between">
                         <div className="space-y-1">
                             <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Recent Activity Stream</CardTitle>
                             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Live Updates & Logged Events</p>

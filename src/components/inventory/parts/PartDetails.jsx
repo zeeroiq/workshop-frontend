@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 import { formatDate } from "../Utils";
 import { getAuthenticatedUrl } from "@/utils/storage";
+import { Button } from '@/components/ui/button';
 
 const PartDetails = ({ part, onBack, onEdit }) => {
     console.log("Part Details:", part);
@@ -33,9 +34,9 @@ const PartDetails = ({ part, onBack, onEdit }) => {
     if (!part) {
         return (
             <div className="bg-card p-6 rounded-lg">
-                <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-4" onClick={onBack}>
+                <Button type="button" variant="outline" className="mb-4" onClick={onBack}>
                     <FaArrowLeft className="mr-2" /> Back to Parts
-                </button>
+                </Button>
                 <h2 className="text-xl font-semibold">Part not found</h2>
             </div>
         );
@@ -43,13 +44,13 @@ const PartDetails = ({ part, onBack, onEdit }) => {
 
     return (
         <div className="bg-card p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-6">
-                <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary" onClick={onBack}>
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Button type="button" variant="outline" onClick={onBack}>
                     <FaArrowLeft className="mr-2" /> Back to Parts
-                </button>
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onEdit}>
+                </Button>
+                <Button type="button" onClick={onEdit}>
                     <FaEdit className="mr-2" /> Edit Part
-                </button>
+                </Button>
             </div>
 
             <div className="border-b border-border pb-4 mb-6">
@@ -172,7 +173,7 @@ const PartDetails = ({ part, onBack, onEdit }) => {
                 {/* Dates */}
                 <div className="space-y-4 col-span-full">
                      <h3 className="text-lg font-semibold border-b border-border pb-2">Dates</h3>
-                     <div className="flex space-x-8">
+                     <div className="flex flex-col gap-4 sm:flex-row sm:space-x-8">
                         <div className="flex items-start">
                             <FaCalendarAlt className="text-muted-foreground mt-1 mr-3" />
                             <div>

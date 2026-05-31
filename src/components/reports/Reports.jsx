@@ -24,7 +24,7 @@ const Reports = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Reports & Analytics</h1>
                     <p className="text-muted-foreground">Analyze your workshop's performance.</p>
@@ -32,7 +32,7 @@ const Reports = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="w-full">
                     <TabsTrigger value="financial"><BarChart className="mr-2 h-4 w-4" /> Financial Reports</TabsTrigger>
                     <TabsTrigger value="inventory"><PieChart className="mr-2 h-4 w-4" /> Inventory Reports</TabsTrigger>
                     <TabsTrigger value="mechanic"><UserCog className="mr-2 h-4 w-4" /> Mechanic Performance</TabsTrigger>

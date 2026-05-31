@@ -110,7 +110,7 @@ const PaymentForm = ({ invoice, onSave, onCancel }) => {
     return (
         <div className="container mx-auto py-6">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <Button variant="ghost" onClick={onCancel} className="flex items-center">
                         <FaArrowLeft className="mr-2" /> Back to Invoices
                     </Button>

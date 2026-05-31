@@ -151,23 +151,23 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
     return (
         <div className="bg-card p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-xl font-semibold">Parts Inventory</h3>
-                <div className="flex space-x-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <PartScannerModal onPartAction={handlePartAction} />
-                    <Button className="text-md font-medium" variant="default" size="lg" onClick={onCreate}>
+                    <Button className="w-full text-md font-medium sm:w-auto" variant="default" size="lg" onClick={onCreate}>
                         <FaPlus className="mr-2" /> Add Part
                     </Button>
                 </div>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
-                <div className="relative">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative w-full sm:w-auto">
                     <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
+                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none w-full sm:w-48"
                     >
                         <option value="all">All Statuses</option>
                         <option value="IN_STOCK">In Stock</option>

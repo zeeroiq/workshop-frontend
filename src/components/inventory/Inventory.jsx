@@ -106,7 +106,7 @@ const Inventory = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Inventory Management</h1>
                     <p className="text-muted-foreground">Manage your parts, suppliers, and purchase orders.</p>
@@ -114,7 +114,7 @@ const Inventory = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="w-full">
                     <TabsTrigger value="parts"><List className="mr-2 h-4 w-4" /> Parts</TabsTrigger>
                     <TabsTrigger value="suppliers"><Users className="mr-2 h-4 w-4" /> Suppliers</TabsTrigger>
                     <TabsTrigger value="orders"><Truck className="mr-2 h-4 w-4" /> Purchase Orders</TabsTrigger>

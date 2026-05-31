@@ -352,9 +352,9 @@ const JobForm = ({ job, onSave, onCancel }) => {
         <div className="container mx-auto py-6">
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <CardTitle>{isEdit ? `${formData.jobNumber}` : 'Create New Job'}</CardTitle>
-                         <div className="flex space-x-2">
+                         <div className="flex flex-col gap-2 sm:flex-row">
                             <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
                             <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Job'}</Button>
                         </div>
@@ -417,9 +417,9 @@ const JobForm = ({ job, onSave, onCancel }) => {
                 </Card>
 
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <CardTitle>Parts & Labor</CardTitle>
-                        <div className="space-x-2">
+                        <div className="flex flex-wrap gap-2">
                             <PartScannerButton onPartScanned={addScannedPartItem} onPartAlreadyExists={isPartAlreadyInJob} />
                             <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('PART')}><FaPlus className="mr-2" />Part</Button>
                             <Button type="button" size="sm" variant="outline" onClick={() => handleAddItem('LABOR')}><FaPlus className="mr-2" />Labor</Button>
@@ -428,8 +428,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
                     <CardContent className="space-y-4">
                         {
                             formData.items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                                <div className="col-span-4 space-y-2">
+                            <div key={index} className="grid grid-cols-1 gap-4 items-start sm:grid-cols-12 sm:items-center">
+                                <div className="space-y-2 sm:col-span-4">
                                     {
                                         item.type === 'PART' ? (
                                         <SearchableSelect
@@ -448,14 +448,14 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                     )
                                     }
                                 </div>
-                                <div className="col-span-2 space-y-2">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Input name="quantity" type="number" pattern="[0-9]*" value={item.quantity} step="1" min="0" onChange={(e) => {
                                         const newItems = [...formData.items];
                                         newItems[index] = {...newItems[index], quantity: e.target.value};
                                         setFormData(prev => ({ ...prev, items: newItems }));
                                     }} placeholder="Qty" />
                                 </div>
-                                <div className="col-span-2 space-y-2">
+                                <div className="space-y-2 sm:col-span-2">
                                     <Input name="rate" type="number" value={item.rate} onChange={e => handleItemChange(index, 'rate', e.target.value)}
                                            placeholder="Rate" disabled={item.type === 'PART' || !!item.id} />
                                 </div>
@@ -463,8 +463,8 @@ const JobForm = ({ job, onSave, onCancel }) => {
                                 {/*    <Input name="discount" type="number" value={item.discount} onChange={e => handleItemChange(index, 'discount', e.target.value)}*/}
                                 {/*           placeholder="Discount %" />*/}
                                 {/*</div>*/}
-                                <div className="col-span-2 justify-self-center pt-3">₹{(((item.quantity || 0) * (item.rate || 0)) * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
-                                <div className="col-span-2 justify-self-center pt-3">
+                                <div className="justify-self-center pt-3 sm:col-span-2">₹{(((item.quantity || 0) * (item.rate || 0)) * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
+                                <div className="justify-self-center pt-3 sm:col-span-2">
                                     <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!item.id}>
                                         <FaTrash />
                                     </Button>

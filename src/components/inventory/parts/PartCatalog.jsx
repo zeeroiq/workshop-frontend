@@ -109,9 +109,9 @@ const PartCatalog = ({ onPartSelect }) => {
       </div>
 
       {showModels && (
-        <div className="flex items-center space-x-2 mt-4">
+        <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center">
           <Select onValueChange={handleModelChange} value={selectedModel}>
-            <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 dark:border-gray-700">
+            <SelectTrigger className="w-full bg-white dark:bg-gray-800 dark:border-gray-700 lg:w-48">
               <SelectValue placeholder="Select Model" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 dark:text-white">
@@ -121,16 +121,40 @@ const PartCatalog = ({ onPartSelect }) => {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+            </Select>
           <Input type="text" value={modelName} placeholder="Model Name" disabled className="bg-gray-100 dark:bg-gray-800 dark:text-gray-400" />
-          <Button onClick={handleLoadParts} disabled={!selectedModel}>
+          <Button className="w-full lg:w-auto" onClick={handleLoadParts} disabled={!selectedModel}>
             Load Parts
           </Button>
         </div>
       )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Parts for ${modelName}`}>
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-[70dvh] overflow-y-auto">
+          <div className="mb-4 grid gap-3 sm:grid-cols-3">
+            <Input
+              name="partNo"
+              value={filters.partNo}
+              onChange={handleFilterChange}
+              className="h-11 bg-white dark:bg-gray-800 dark:text-white"
+              placeholder="Filter part no"
+            />
+            <Input
+              name="description"
+              value={filters.description}
+              onChange={handleFilterChange}
+              className="h-11 bg-white dark:bg-gray-800 dark:text-white"
+              placeholder="Filter description"
+            />
+            <Input
+              name="plateTitle"
+              value={filters.plateTitle}
+              onChange={handleFilterChange}
+              className="h-11 bg-white dark:bg-gray-800 dark:text-white"
+              placeholder="Filter plate title"
+            />
+          </div>
+
           <Table className="table-fixed w-full text-foreground">
             <TableHeader>
               <TableRow className="border-b dark:border-gray-700">
@@ -138,18 +162,6 @@ const PartCatalog = ({ onPartSelect }) => {
                 <TableHead style={{ width: '25%' }}>Part No</TableHead>
                 <TableHead style={{ width: '40%' }}>Description</TableHead>
                 <TableHead style={{ width: '30%' }}>Plate Title</TableHead>
-              </TableRow>
-              <TableRow className="border-b dark:border-gray-700">
-                <TableCell></TableCell>
-                <TableCell>
-                  <Input name="partNo" value={filters.partNo} onChange={handleFilterChange} className="h-8 bg-white dark:bg-gray-800 dark:text-white" />
-                </TableCell>
-                <TableCell>
-                  <Input name="description" value={filters.description} onChange={handleFilterChange} className="h-8 bg-white dark:bg-gray-800 dark:text-white" />
-                </TableCell>
-                <TableCell>
-                  <Input name="plateTitle" value={filters.plateTitle} onChange={handleFilterChange} className="h-8 bg-white dark:bg-gray-800 dark:text-white" />
-                </TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -182,4 +194,3 @@ const PartCatalog = ({ onPartSelect }) => {
 };
 
 export default PartCatalog;
-

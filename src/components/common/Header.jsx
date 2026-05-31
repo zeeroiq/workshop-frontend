@@ -60,29 +60,29 @@ const Header = ({ onToggleSidebar }) => {
     };
 
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between p-4 border-b bg-card/80 backdrop-blur-md">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="md:flex">
+        <header className="sticky top-0 z-50 flex min-w-0 items-center justify-between gap-3 border-b bg-card/80 p-3 backdrop-blur-md sm:p-4">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+                <Button variant="ghost" size="icon" className="lg:hidden" onClick={onToggleSidebar} aria-label="Open navigation menu">
                     <Menu size={20} />
                 </Button>
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                     {workshopInfo.logoUrl ? (
-                        <img src={getAuthenticatedUrl(workshopInfo.logoUrl)} alt="Logo" className="h-8 w-8 object-contain rounded" />
+                        <img src={getAuthenticatedUrl(workshopInfo.logoUrl)} alt="Logo" className="h-8 w-8 shrink-0 object-contain rounded" />
                     ) : (
-                        <div className="bg-primary p-1 rounded hidden sm:flex">
+                        <div className="hidden shrink-0 rounded bg-primary p-1 sm:flex">
                             <Wrench size={16} className="text-primary-foreground" />
                         </div>
                     )}
-                    <span className="font-bold text-lg tracking-tight hidden sm:block">
+                    <span className="hidden min-w-0 truncate text-base font-bold tracking-tight sm:block lg:text-lg">
                         {workshopInfo.name}
                     </span>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2 lg:gap-4">
                 <ThemeToggle />
 
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
                     <Bell size={20} />
                     <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
                     <span className="sr-only">Notifications</span>

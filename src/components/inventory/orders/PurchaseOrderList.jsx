@@ -4,6 +4,8 @@ import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import { formatDate } from "../Utils";
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
@@ -75,30 +77,30 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
 
     return (
         <div className="bg-card p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-xl font-semibold">Purchase Orders</h2>
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
+                <Button type="button" onClick={onCreate}>
                     <FaPlus className="mr-2" /> New Purchase Order
-                </button>
+                </Button>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
-                <div className="relative w-full md:w-1/2">
-                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="relative w-full lg:flex-1">
+                    <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search by order number or supplier"
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
+                        className="min-h-11 w-full rounded-md border border-border bg-input pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:min-h-10"
                     />
                 </div>
-                <div className="relative">
-                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
+                <div className="relative w-full lg:w-auto">
+                    <FaFilter className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
                     <select
                         value={statusFilter}
                         onChange={handleStatusFilterChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
+                        className="min-h-11 w-full appearance-none rounded-md border border-border bg-input pl-10 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:min-h-10 lg:w-auto"
                     >
                         <option value="all">All Statuses</option>
                         <option value="PENDING">Pending</option>
@@ -110,60 +112,65 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Order #</th>
-                            <th className="px-6 py-3">Supplier</th>
-                            <th className="px-6 py-3">Order Date</th>
-                            <th className="px-6 py-3">Expected Date</th>
-                            <th className="px-6 py-3">Total</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {orders.map(order => {
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Order #</TableHead>
+                        <TableHead>Supplier</TableHead>
+                        <TableHead>Order Date</TableHead>
+                        <TableHead>Expected Date</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {orders.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                No orders found
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        orders.map(order => {
                             const isDisabled = order.status.toUpperCase() === 'COMPLETED' || order.status.toUpperCase() === 'CANCELLED';
                             return (
-                                <tr key={order.id} className="border-b border-border hover:bg-muted/50">
-                                    <td className="px-6 py-4 font-medium">{order.orderNumber}</td>
-                                    <td className="px-6 py-4">{order.supplierName}</td>
-                                    <td className="px-6 py-4">{formatDate(order.orderDate)}</td>
-                                    <td className="px-6 py-4">{formatDate(order.expectedDeliveryDate)}</td>
-                                    <td className="px-6 py-4">₹{order.totalAmount.toFixed(2)}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.status)}`}>
+                                <TableRow key={order.id}>
+                                    <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                                    <TableCell>{order.supplierName}</TableCell>
+                                    <TableCell>{formatDate(order.orderDate)}</TableCell>
+                                    <TableCell>{formatDate(order.expectedDeliveryDate)}</TableCell>
+                                    <TableCell>₹{order.totalAmount.toFixed(2)}</TableCell>
+                                    <TableCell>
+                                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getStatusClass(order.status)}`}>
                                             {order.status}
                                         </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center space-x-2">
-                                            <button className="text-primary hover:text-primary/80" onClick={() => onViewDetails(order)}>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex flex-wrap items-center justify-end gap-2">
+                                            <Button type="button" variant="ghost" size="icon" className="text-primary hover:text-primary/80" onClick={() => onViewDetails(order)} aria-label={`View order ${order.orderNumber}`}>
                                                 <FaEye />
-                                            </button>
-                                            <button
-                                                className={`text-blue-500 hover:text-blue-700 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-blue-500 hover:text-blue-700"
                                                 onClick={() => !isDisabled && onEdit(order)}
                                                 disabled={isDisabled}
                                                 title={isDisabled ? `Cannot edit ${order.status.toLowerCase()} order` : "Edit Order"}
+                                                aria-label={`Edit order ${order.orderNumber}`}
                                             >
                                                 <FaEdit />
-                                            </button>
+                                            </Button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             );
-                        })}
-                    </tbody>
-                </table>
-                {orders.length === 0 && (
-                    <div className="text-center py-8">
-                        <p className="text-muted-foreground">No orders found</p>
-                    </div>
-                )}
-            </div>
+                        })
+                    )}
+                </TableBody>
+            </Table>
             {totalPages > 1  && (
                 <div className="mt-4 flex justify-center">
                     <PaginationComponent

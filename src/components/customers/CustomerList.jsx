@@ -79,7 +79,7 @@ const CustomerList = () => {
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                     <h1 className="text-2xl font-bold">Customers</h1>
                     <p className="text-muted-foreground">Manage your workshop customers</p>
                 </div>
@@ -91,14 +91,14 @@ const CustomerList = () => {
             <Card>
                 <CardHeader>
                     <CardTitle>All Customers</CardTitle>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                        <form onSubmit={handleSearch} className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <form onSubmit={handleSearch} className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                             <Input
                                 type="text"
                                 placeholder="Search customers..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="max-w-sm"
+                                className="w-full sm:max-w-sm"
                             />
                             <Button type="submit" variant="outline" size="icon">
                                 <Search className="h-4 w-4" />

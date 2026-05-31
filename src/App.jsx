@@ -31,7 +31,7 @@ import {ThemeProvider} from './components/common/ThemeProvider';
 function AppContent() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [sidebarExpanded, setSidebarExpanded] = useState(true);
+    const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -51,7 +51,7 @@ function AppContent() {
     }, []);
 
     const toggleSidebarExpansion = () => {
-        setSidebarExpanded(!sidebarExpanded);
+        setSidebarExpanded((current) => !current);
     };
 
     const closeSidebar = () => {

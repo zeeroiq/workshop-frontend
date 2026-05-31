@@ -3,6 +3,8 @@ import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter } from 
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PaginationComponent from "@/components/common/PaginationComponent";
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
@@ -111,33 +113,33 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
 
     return (
         <div className="bg-card p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-                <div>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                     <h2 className="text-xl font-semibold">Suppliers</h2>
                     <p className="text-muted-foreground">Manage your supplier information</p>
                 </div>
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={onCreate}>
+                <Button type="button" onClick={onCreate}>
                     <FaPlus className="mr-2" /> Add Supplier
-                </button>
+                </Button>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
-                <div className="relative w-full md:w-1/2">
-                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div className="relative w-full lg:flex-1">
+                    <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search suppliers..."
                         value={searchTerm}
                         onChange={handleSearchChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full"
+                        className="min-h-11 w-full rounded-md border border-border bg-input pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:min-h-10"
                     />
                 </div>
-                <div className="relative">
-                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
+                <div className="relative w-full lg:w-auto">
+                    <FaFilter className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
                     <select
                         value={statusFilter}
                         onChange={handleStatusFilterChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
+                        className="min-h-11 w-full appearance-none rounded-md border border-border bg-input pl-10 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:min-h-10 lg:w-auto"
                     >
                         <option value="all">All Statuses</option>
                         <option value="ACTIVE">Active</option>
@@ -149,83 +151,87 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground uppercase">
-                        <tr>
-                            <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Contact</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {suppliers.map((supplier) => (
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {suppliers.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={4} className="py-16 text-center text-muted-foreground">
+                                <div className="flex flex-col items-center gap-3">
+                                    <h3 className="text-lg font-semibold text-foreground">No suppliers found</h3>
+                                    <p>Try adjusting your search or add a new supplier.</p>
+                                    <Button type="button" onClick={onCreate}>
+                                        <FaPlus className="mr-2" /> Add Supplier
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        suppliers.map((supplier) => (
                             <React.Fragment key={supplier.id}>
-                                <tr className="border-b border-border hover:bg-muted/50">
-                                    <td className="px-6 py-4">
+                                <TableRow>
+                                    <TableCell>
                                         <div className="font-medium">{supplier.name}</div>
                                         <div className="text-muted-foreground">{supplier.email}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell>
                                         <div>{supplier.contactPerson}</div>
                                         <div className="text-muted-foreground">{supplier.phone}</div>
-                                    </td>
-                                    <td className="px-6 py-4">{getStatusBadge(supplier.status)}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="text-muted-foreground hover:text-primary" onClick={() => toggleRowExpansion(supplier.id)}>
-                                            <FaEllipsisV />
-                                        </button>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                    <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button type="button" variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => toggleRowExpansion(supplier.id)} aria-label={`Toggle details for ${supplier.name}`}>
+                                                <FaEllipsisV />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
                                 {expandedRow === supplier.id && (
-                                    <tr className="bg-muted/20">
-                                        <td colSpan="4" className="p-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <TableRow className="bg-muted/20">
+                                        <TableCell colSpan={4} className="p-4">
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                                 <div>
                                                     <h4 className="font-semibold">Address</h4>
-                                                    <p>{supplier.address}</p>
+                                                    <p className="text-muted-foreground">{supplier.address || '-'}</p>
                                                 </div>
                                                 <div>
                                                     <h4 className="font-semibold">Payment Terms</h4>
-                                                    <p>{supplier.paymentTerm}</p>
+                                                    <p className="text-muted-foreground">{supplier.paymentTerm || '-'}</p>
                                                 </div>
                                                 {supplier.notes && (
                                                     <div>
                                                         <h4 className="font-semibold">Notes</h4>
-                                                        <p>{supplier.notes}</p>
+                                                        <p className="text-muted-foreground">{supplier.notes}</p>
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex justify-end space-x-2 mt-4">
-                                                <button className="text-primary hover:text-primary/80 flex items-center" onClick={() => onViewDetails(supplier)}>
-                                                    <FaEye className="mr-1" /> View
-                                                </button>
-                                                <button className="text-blue-500 hover:text-blue-700 flex items-center" onClick={() => onEdit(supplier)}>
-                                                    <FaEdit className="mr-1" /> Edit
-                                                </button>
-                                                <button className="text-red-500 hover:text-red-700 flex items-center" onClick={() => handleDeleteClick(supplier)}>
-                                                    <FaTrash className="mr-1" /> Delete
-                                                </button>
+                                            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                                                <Button type="button" variant="outline" onClick={() => onViewDetails(supplier)}>
+                                                    <FaEye className="mr-2" /> View
+                                                </Button>
+                                                <Button type="button" variant="outline" onClick={() => onEdit(supplier)}>
+                                                    <FaEdit className="mr-2" /> Edit
+                                                </Button>
+                                                <Button type="button" variant="destructive" onClick={() => handleDeleteClick(supplier)}>
+                                                    <FaTrash className="mr-2" /> Delete
+                                                </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
                             </React.Fragment>
-                        ))}
-                    </tbody>
-                </table>
-
-                {suppliers.length === 0 && (
-                    <div className="text-center py-16">
-                        <h3 className="text-lg font-semibold">No suppliers found</h3>
-                        <p className="text-muted-foreground mb-4">Try adjusting your search or add a new supplier.</p>
-                        <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center mx-auto" onClick={onCreate}>
-                            <FaPlus className="mr-2" /> Add Supplier
-                        </button>
-                    </div>
-                )}
-            </div>
+                        ))
+                    )}
+                </TableBody>
+            </Table>
             {totalPages > 1  && (
             <div className="mt-4 flex justify-center">
                 <PaginationComponent
@@ -236,17 +242,17 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             </div>
             )}
             {deleteDialogOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-card p-6 rounded-lg shadow-lg">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-[calc(100vw-2rem)] max-w-md rounded-lg bg-card p-6 shadow-lg">
                         <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-                        <p>Are you sure you want to delete supplier "{supplierToDelete?.name}"?</p>
-                        <div className="flex justify-end mt-6 space-x-4">
-                            <button className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md" onClick={() => setDeleteDialogOpen(false)}>
+                        <p className="text-muted-foreground">Are you sure you want to delete supplier "{supplierToDelete?.name}"?</p>
+                        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
                                 Cancel
-                            </button>
-                            <button className="bg-destructive text-destructive-foreground hover:bg-destructive/80 px-4 py-2 rounded-md" onClick={handleDeleteConfirm}>
+                            </Button>
+                            <Button type="button" variant="destructive" onClick={handleDeleteConfirm}>
                                 Delete
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

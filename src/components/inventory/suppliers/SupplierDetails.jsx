@@ -1,14 +1,15 @@
 import React from 'react';
 import { FaArrowLeft, FaEdit, FaBuilding, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaGlobe, FaCalendar, FaStickyNote } from 'react-icons/fa';
 import { formatDate } from "../Utils";
+import { Button } from '@/components/ui/button';
 
 const SupplierDetails = ({ supplier, onBack, onEdit }) => {
     if (!supplier) {
         return (
             <div className="bg-card p-6 rounded-lg">
-                <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-4" onClick={onBack}>
+                <Button type="button" variant="outline" className="mb-4" onClick={onBack}>
                     <FaArrowLeft className="mr-2" /> Back to Suppliers
-                </button>
+                </Button>
                 <h2 className="text-xl font-semibold">Supplier not found</h2>
             </div>
         );
@@ -25,13 +26,13 @@ const SupplierDetails = ({ supplier, onBack, onEdit }) => {
 
     return (
         <div className="bg-card p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-6">
-                <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary" onClick={onBack}>
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Button type="button" variant="outline" onClick={onBack}>
                     <FaArrowLeft className="mr-2" /> Back to Suppliers
-                </button>
-                <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={() => onEdit(supplier)}>
+                </Button>
+                <Button type="button" onClick={() => onEdit(supplier)}>
                     <FaEdit className="mr-2" /> Edit
-                </button>
+                </Button>
             </div>
 
             <div className="border-b border-border pb-4 mb-6">

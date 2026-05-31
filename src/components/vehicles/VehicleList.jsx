@@ -78,8 +78,8 @@ const VehicleList = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                     <h1 className="text-2xl font-bold">Vehicles</h1>
                     <p className="text-muted-foreground">Manage your workshop vehicles</p>
                 </div>
@@ -88,16 +88,16 @@ const VehicleList = () => {
                 </Button>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>All Vehicles</CardTitle>
-                    <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>All Vehicles</CardTitle>
+                    <form onSubmit={handleSearch} className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
                         <Input
                             type="text"
                             placeholder="Search vehicles..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="max-w-sm"
+                            className="w-full sm:max-w-sm"
                         />
                         <Button type="submit" variant="outline" size="icon">
                             <Search className="h-4 w-4" />

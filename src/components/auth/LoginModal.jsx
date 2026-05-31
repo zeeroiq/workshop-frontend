@@ -17,8 +17,8 @@ const LoginModal = ({ trigger }) => {
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-[#111827] border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-0">
-        <div className="relative w-full h-full min-h-[550px] flex flex-col">
+      <DialogContent className="w-[calc(100vw-1rem)] bg-[#111827] border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-0 sm:max-w-md">
+        <div className="relative flex min-h-[70svh] w-full flex-col sm:min-h-[550px]">
           {/* Background Image Layer */}
           <div className="absolute inset-0 pointer-events-none">
             <img 
@@ -30,14 +30,14 @@ const LoginModal = ({ trigger }) => {
           </div>
 
           {/* Content Layer */}
-          <div className="relative p-10 flex-1 flex flex-col justify-center">
+          <div className="relative flex flex-1 flex-col justify-center p-6 sm:p-10">
             <DialogHeader className="space-y-3 mb-8">
-              <DialogTitle className="text-4xl font-black text-center text-white tracking-tight">Login to Your Workshop</DialogTitle>
-              <DialogDescription className="text-center text-slate-300 font-bold text-lg">
+              <DialogTitle className="text-2xl font-black text-center text-white tracking-tight sm:text-4xl">Login to Your Workshop</DialogTitle>
+              <DialogDescription className="text-center text-sm font-bold text-slate-300 sm:text-lg">
                 Enter your credentials to access your account
               </DialogDescription>
             </DialogHeader>
-            <div className="max-w-sm mx-auto w-full">
+            <div className="mx-auto w-full max-w-full sm:max-w-sm">
                 <LoginForm onSuccess={() => setOpen(false)} onRedirect={() => setOpen(false)} />
             </div>
           </div>

@@ -80,11 +80,11 @@ const CustomerDetails = () => {
 
     return (
         <div className="container mx-auto py-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button onClick={() => navigate('/customers')} variant="outline">
                     <FaArrowLeft className="mr-2" /> Back to Customers
                 </Button>
-                <div className="flex space-x-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button asChild variant="outline">
                         <Link to={`/customers/edit/${id}`}>
                             <FaEdit className="mr-2" /> Edit
@@ -103,7 +103,7 @@ const CustomerDetails = () => {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="w-full">
                             <TabsTrigger value="details">Details</TabsTrigger>
                             <TabsTrigger value="vehicles">Vehicles ({customer.vehicles?.length || 0})</TabsTrigger>
                             <TabsTrigger value="notes">Notes ({customer.notes?.length || 0})</TabsTrigger>

@@ -116,7 +116,7 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
 
     return (
         <div className="bg-card p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary" onClick={onCancel}>
                     <FaArrowLeft className="mr-2" /> Back to Suppliers
                 </button>
@@ -158,7 +158,7 @@ const SupplierForm = ({ supplier, onSave, onCancel }) => {
                     </div>
                 </div>
 
-                <div className="flex justify-end space-x-4">
+                <div className="flex flex-col justify-end gap-3 sm:flex-row">
                     <button type="button" className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md flex items-center" onClick={onCancel}>
                         <FaTimes className="mr-2" /> Cancel
                     </button>

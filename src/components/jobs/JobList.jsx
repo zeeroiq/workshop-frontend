@@ -143,12 +143,12 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                     <h1 className="text-2xl font-bold">Jobs</h1>
                     <p className="text-muted-foreground">Manage all the jobs in your workshop</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button variant="outline" onClick={onShowCalendar}><Calendar className="mr-2 h-4 w-4" /> Calendar View</Button>
                     <Button onClick={onCreateJob}><Plus className="mr-2 h-4 w-4" /> New Job</Button>
                 </div>
@@ -159,22 +159,22 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                     <CardTitle>All Jobs</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2">
+                    <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
                             <Input
                                 type="text"
                                 placeholder="Search jobs by job number..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                className="max-w-sm"
+                                className="w-full sm:max-w-sm"
                             />
                             <Button type="button" variant="outline" size="icon" onClick={handleSearch}>
                                 <Search className="h-4 w-4" />
                             </Button>
                         </div>
                         <Select value={activeTab} onValueChange={setActiveTab}>
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full sm:w-48">
                                 <SelectValue placeholder="Filter by Status" />
                             </SelectTrigger>
                             <SelectContent>

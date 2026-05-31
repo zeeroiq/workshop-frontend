@@ -37,7 +37,7 @@ const UserList = ({ onEdit, onCreate }) => {
 
     return (
         <>
-            <CardHeader className="flex flex-row items-center justify-between px-0">
+            <CardHeader className="flex flex-col gap-3 px-0 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle>Staff Members</CardTitle>
                 <Button onClick={onCreate}>
                     <PlusCircle className="mr-2 h-4 w-4" />

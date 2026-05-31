@@ -163,8 +163,8 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                     <h1 className="text-2xl font-bold">Invoices</h1>
                     <p className="text-muted-foreground">Manage all invoices for your workshop</p>
                 </div>
@@ -174,13 +174,13 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
             <Card>
                 <CardHeader>
                     <CardTitle>All Invoices</CardTitle>
-                    <div className="flex items-center gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
                         <Input
                             type="text"
                             placeholder="Search invoices..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="max-w-sm"
+                            className="w-full sm:max-w-sm"
                         />
                         {/*<Button type="submit" variant="outline" size="icon">*/}
                         {/*    <Search className="h-4 w-4" />*/}
