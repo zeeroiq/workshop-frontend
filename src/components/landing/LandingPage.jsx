@@ -615,13 +615,13 @@ const FeatureCard = ({ image, icon, title, description }) => (
 );
 
 const AutomationLink = ({ title, description }) => (
-    <div className="group p-6 rounded-2xl border border-border bg-card/50 hover:bg-card hover:border-accent transition-all cursor-default">
+    <div className="group p-6 rounded-2xl border border-border bg-card/50 hover:bg-card hover:border-accent transition-all cursor-default [--feature-hover-emerald:#059669] dark:[--feature-hover-emerald:#34d399]">
         <div className="flex items-start gap-4">
             <div className="mt-1 bg-muted group-hover:bg-emerald-500 p-2 rounded-lg transition-colors">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 group-hover:text-emerald-950" />
             </div>
             <div>
-                <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h4>
+                <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-[color:var(--feature-hover-emerald)] transition-colors">{title}</h4>
                 <p className="text-muted-foreground font-medium leading-relaxed">{description}</p>
             </div>
         </div>
@@ -629,12 +629,12 @@ const AutomationLink = ({ title, description }) => (
 );
 
 const BillingPerk = ({ icon, title, description }) => (
-    <div className="group flex items-start gap-4 p-4 rounded-xl hover:bg-accent/50 transition-all cursor-default">
+    <div className="group flex items-start gap-4 p-4 rounded-xl hover:bg-accent/50 transition-all cursor-default [--feature-hover-emerald:#059669] dark:[--feature-hover-emerald:#34d399]">
         <div className="mt-1 bg-background shadow-md p-2.5 rounded-xl border border-border group-hover:scale-110 transition-transform">
             {icon}
         </div>
         <div>
-            <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h4>
+            <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-[color:var(--feature-hover-emerald)] transition-colors">{title}</h4>
             <p className="text-muted-foreground font-medium leading-relaxed text-sm">{description}</p>
         </div>
     </div>
