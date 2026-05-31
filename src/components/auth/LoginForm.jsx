@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Chrome } from 'lucide-react';
+import { Chrome, Key, Mail, ArrowRight } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 const LoginForm = ({ onSuccess, onRedirect }) => {
     const [formData, setFormData] = useState({
@@ -36,16 +37,16 @@ const LoginForm = ({ onSuccess, onRedirect }) => {
                 authService.setToken(token);
                 authService.setUser(user);
 
-                toast.success('Login successful!');
+                toast.success('Synchronization established.');
                 if (onSuccess) onSuccess();
                 window.location.href = '/dashboard';
             } else {
-                toast.error(response.data.message || 'Login failed');
+                toast.error(response.data.message || 'Authentication failure.');
             }
         } catch (error) {
             const errorMessage = error.response?.data?.message ||
                 error.response?.data?.error ||
-                'Login failed';
+                'Node rejected credentials.';
             toast.error(errorMessage);
         } finally {
             setLoading(false);
@@ -64,7 +65,6 @@ const LoginForm = ({ onSuccess, onRedirect }) => {
             }
         } else {
             navigate('/#onboard');
-            // Small timeout to allow navigation then scroll if the hash effect isn't enough
             setTimeout(() => {
                 const element = document.getElementById('onboard');
                 if (element) element.scrollIntoView({ behavior: 'smooth' });
@@ -73,59 +73,69 @@ const LoginForm = ({ onSuccess, onRedirect }) => {
     };
 
     return (
-        <div className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                    <Label htmlFor="username" className="text-white font-semibold">Username (Email)</Label>
-                    <Input
-                        id="username"
-                        name="username"
-                        type="text"
-                        placeholder="admin"
-                        value={formData.username}
-                        onChange={handleChange}
-                        required
-                        className="bg-[#1e293b] border-slate-700 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-white focus:border-transparent transition-all h-12"
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="password" name="password" className="text-white font-semibold">Password</Label>
-                        <a href="#" className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Forgot Password?</a>
+        <div className="space-y-8 w-full max-w-sm mx-auto">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="username" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70 ml-1">Digital Identity (UID)</Label>
+                        <div className="relative group">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-30 group-focus-within:text-primary group-focus-within:opacity-100 transition-all" />
+                            <Input
+                                id="username"
+                                name="username"
+                                type="text"
+                                placeholder="analyst@staff.node"
+                                value={formData.username}
+                                onChange={handleChange}
+                                required
+                                className="bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground/30 focus:ring-primary/20 h-14 pl-12 rounded-2xl font-bold transition-all"
+                            />
+                        </div>
                     </div>
-                    <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        className="bg-[#111827] border-slate-700 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-white focus:border-transparent transition-all h-12"
-                    />
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                            <Label htmlFor="password" name="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-70">Security Key</Label>
+                            <a href="#" className="text-[9px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">Recover Key</a>
+                        </div>
+                        <div className="relative group">
+                            <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-30 group-focus-within:text-primary group-focus-within:opacity-100 transition-all" />
+                            <Input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="••••••••••••"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground/30 focus:ring-primary/20 h-14 pl-12 rounded-2xl font-bold transition-all"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <Button 
                     type="submit" 
-                    className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold h-12 text-lg rounded-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] hover:scale-[1.01]" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black h-16 text-sm rounded-2xl shadow-2xl shadow-primary/20 transition-all active:scale-[0.98] uppercase tracking-[0.3em]" 
                     disabled={loading}
                 >
                     {loading ? (
-                        <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Processing...
+                        <div className="flex items-center gap-3">
+                            <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                            Establishing Link...
                         </div>
-                    ) : 'Login'}
+                    ) : (
+                        <span className="flex items-center gap-2">Connect Node <ArrowRight className="h-4 w-4" /></span>
+                    )}
                 </Button>
             </form>
 
-            <div className="relative">
+            <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-slate-800"></span>
+                    <span className="w-full border-t border-border/50"></span>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-[#111827] px-2 text-slate-500 font-bold">Or continue with</span>
+                <div className="relative flex justify-center text-[8px] uppercase tracking-[0.4em] font-black">
+                    <span className="bg-card px-4 text-muted-foreground opacity-40">External Protocol</span>
                 </div>
             </div>
 
@@ -133,15 +143,15 @@ const LoginForm = ({ onSuccess, onRedirect }) => {
                 <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-12 w-12 rounded-full border-slate-700 bg-[#1e293b] hover:bg-slate-700 text-white transition-all hover:scale-110 active:scale-95"
+                    className="h-14 w-14 rounded-2xl border-border/50 bg-background/50 hover:bg-accent transition-all hover:scale-110 active:scale-95 shadow-lg group"
                     onClick={handleOnboardRedirect}
                 >
-                    <Chrome className="h-5 w-5" />
+                    <Chrome className="h-6 w-6 opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all" />
                 </Button>
             </div>
 
-            <p className="text-center text-sm font-medium text-slate-400">
-                New User? <button onClick={handleOnboardRedirect} className="text-indigo-400 font-bold hover:text-indigo-300 underline-offset-4 hover:underline transition-all bg-transparent border-none p-0">Sign Up</button>
+            <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                Unauthorized Analyst? <button onClick={handleOnboardRedirect} className="text-primary font-black hover:underline underline-offset-4 decoration-2 transition-all bg-transparent border-none p-0">Initialize Deployment</button>
             </p>
         </div>
     );

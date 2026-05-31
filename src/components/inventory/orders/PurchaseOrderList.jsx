@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaEdit, FaPlus, FaSearch, FaFilter, FaCalendarAlt, FaUser, FaMoneyBillWave } from 'react-icons/fa';
+import { FaEye, FaEdit, FaPlus, FaSearch, FaFilter, FaCalendarAlt, FaUser, FaMoneyBillWave, FaHashtag, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PaginationComponent from "@/components/common/PaginationComponent";
+import ResponsiveActions from "@/components/common/ResponsiveActions";
 import { formatDate } from "../Utils";
+import { cn } from "@/lib/utils";
 
 const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
     const [orders, setOrders] = useState([]);
@@ -29,12 +31,9 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                 size: pageSize,
                 sort: 'orderDate,desc',
             };
-            if (searchTerm) {
-                params.search = searchTerm;
-            }
-            if (statusFilter !== 'all') {
-                params.status = statusFilter;
-            }
+            if (searchTerm) params.search = searchTerm;
+            if (statusFilter !== 'all') params.status = statusFilter;
+            
             const response = await inventoryService.getPurchaseOrders(params);
             if (response?.data?.success && response.data) {
                 setOrders(response.data.content || []);
@@ -42,7 +41,6 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
             } else {
                 setOrders([]);
                 setTotalPages(0);
-                toast.warn('Failed to fetch purchase orders');
             }
         } catch (error) {
             console.error('Error fetching purchase orders:', error);
@@ -52,215 +50,191 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
-    const getStatusVariant = (status) => {
-        const s = (status || '').toUpperCase();
-        switch (s) {
-            case 'PENDING': return 'warning';
-            case 'ORDERED': return 'info';
-            case 'PARTIALLY_RECEIVED': return 'secondary';
-            case 'COMPLETED': return 'success';
-            case 'CANCELLED': return 'destructive';
-            default: return 'outline';
-        }
-    };
-
     const getStatusClass = (status) => {
         const s = (status || '').toUpperCase();
-        switch (s) {
-            case 'PENDING': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-            case 'ORDERED': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-            case 'PARTIALLY_RECEIVED': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
-            case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-            case 'CANCELLED': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
-        }
+        const colors = {
+            PENDING: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+            ORDERED: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+            PARTIALLY_RECEIVED: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+            COMPLETED: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+            CANCELLED: 'bg-red-500/10 text-red-500 border-red-500/20',
+        };
+        return cn("px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border", colors[s] || 'bg-muted text-muted-foreground border-border/50');
     };
 
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(0);
+    const getOrderActions = (order) => {
+        const s = (order.status || '').toUpperCase();
+        const isDisabled = s === 'COMPLETED' || s === 'CANCELLED';
+        return [
+            {
+                label: "Inspect Order",
+                icon: <FaEye className="text-xs" />,
+                onClick: () => onViewDetails(order),
+                variant: "outline"
+            },
+            {
+                label: "Modify Specs",
+                icon: <FaEdit className="text-xs" />,
+                onClick: () => onEdit(order),
+                variant: "outline",
+                disabled: isDisabled
+            }
+        ];
     };
 
-    const handleStatusFilterChange = (e) => {
-        setStatusFilter(e.target.value);
-        setCurrentPage(0);
-    };
-
-    if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading purchase orders...</div>;
+    if (loading && orders.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary shadow-lg shadow-primary/20"></div>
+            </div>
+        );
     }
 
     return (
-        <div className="bg-card p-4 rounded-lg">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                    <h2 className="text-xl font-semibold">Purchase Orders</h2>
-                    <p className="text-muted-foreground">Track and manage your part orders</p>
+        <div className="space-y-8 w-full max-w-screen-2xl mx-auto">
+            {/* Header Transformation */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight uppercase leading-none text-center lg:text-left">Procurement: Orders</h2>
+                    <p className="text-muted-foreground font-medium text-sm md:text-base opacity-70 text-center lg:text-left">Tracking node for part procurement cycles and supply chain status.</p>
                 </div>
-                <Button className="w-full sm:w-auto" onClick={onCreate}>
-                    <FaPlus className="mr-2" /> New Purchase Order
+                <Button className="h-12 px-8 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 active:scale-95 w-full lg:w-auto" onClick={onCreate}>
+                    <FaPlus className="mr-2" /> Initialize Procurement
                 </Button>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="relative w-full md:w-1/2">
-                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search by order # or supplier..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full focus:ring-2 focus:ring-primary outline-none transition-all"
-                    />
-                </div>
-                <div className="relative w-full md:w-auto">
-                    <FaFilter className="absolute top-3 left-3 text-muted-foreground pointer-events-none" />
-                    <select
-                        value={statusFilter}
-                        onChange={handleStatusFilterChange}
-                        className="bg-input pl-10 pr-8 py-2 rounded-md appearance-none w-full outline-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="PENDING">Pending</option>
-                        <option value="ORDERED">Ordered</option>
-                        <option value="PARTIALLY_RECEIVED">Partially Received</option>
-                        <option value="COMPLETED">Completed</option>
-                        <option value="CANCELLED">Cancelled</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Desktop View */}
-            <div className="hidden xl:block overflow-x-auto rounded-md border border-border/50">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground uppercase text-xs tracking-wider">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold">Order #</th>
-                            <th className="px-6 py-4 font-semibold">Supplier</th>
-                            <th className="px-6 py-4 font-semibold">Order Date</th>
-                            <th className="px-6 py-4 font-semibold">Expected Date</th>
-                            <th className="px-6 py-4 font-semibold">Total</th>
-                            <th className="px-6 py-4 font-semibold">Status</th>
-                            <th className="px-6 py-4 text-right font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
-                        {orders.map(order => {
-                            const s = (order.status || '').toUpperCase();
-                            const isDisabled = s === 'COMPLETED' || s === 'CANCELLED';
-                            return (
-                                <tr key={order.id} className="hover:bg-muted/30 transition-colors">
-                                    <td className="px-6 py-4 font-bold text-primary">{order.orderNumber}</td>
-                                    <td className="px-6 py-4 font-medium">{order.supplierName}</td>
-                                    <td className="px-6 py-4 text-muted-foreground">{formatDate(order.orderDate)}</td>
-                                    <td className="px-6 py-4 text-muted-foreground">{formatDate(order.expectedDeliveryDate)}</td>
-                                    <td className="px-6 py-4 font-bold text-emerald-500">₹{order.totalAmount.toFixed(2)}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${getStatusClass(order.status)}`}>
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end space-x-2">
-                                            <Button variant="ghost" size="icon" onClick={() => onViewDetails(order)} title="View Details">
-                                                <FaEye />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className={isDisabled ? 'opacity-30 cursor-not-allowed' : 'text-blue-500'}
-                                                onClick={() => !isDisabled && onEdit(order)}
-                                                disabled={isDisabled}
-                                                title={isDisabled ? `Cannot edit ${order.status.toLowerCase()} order` : "Edit Order"}
-                                            >
-                                                <FaEdit />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile/Tablet View */}
-            <div className="xl:hidden space-y-4">
-                {orders.length === 0 ? (
-                    <div className="text-center py-16 bg-muted/20 rounded-lg">
-                        <p className="text-muted-foreground">No purchase orders found.</p>
+            <Card className="border-border/50 bg-card/30 backdrop-blur-md shadow-2xl overflow-hidden">
+                <CardHeader className="bg-muted/20 border-b border-border/50 p-6">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+                        <div className="relative flex-1">
+                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50" />
+                            <input
+                                type="text"
+                                placeholder="Search by serial # or provider node..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full h-11 pl-10 bg-background/50 border border-border/50 rounded-xl focus:ring-primary/20 font-bold text-sm"
+                            />
+                        </div>
                     </div>
-                ) : (
-                    orders.map((order) => {
-                        const s = (order.status || '').toUpperCase();
-                        const isDisabled = s === 'COMPLETED' || s === 'CANCELLED';
-                        return (
-                            <Card key={order.id} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <CardTitle className="text-lg font-bold">{order.orderNumber}</CardTitle>
-                                            <p className="text-sm text-primary font-medium flex items-center gap-2">
-                                                <FaUser className="text-[10px]" /> {order.supplierName}
-                                            </p>
-                                        </div>
-                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${getStatusClass(order.status)}`}>
-                                            {order.status}
-                                        </span>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div className="space-y-1">
-                                            <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Order Date</p>
-                                            <p className="font-medium flex items-center gap-2">
-                                                <FaCalendarAlt className="text-[10px]" /> {formatDate(order.orderDate)}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Expected</p>
-                                            <p className="font-medium flex items-center gap-2">
-                                                <FaCalendarAlt className="text-[10px]" /> {formatDate(order.expectedDeliveryDate)}
-                                            </p>
-                                        </div>
-                                        <div className="col-span-2 space-y-1">
-                                            <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Total Amount</p>
-                                            <p className="text-lg font-bold text-emerald-500 flex items-center gap-2">
-                                                <FaMoneyBillWave className="text-sm" /> ₹{order.totalAmount.toFixed(2)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/50">
-                                        <Button variant="outline" size="sm" onClick={() => onViewDetails(order)} className="flex-1">
-                                            <FaEye className="mr-2" /> View
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm" 
-                                            onClick={() => !isDisabled && onEdit(order)} 
-                                            disabled={isDisabled}
-                                            className={`flex-1 ${isDisabled ? 'opacity-30' : 'text-blue-500'}`}
-                                        >
-                                            <FaEdit className="mr-2" /> Edit
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })
-                )}
-            </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    {/* Desktop Matrix */}
+                    <div className="hidden xl:block overflow-x-auto">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-muted/10">
+                                <tr className="border-b border-border/30">
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Order Serial</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Provider Node</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Temporal Pipeline</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Valuation</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Status</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60 text-right">System Controls</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/20">
+                                {orders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-primary/[0.02] transition-colors group">
+                                        <td className="px-6 py-5">
+                                            <span className="font-black text-foreground text-sm uppercase tracking-widest group-hover:text-primary transition-colors">
+                                                {order.orderNumber}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-bold text-foreground uppercase">{order.supplierName}</span>
+                                                <span className="text-[9px] text-muted-foreground opacity-60 uppercase font-black tracking-tighter mt-1 flex items-center gap-1.5">
+                                                    <FaUser className="text-[8px]" /> Authorized Node
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] font-bold text-foreground flex items-center gap-1.5">
+                                                    <FaClock className="text-[10px] opacity-40" /> ISS: {formatDate(order.orderDate)}
+                                                </span>
+                                                <span className="text-[9px] font-medium text-red-400/80 flex items-center gap-1.5 uppercase tracking-tighter">
+                                                    <FaCalendarAlt className="text-[10px] opacity-40" /> EXP: {formatDate(order.expectedDeliveryDate)}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 font-black text-emerald-500 text-sm">₹{order.totalAmount.toFixed(2)}</td>
+                                        <td className="px-6 py-5">
+                                            <span className={getStatusClass(order.status)}>
+                                                {order.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5 text-right">
+                                            <ResponsiveActions actions={getOrderActions(order)} />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-            {totalPages > 1 && (
-                <div className="mt-8 flex justify-center">
-                    <PaginationComponent
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-            )}
+                    {/* Mobile Unit Decomposition */}
+                    <div className="xl:hidden p-4 space-y-4">
+                        {orders.length === 0 ? (
+                            <div className="text-center py-20 bg-muted/5 rounded-3xl border border-dashed border-border/50">
+                                <p className="text-muted-foreground font-black uppercase tracking-widest text-xs opacity-50">Zero active nodes found</p>
+                            </div>
+                        ) : (
+                            orders.map((order) => (
+                                <Card key={order.id} className="border-border/50 bg-background/50 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden active:scale-[0.98] transition-all">
+                                    <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <CardTitle className="text-lg font-black uppercase tracking-tight text-foreground leading-none">
+                                                    {order.orderNumber}
+                                                </CardTitle>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-primary leading-tight">{order.supplierName}</p>
+                                            </div>
+                                            <div className="shrink-0 flex items-center gap-2">
+                                                <span className={getStatusClass(order.status)}>
+                                                    {order.status.split('_')[0]}
+                                                </span>
+                                                <ResponsiveActions actions={getOrderActions(order)} side="horizontal" />
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-5">
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm">
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center gap-1.5"><FaMoneyBillWave className="text-[8px]" /> Valuation</p>
+                                                <p className="font-black text-emerald-500 text-sm">₹{order.totalAmount.toFixed(2)}</p>
+                                            </div>
+                                            <div className="space-y-1 text-right">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center justify-end gap-1.5"><FaHashtag className="text-[8px]" /> Node ID</p>
+                                                <p className="font-black text-foreground text-[10px] uppercase">#{order.id.toString().padStart(4, '0')}</p>
+                                            </div>
+                                            <div className="col-span-2 space-y-1 pt-2 border-t border-border/10">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Logistics Timeline</p>
+                                                <div className="flex items-center justify-between text-[11px] font-bold">
+                                                    <span className="flex items-center gap-2 text-foreground">
+                                                        <FaClock className="text-primary opacity-50" /> Issued: {formatDate(order.orderDate)}
+                                                    </span>
+                                                    <span className="flex items-center gap-2 text-red-400">
+                                                        Target: {formatDate(order.expectedDeliveryDate)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="pt-4 flex justify-center">
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
         </div>
     );
 };

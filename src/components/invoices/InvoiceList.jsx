@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote, Calendar } from 'lucide-react';
+import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote, Calendar, Hash, User, Clock, IndianRupee, Filter } from 'lucide-react';
 import { invoiceService } from '@/services/invoiceService';
 import { jobService } from '@/services/jobService';
 import { INVOICE_STATUS_OPTIONS } from './constants/invoiceConstants';
@@ -27,8 +27,9 @@ import {
     TabsList,
     TabsTrigger,
 } from "@/components/ui/tabs";
-
 import PaginationComponent from "@/components/common/PaginationComponent";
+import ResponsiveActions from "@/components/common/ResponsiveActions";
+import { cn } from "@/lib/utils";
 
 const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayment }) => {
     const [invoices, setInvoices] = useState([]);
@@ -118,147 +119,177 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
             const blob = new Blob([response.data], {
                 type: response.headers['content-type'] || 'application/pdf'
             });
-
-            if (blob.size === 0) {
-                throw new Error('Server returned empty PDF file');
-            }
-
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-
             const contentDisposition = response.headers['content-disposition'];
             let filename = `invoice-${id}.pdf`;
-
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-                if (filenameMatch && filenameMatch[1]) {
-                    filename = filenameMatch[1];
-                }
+                if (filenameMatch && filenameMatch[1]) filename = filenameMatch[1];
             }
-
             link.download = filename;
-            link.style.display = 'none';
-
-            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-
             window.URL.revokeObjectURL(url);
-
             toast.success('Invoice downloaded successfully!');
-
         } catch (error) {
-            console.error('Error downloading invoice:', error);
-            toast.error(error.message || 'Failed to download invoice');
+            toast.error('Failed to download invoice');
         } finally {
             setLoading(false);
         }
     };
+
+    const getInvoiceActions = (invoice) => [
+        {
+            label: "Inspect Document",
+            icon: <Eye className="h-4 w-4" />,
+            onClick: () => onViewInvoice(invoice),
+            variant: "outline"
+        },
+        {
+            label: "Modify Ledger",
+            icon: <Edit className="h-4 w-4" />,
+            onClick: () => onEditInvoice(invoice),
+            variant: "outline",
+            show: invoice.status !== 'PAID' && invoice.status !== 'CANCELLED'
+        },
+        {
+            label: "Apply Settlement",
+            icon: <Banknote className="h-4 w-4" />,
+            onClick: () => onAddPayment(invoice),
+            variant: "outline",
+            show: invoice.status !== 'PAID' && invoice.status !== 'CANCELLED'
+        },
+        {
+            label: "Transmit to Client",
+            icon: <Send className="h-4 w-4" />,
+            onClick: () => handleSendInvoice(invoice.id),
+            variant: "outline",
+            show: invoice.status === 'DRAFT'
+        },
+        {
+            label: "Void Transaction",
+            icon: <Trash className="h-4 w-4" />,
+            onClick: () => (invoice.status === 'DRAFT' ? handleDeleteInvoice(invoice.id) : handleCancelInvoice(invoice.id)),
+            variant: "destructive",
+            show: invoice.status !== 'PAID' && invoice.status !== 'CANCELLED'
+        },
+        {
+            label: "Export PDF",
+            icon: <TextSearch className="h-4 w-4" />,
+            onClick: () => downloadInvoice(invoice.id),
+            variant: "outline"
+        }
+    ];
 
     const filteredAndSearchedInvoices = invoices.filter(invoice =>
         invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    if (loading && invoices.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary shadow-lg shadow-primary/20"></div>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold">Invoices</h1>
-                    <p className="text-muted-foreground">Manage all invoices for your workshop</p>
+        <div className="space-y-8 w-full max-w-screen-2xl mx-auto">
+            {/* Header Transformation */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight uppercase">Financial Hub: Billing</h1>
+                    <p className="text-muted-foreground font-medium text-sm md:text-base">Managing node for workshop financial documents and settlements.</p>
                 </div>
-                <Button onClick={onCreateInvoice} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Create Invoice</Button>
+                <Button onClick={onCreateInvoice} className="h-12 px-6 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all active:scale-95 w-full lg:w-auto">
+                    <Plus className="mr-2 h-4 w-4" /> Initialize Invoice
+                </Button>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>All Invoices</CardTitle>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Search invoices..."
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            className="max-w-sm"
-                        />
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-                        <div className="overflow-x-auto pb-2">
-                            <TabsList className="inline-flex w-auto">
-                                <TabsTrigger value="all">All</TabsTrigger>
+            <Card className="border-border/50 bg-card/30 backdrop-blur-md shadow-2xl overflow-hidden">
+                <CardHeader className="bg-muted/20 border-b border-border/50 p-6">
+                    <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4">
+                        <div className="flex-1 flex items-center gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
+                                <Input
+                                    type="text"
+                                    placeholder="Search by serial # or recipient..."
+                                    value={searchTerm}
+                                    onChange={handleSearch}
+                                    className="h-11 pl-10 bg-background/50 border-border/50 focus:ring-primary/20 font-bold"
+                                />
+                            </div>
+                        </div>
+                        <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full xl:w-auto">
+                            <TabsList className="bg-background/50 border-border/50">
+                                <TabsTrigger value="all" className="text-[10px]">ALL_MODES</TabsTrigger>
                                 {INVOICE_STATUS_OPTIONS.map(status => (
-                                    <TabsTrigger key={status.value} value={status.value}>
-                                        {status.label}
+                                    <TabsTrigger key={status.value} value={status.value} className="text-[10px]">
+                                        {status.label.toUpperCase()}
                                     </TabsTrigger>
                                 ))}
                             </TabsList>
-                        </div>
-                        <TabsContent value={statusFilter} className="mt-6">
-                            {/* Desktop View */}
+                        </Tabs>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <Tabs value={statusFilter} className="w-full">
+                        <TabsContent value={statusFilter} className="mt-0">
+                            {/* Desktop Matrix */}
                             <div className="hidden lg:block overflow-x-auto">
                                 <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Invoice #</TableHead>
-                                            <TableHead>Job Number</TableHead>
-                                            <TableHead>Customer</TableHead>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Due Date</TableHead>
-                                            <TableHead>Amount</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                    <TableHeader className="bg-muted/10">
+                                        <TableRow className="hover:bg-transparent border-b border-border/30">
+                                            <TableHead className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Serial Node</TableHead>
+                                            <TableHead className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Recipient Node</TableHead>
+                                            <TableHead className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Temporal Specs</TableHead>
+                                            <TableHead className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Valuation</TableHead>
+                                            <TableHead className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Status</TableHead>
+                                            <TableHead className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60 text-right">System Controls</TableHead>
                                         </TableRow>
                                     </TableHeader>
-                                    <TableBody>
-                                        {loading ? (
+                                    <TableBody className="divide-y divide-border/20">
+                                        {filteredAndSearchedInvoices.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan="8" className="h-24 text-center">
-                                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : filteredAndSearchedInvoices.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan="8" className="h-24 text-center">
-                                                    No invoices found.
+                                                <TableCell colSpan="6" className="h-40 text-center text-muted-foreground italic font-medium">
+                                                    Zero financial nodes matching criteria.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
                                             filteredAndSearchedInvoices.map(invoice => (
-                                                <TableRow key={invoice.id}>
-                                                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                                                    <TableCell className="font-medium text-center">{invoice.jobNumber === null ? '-' : invoice.jobNumber}</TableCell>
-                                                    <TableCell>{invoice.customerName}</TableCell>
-                                                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
-                                                    <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                                                    <TableCell className="font-bold">₹{invoice.totalAmount.toFixed(2)}</TableCell>
-                                                    <TableCell>
-                                                        <Badge variant={getStatusVariant(invoice.status)}>
-                                                            {INVOICE_STATUS_OPTIONS.find(s => s.value === invoice.status)?.label || invoice.status}
+                                                <TableRow key={invoice.id} className="hover:bg-primary/[0.02] transition-colors group border-b border-border/10">
+                                                    <TableCell className="px-6 py-5">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-black text-foreground text-xs tracking-widest uppercase">{invoice.invoiceNumber}</span>
+                                                            <span className="text-[9px] font-mono text-muted-foreground opacity-60 uppercase">JOB: {invoice.jobNumber || 'NULL_PTR'}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-5">
+                                                        <span className="text-xs font-bold text-foreground uppercase tracking-tight">{invoice.customerName}</span>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-5">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="text-[10px] font-bold text-foreground flex items-center gap-1.5">
+                                                                <Clock className="h-3 w-3 opacity-40" /> ISS: {new Date(invoice.invoiceDate).toLocaleDateString()}
+                                                            </span>
+                                                            <span className="text-[9px] font-medium text-red-400/80 flex items-center gap-1.5 uppercase tracking-tighter">
+                                                                MAT: {new Date(invoice.dueDate).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-5">
+                                                        <span className="font-black text-emerald-500 text-sm">₹{invoice.totalAmount.toFixed(2)}</span>
+                                                    </TableCell>
+                                                    <TableCell className="px-6 py-5">
+                                                        <Badge variant={getStatusVariant(invoice.status)} className="font-black uppercase tracking-widest text-[9px] px-2 py-0.5 rounded-md">
+                                                            {invoice.status}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <Button variant="outline" size="icon" onClick={() => onViewInvoice(invoice)} title="View"><Eye className="h-4 w-4" /></Button>
-                                                            {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                                <Button variant="outline" size="icon" onClick={() => onEditInvoice(invoice)} title="Edit"><Edit className="h-4 w-4" /></Button>
-                                                            )}
-                                                            {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                                <Button variant="outline" size="icon" onClick={() => onAddPayment(invoice)} title="Add Payment"><Banknote className="h-4 w-4" /></Button>
-                                                            )}
-                                                            {invoice.status === 'DRAFT' && (
-                                                                <>
-                                                                    <Button variant="outline" size="icon" onClick={() => handleSendInvoice(invoice.id)} title="Send"><Send className="h-4 w-4" /></Button>
-                                                                    <Button variant="destructive" size="icon" onClick={() => handleDeleteInvoice(invoice.id)} title="Delete"><Trash className="h-4 w-4" /></Button>
-                                                                </>
-                                                            )}
-                                                            {invoice.status === 'SENT' && (
-                                                                <Button variant="destructive" size="icon" onClick={() => handleCancelInvoice(invoice.id)} title="Cancel"><Trash className="h-4 w-4" /></Button>
-                                                            )}
-                                                            <Button variant="outline" size="icon" onClick={() => downloadInvoice(invoice.id)} title="Download PDF"><TextSearch className="h-4 w-4" /></Button>
-                                                        </div>
+                                                    <TableCell className="px-6 py-5 text-right">
+                                                        <ResponsiveActions actions={getInvoiceActions(invoice)} />
                                                     </TableCell>
                                                 </TableRow>
                                             ))
@@ -267,80 +298,52 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                                 </Table>
                             </div>
 
-                            {/* Mobile/Tablet View */}
-                            <div className="lg:hidden space-y-4">
-                                {loading ? (
-                                    <div className="flex justify-center py-8">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                            {/* Mobile Deconstruction */}
+                            <div className="lg:hidden p-4 space-y-4">
+                                {filteredAndSearchedInvoices.length === 0 ? (
+                                    <div className="text-center py-20 bg-muted/5 rounded-3xl border border-dashed border-border/50">
+                                        <p className="text-muted-foreground font-black uppercase tracking-widest text-xs opacity-50">Zero financial nodes found</p>
                                     </div>
-                                ) : filteredAndSearchedInvoices.length === 0 ? (
-                                    <p className="text-center text-muted-foreground py-8">No invoices found.</p>
                                 ) : (
                                     filteredAndSearchedInvoices.map(invoice => (
-                                        <Card key={invoice.id} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-                                            <CardHeader className="pb-2">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <CardTitle className="text-lg font-bold">{invoice.invoiceNumber}</CardTitle>
-                                                        <p className="text-sm font-medium text-primary">{invoice.customerName}</p>
+                                        <Card key={invoice.id} className="border-border/50 bg-background/50 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden active:scale-[0.98] transition-all">
+                                            <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="space-y-1">
+                                                        <CardTitle className="text-lg font-black tracking-widest text-foreground leading-none uppercase">
+                                                            {invoice.invoiceNumber}
+                                                        </CardTitle>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary leading-tight">{invoice.customerName}</p>
                                                     </div>
-                                                    <Badge variant={getStatusVariant(invoice.status)}>
-                                                        {INVOICE_STATUS_OPTIONS.find(s => s.value === invoice.status)?.label || invoice.status}
-                                                    </Badge>
+                                                    <div className="shrink-0 flex items-center gap-2">
+                                                        <Badge variant={getStatusVariant(invoice.status)} className="font-black uppercase tracking-widest text-[8px] px-1.5 py-0.5 rounded-full">
+                                                            {invoice.status}
+                                                        </Badge>
+                                                        <ResponsiveActions actions={getInvoiceActions(invoice)} side="horizontal" />
+                                                    </div>
                                                 </div>
                                             </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
+                                            <CardContent className="p-5">
+                                                <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm">
                                                     <div className="space-y-1">
-                                                        <p className="text-muted-foreground text-xs uppercase tracking-wider">Job Number</p>
-                                                        <p className="font-medium">{invoice.jobNumber || '-'}</p>
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center gap-1.5"><Hash className="h-3 w-3" /> Job Link</p>
+                                                        <p className="font-black text-foreground text-xs uppercase tracking-widest">{invoice.jobNumber || 'NULL'}</p>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-muted-foreground text-xs uppercase tracking-wider">Total Amount</p>
-                                                        <p className="font-bold text-emerald-500">₹{invoice.totalAmount.toFixed(2)}</p>
+                                                    <div className="space-y-1 text-right">
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center justify-end gap-1.5"><IndianRupee className="h-3 w-3" /> Valuation</p>
+                                                        <p className="font-black text-emerald-500 text-base leading-none">₹{invoice.totalAmount.toFixed(2)}</p>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-muted-foreground text-xs uppercase tracking-wider">Invoice Date</p>
-                                                        <p className="font-medium">{new Date(invoice.invoiceDate).toLocaleDateString()}</p>
+                                                    <div className="col-span-2 space-y-1 pt-2 border-t border-border/10">
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Temporal Pipeline</p>
+                                                        <div className="flex items-center justify-between text-[11px] font-bold">
+                                                            <span className="flex items-center gap-2 text-foreground">
+                                                                <Calendar className="h-3 w-3 text-primary opacity-50" /> Issued: {new Date(invoice.invoiceDate).toLocaleDateString()}
+                                                            </span>
+                                                            <span className="flex items-center gap-2 text-red-400">
+                                                                Maturity: {new Date(invoice.dueDate).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-muted-foreground text-xs uppercase tracking-wider">Due Date</p>
-                                                        <p className="font-medium">{new Date(invoice.dueDate).toLocaleDateString()}</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-border/50">
-                                                    <Button variant="outline" size="sm" onClick={() => onViewInvoice(invoice)} className="flex-1 min-w-[80px]">
-                                                        <Eye className="h-4 w-4 mr-2" /> View
-                                                    </Button>
-                                                    {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                        <Button variant="outline" size="sm" onClick={() => onEditInvoice(invoice)} className="flex-1 min-w-[80px]">
-                                                            <Edit className="h-4 w-4 mr-2" /> Edit
-                                                        </Button>
-                                                    )}
-                                                    {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                        <Button variant="outline" size="sm" onClick={() => onAddPayment(invoice)} className="flex-1 min-w-[80px]">
-                                                            <Banknote className="h-4 w-4 mr-2" /> Pay
-                                                        </Button>
-                                                    )}
-                                                    {invoice.status === 'DRAFT' && (
-                                                        <>
-                                                            <Button variant="outline" size="sm" onClick={() => handleSendInvoice(invoice.id)} className="flex-1 min-w-[80px]">
-                                                                <Send className="h-4 w-4 mr-2" /> Send
-                                                            </Button>
-                                                            <Button variant="destructive" size="sm" onClick={() => handleDeleteInvoice(invoice.id)} className="flex-1 min-w-[80px]">
-                                                                <Trash className="h-4 w-4 mr-2" />
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                    {invoice.status === 'SENT' && (
-                                                        <Button variant="destructive" size="sm" onClick={() => handleCancelInvoice(invoice.id)} className="flex-1 min-w-[80px]">
-                                                            <Trash className="h-4 w-4 mr-2" /> Cancel
-                                                        </Button>
-                                                    )}
-                                                    <Button variant="outline" size="sm" onClick={() => downloadInvoice(invoice.id)} className="flex-1 min-w-[80px]">
-                                                        <TextSearch className="h-4 w-4 mr-2" /> PDF
-                                                    </Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -352,11 +355,13 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
                 </CardContent>
             </Card>
 
-            <PaginationComponent
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-            />
+            <div className="pt-4 flex justify-center">
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
         </div>
     );
 };

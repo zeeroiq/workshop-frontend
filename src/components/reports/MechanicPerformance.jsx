@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
 import {
     FaUserCog,
@@ -16,7 +17,7 @@ import TimePeriodFilter from "./TimePeriodFilter";
 import {userService} from "@/services/userService";
 import {toast} from "react-toastify";
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'; import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';

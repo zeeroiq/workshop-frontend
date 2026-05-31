@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaEdit, FaTrash, FaArrowLeft, FaCar, FaUser, FaHistory, FaStickyNote, FaCog, FaPalette, FaHashtag, FaCalendarAlt, FaTachometerAlt } from 'react-icons/fa';
+import { Edit, Trash, ArrowLeft, Car, User, History, StickyNote, Cog, Palette, Hash, Calendar, Gauge, Fingerprint, Activity } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { toast } from 'react-toastify';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import ResponsiveActions from "@/components/common/ResponsiveActions";
 import { cn } from '@/lib/utils';
 
 const VehicleDetails = () => {
@@ -57,7 +58,7 @@ const VehicleDetails = () => {
         if (!noteContent.trim()) return;
         try {
             await vehicleService.addNote(id, { content: noteContent });
-            toast.success('Note added successfully');
+            toast.success('Intelligence entry deployed.');
             setNoteContent('');
             fetchVehicle();
         } catch (error) {
@@ -66,184 +67,253 @@ const VehicleDetails = () => {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this vehicle?')) {
+        if (window.confirm('Are you sure you want to decommission this vehicle?')) {
             try {
                 await vehicleService.delete(id);
-                toast.success('Vehicle deleted successfully');
+                toast.success('Asset decommissioned successfully.');
                 navigate('/vehicles');
             } catch (error) {
-                toast.error('Failed to delete vehicle');
+                toast.error('Failed to decommission vehicle');
             }
         }
     };
 
     const handleUpdateMileage = async () => {
-        const newMileage = prompt('Enter new mileage:', vehicle.currentMileage);
+        const newMileage = prompt('Enter new odometer reading:', vehicle.currentMileage);
         if (newMileage !== null && !isNaN(newMileage)) {
             try {
                 await vehicleService.updateMileage(id, parseInt(newMileage));
-                toast.success('Mileage updated successfully');
+                toast.success('Logistics updated.');
                 fetchVehicle();
             } catch (error) {
-                toast.error('Failed to update mileage');
+                toast.error('Failed to update logistics.');
             }
         }
     };
 
-    if (loading) return <LoadingSpinner />;
-    if (!vehicle) return <div className="p-8 text-center">Vehicle not found</div>;
+    const getVehicleDetailsActions = () => [
+        {
+            label: "Return to Fleet",
+            icon: <ArrowLeft className="h-4 w-4" />,
+            onClick: () => navigate('/vehicles'),
+            variant: "outline"
+        },
+        {
+            label: "Update Logistics",
+            icon: <Gauge className="h-4 w-4" />,
+            onClick: handleUpdateMileage,
+            variant: "outline"
+        },
+        {
+            label: "Modify Spec",
+            icon: <Edit className="h-4 w-4" />,
+            onClick: () => navigate(`/vehicles/edit/${id}`),
+            variant: "outline"
+        },
+        {
+            label: "Decommission",
+            icon: <Trash className="h-4 w-4" />,
+            onClick: handleDelete,
+            variant: "destructive"
+        }
+    ];
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary shadow-lg shadow-primary/20"></div>
+            </div>
+        );
+    }
+
+    if (!vehicle) {
+        return (
+            <div className="container mx-auto py-20 text-center space-y-4">
+                <Activity className="h-12 w-12 text-muted-foreground mx-auto opacity-20" />
+                <h3 className="text-xl font-black uppercase tracking-widest text-muted-foreground">Asset Not Found</h3>
+                <Button onClick={() => navigate('/vehicles')} variant="outline">Return to Fleet</Button>
+            </div>
+        );
+    }
 
     return (
-        <div className="container mx-auto py-4 md:py-6 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <Button onClick={() => navigate('/vehicles')} variant="outline" size="sm" className="w-fit">
-                    <FaArrowLeft className="mr-2" /> Back
-                </Button>
-                <div className="flex gap-2">
-                    <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
-                        <Link to={`/vehicles/edit/${id}`}><FaEdit className="mr-2" /> Edit</Link>
-                    </Button>
-                    <Button onClick={handleDelete} variant="destructive" size="sm" className="flex-1 sm:flex-none">
-                        <FaTrash className="mr-2" /> Delete
-                    </Button>
+        <div className="space-y-8 w-full max-w-screen-xl mx-auto pb-12">
+            {/* Header Node */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Asset Spec Node</span>
+                    </div>
+                    <h1 className="text-3xl md:text-5xl font-black text-foreground tracking-tighter uppercase leading-none">
+                        {vehicle.make} {vehicle.model}
+                    </h1>
                 </div>
+                <ResponsiveActions actions={getVehicleDetailsActions()} />
             </div>
 
-            <Card className="border-border/50 shadow-sm">
-                <CardHeader className="pb-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <CardTitle className="text-2xl md:text-3xl font-bold">{vehicle.make} {vehicle.model} ({vehicle.year})</CardTitle>
-                            <CardDescription className="flex items-center gap-2 mt-1">
-                                <span className="bg-muted px-2 py-0.5 rounded font-mono text-xs">{vehicle.licensePlate}</span>
-                                <span className="text-muted-foreground/50">|</span>
-                                <span className="font-mono text-xs">{vehicle.vin || 'NO VIN'}</span>
-                            </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-right hidden md:block">
-                                <p className="text-[10px] uppercase font-bold text-muted-foreground">Current Odometer</p>
-                                <p className="text-xl font-black">{vehicle.currentMileage?.toLocaleString() || '0'} <span className="text-sm font-medium text-muted-foreground">mi</span></p>
+            <Card className="border-border/50 bg-card/30 backdrop-blur-md shadow-2xl rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="bg-muted/20 border-b border-border/50 p-6 md:p-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                        <div className="flex items-center gap-6">
+                            <div className="h-20 w-20 md:h-24 md:w-24 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
+                                <Car className="h-10 w-10 md:h-12 md:w-12" />
                             </div>
-                            <Button onClick={handleUpdateMileage} size="icon" variant="outline" className="h-10 w-10">
-                                <FaCog className="h-4 w-4" />
+                            <div className="space-y-1">
+                                <CardTitle className="text-xl md:text-2xl font-black uppercase tracking-tight">{vehicle.year} Production Cycle</CardTitle>
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    <Badge variant="outline" className="font-mono text-[10px] md:text-xs font-black tracking-widest uppercase bg-background/50">
+                                        {vehicle.licensePlate}
+                                    </Badge>
+                                    <Badge variant="outline" className="font-mono text-[10px] md:text-xs font-medium opacity-60 bg-background/50">
+                                        VIN: {vehicle.vin || 'SIGNAL_MISSING'}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-6 bg-background/40 p-4 md:p-6 rounded-3xl border border-border/50 shadow-inner">
+                            <div className="space-y-1">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Logistics Metrics</p>
+                                <p className="text-2xl md:text-3xl font-black text-foreground tabular-nums leading-none">
+                                    {vehicle.currentMileage?.toLocaleString() || '0'}
+                                    <span className="text-xs ml-1 font-bold text-muted-foreground">MI</span>
+                                </p>
+                            </div>
+                            <Button onClick={handleUpdateMileage} size="icon" variant="ghost" className="h-12 w-12 rounded-2xl hover:bg-primary/10 hover:text-primary transition-colors">
+                                <Gauge className="h-5 w-5" />
                             </Button>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <div className="overflow-x-auto pb-1">
-                            <TabsList className="inline-flex w-full sm:w-auto min-w-full sm:min-w-0">
-                                <TabsTrigger value="details" className="flex-1 sm:flex-none"><FaCar className="mr-2 h-3 w-3" />Details</TabsTrigger>
-                                <TabsTrigger value="history" className="flex-1 sm:flex-none"><FaHistory className="mr-2 h-3 w-3" />History</TabsTrigger>
-                                <TabsTrigger value="notes" className="flex-1 sm:flex-none"><FaStickyNote className="mr-2 h-3 w-3" />Notes ({vehicle.notes?.length || 0})</TabsTrigger>
+                        <div className="px-6 md:px-10 py-4 bg-muted/10 border-b border-border/30 overflow-x-auto whitespace-nowrap">
+                            <TabsList className="bg-transparent border-none shadow-none gap-8">
+                                <TabsTrigger value="details" className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-primary border-none p-0 h-auto font-black uppercase tracking-[0.2em] text-[10px] relative">
+                                    Specifications
+                                    {activeTab === 'details' && <div className="absolute -bottom-4 left-0 w-full h-1 bg-primary rounded-full" />}
+                                </TabsTrigger>
+                                <TabsTrigger value="history" className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-primary border-none p-0 h-auto font-black uppercase tracking-[0.2em] text-[10px] relative">
+                                    Service Pipeline
+                                    {activeTab === 'history' && <div className="absolute -bottom-4 left-0 w-full h-1 bg-primary rounded-full" />}
+                                </TabsTrigger>
+                                <TabsTrigger value="notes" className="bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-primary border-none p-0 h-auto font-black uppercase tracking-[0.2em] text-[10px] relative">
+                                    Intel History ({vehicle.notes?.length || 0})
+                                    {activeTab === 'notes' && <div className="absolute -bottom-4 left-0 w-full h-1 bg-primary rounded-full" />}
+                                </TabsTrigger>
                             </TabsList>
                         </div>
 
-                        <TabsContent value="details" className="mt-6 animate-in fade-in duration-300">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <InfoBlock icon={<FaCar />} label="Make & Model" value={`${vehicle.make} ${vehicle.model}`} />
-                                <InfoBlock icon={<FaCalendarAlt />} label="Year" value={vehicle.year} />
-                                <InfoBlock icon={<FaPalette />} label="Color">
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-4 h-4 rounded-full border shadow-sm" style={{ backgroundColor: vehicle.color?.toLowerCase() || '#ccc' }}></span>
-                                        <span className="font-medium">{vehicle.color || 'N/A'}</span>
-                                    </div>
-                                </InfoBlock>
-                                <InfoBlock icon={<FaHashtag />} label="License Plate" value={vehicle.licensePlate} />
-                                <InfoBlock icon={<FaHashtag />} label="VIN Number" value={vehicle.vin || 'N/A'} isMono />
-                                <InfoBlock icon={<FaTachometerAlt />} label="Current Mileage" value={`${vehicle.currentMileage?.toLocaleString() || '0'} miles`} />
-                                <InfoBlock icon={<FaCog />} label="Engine Type" value={vehicle.engineType || 'N/A'} />
-                                <InfoBlock icon={<FaCalendarAlt />} label="Registration Date" value={new Date(vehicle.createdAt).toLocaleDateString()} />
-                            </div>
+                        <div className="p-6 md:p-10 lg:p-12">
+                            <TabsContent value="details" className="mt-0 animate-in fade-in duration-500 space-y-12">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+                                    <InfoNode icon={<Car />} label="Architecture" value={`${vehicle.make} ${vehicle.model}`} />
+                                    <InfoNode icon={<Calendar />} label="Deployment Year" value={vehicle.year} />
+                                    <InfoNode icon={<Palette />} label="Visual Palette" value={vehicle.color || 'SIGNAL_NOT_FOUND'} />
+                                    <InfoNode icon={<Cog />} label="Propulsion System" value={vehicle.engineType || 'COMBUSTION_GENERIC'} />
+                                </div>
 
-                            {vehicle.customerId && (
-                                <Card className="mt-8 border-emerald-500/20 bg-emerald-500/5">
-                                    <CardContent className="p-4 md:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                                                <FaUser className="text-xl" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] uppercase font-bold text-emerald-600/70 tracking-widest">Registered Owner</p>
-                                                <p className="text-lg font-bold">{vehicle.customerName}</p>
-                                                <p className="text-xs text-muted-foreground">{vehicle.customerPhone} {vehicle.customerEmail && `• ${vehicle.customerEmail}`}</p>
-                                            </div>
-                                        </div>
-                                        <Button asChild variant="outline" size="sm" className="w-full sm:w-auto border-emerald-500/20 hover:bg-emerald-500/10">
-                                            <Link to={`/customers/${vehicle.customerId}`}>View Profile</Link>
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="history" className="mt-6 animate-in fade-in duration-300">
-                            {history.length > 0 ? (
-                                <div className="space-y-4">
-                                    {history.map(record => (
-                                        <Card key={record.jobId} className="bg-muted/10 border-border/50 hover:bg-muted/20 transition-colors">
-                                            <CardContent className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Badge variant="outline" className="text-[10px] font-bold uppercase">{record.serviceType}</Badge>
-                                                        <span className="text-xs text-muted-foreground font-medium">{new Date(record.serviceDate).toLocaleDateString()}</span>
+                                {vehicle.customerId && (
+                                    <Card className="mt-12 border-emerald-500/20 bg-emerald-500/5 rounded-[2rem] overflow-hidden group hover:bg-emerald-500/10 transition-colors">
+                                        <CardContent className="p-8 flex flex-col sm:flex-row items-center justify-between gap-8">
+                                            <div className="flex items-center gap-6">
+                                                <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                                                    <User className="h-7 w-7" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-[9px] font-black uppercase text-emerald-500 tracking-[0.3em]">Registered Node Owner</p>
+                                                    <p className="text-xl font-black text-foreground uppercase tracking-tight">{vehicle.customerName}</p>
+                                                    <div className="flex items-center gap-3 text-[11px] font-bold text-muted-foreground">
+                                                        <span className="flex items-center gap-1.5"><Phone size={12} className="opacity-40" /> {vehicle.customerPhone}</span>
+                                                        {vehicle.customerEmail && <span className="flex items-center gap-1.5"><Mail size={12} className="opacity-40" /> {vehicle.customerEmail}</span>}
                                                     </div>
-                                                    <p className="font-bold text-foreground">{record.description}</p>
                                                 </div>
-                                                <div className="text-left sm:text-right w-full sm:w-auto flex sm:flex-col justify-between items-center sm:items-end border-t sm:border-t-0 pt-3 sm:pt-0 mt-2 sm:mt-0">
-                                                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20">{record.status}</Badge>
-                                                    <p className="text-sm font-black text-foreground mt-1">₹{record.cost?.toLocaleString() || '0.00'}</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-16 border-2 border-dashed border-border rounded-xl">
-                                    <FaHistory className="mx-auto text-4xl text-muted-foreground/30 mb-4" />
-                                    <h3 className="text-lg font-bold text-muted-foreground">No service history</h3>
-                                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">This vehicle hasn't undergone any recorded services yet.</p>
-                                </div>
-                            )}
-                        </TabsContent>
+                                            </div>
+                                            <Button asChild variant="outline" className="w-full sm:w-auto h-12 px-8 border-emerald-500/20 hover:bg-emerald-500/20 font-black uppercase tracking-widest text-[10px] rounded-xl active:scale-95">
+                                                <Link to={`/customers/${vehicle.customerId}`}>View Owner Node</Link>
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </TabsContent>
 
-                        <TabsContent value="notes" className="mt-6 animate-in fade-in duration-300 space-y-6">
-                            <form onSubmit={handleAddNote} className="space-y-3">
-                                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Add Service Note</Label>
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <Textarea
-                                        value={noteContent}
-                                        onChange={(e) => setNoteContent(e.target.value)}
-                                        placeholder="Record specific mechanical details or observations..."
-                                        rows="2"
-                                        className="flex-grow bg-muted/20"
-                                    />
-                                    <Button type="submit" disabled={!noteContent.trim()} className="sm:h-auto">Add</Button>
-                                </div>
-                            </form>
-                            
-                            <div className="space-y-4">
-                                <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Historical Notes</h4>
-                                {vehicle.notes && vehicle.notes.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {vehicle.notes.map(note => (
-                                            <Card key={note.id} className="bg-muted/10 border-border/30">
-                                                <CardContent className="p-4">
-                                                    <p className="text-sm leading-relaxed">{note.content}</p>
-                                                    <p className="text-[10px] text-muted-foreground mt-3 font-medium uppercase tracking-tighter">
-                                                        {new Date(note.createdAt).toLocaleString()}
-                                                    </p>
+                            <TabsContent value="history" className="mt-0 animate-in fade-in duration-500 space-y-6">
+                                {history.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {history.map(record => (
+                                            <Card key={record.jobId} className="bg-background/50 border-border/50 hover:border-primary/50 transition-all rounded-3xl overflow-hidden group">
+                                                <CardContent className="p-6">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/5 border-primary/20 text-primary">{record.serviceType}</Badge>
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(record.serviceDate).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <p className="font-black text-foreground text-sm uppercase tracking-tight mt-1">{record.description}</p>
+                                                        </div>
+                                                        <History className="text-primary h-5 w-5 opacity-20 group-hover:opacity-100 transition-all" />
+                                                    </div>
+                                                    <div className="flex items-center justify-between pt-4 border-t border-border/10">
+                                                        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 uppercase tracking-widest text-[8px] font-black">{record.status}</Badge>
+                                                        <p className="font-black text-emerald-500">₹{record.cost?.toLocaleString() || '0.00'}</p>
+                                                    </div>
                                                 </CardContent>
                                             </Card>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground italic">No notes recorded for this vehicle.</p>
+                                    <div className="text-center py-24 border-2 border-dashed border-border/50 rounded-[2.5rem] bg-muted/5 space-y-6">
+                                        <div className="h-16 w-16 rounded-3xl bg-muted mx-auto flex items-center justify-center">
+                                            <History className="h-8 w-8 text-muted-foreground opacity-20" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h4 className="text-lg font-black uppercase tracking-widest text-muted-foreground/50">Zero Service History</h4>
+                                            <p className="text-xs font-medium text-muted-foreground/30">Asset has no recorded operational maintenance cycles.</p>
+                                        </div>
+                                    </div>
                                 )}
-                            </div>
-                        </TabsContent>
+                            </TabsContent>
+
+                            <TabsContent value="notes" className="mt-0 animate-in fade-in duration-500 space-y-10">
+                                <form onSubmit={handleAddNote} className="space-y-4">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Inject Technical Intel</Label>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <Textarea
+                                            value={noteContent}
+                                            onChange={(e) => setNoteContent(e.target.value)}
+                                            placeholder="Record specific mechanical observations or diagnostic data..."
+                                            rows="3"
+                                            className="bg-background/50 border-border/50 rounded-2xl font-medium focus:ring-primary/20 pt-4"
+                                        />
+                                        <Button type="submit" disabled={!noteContent.trim()} className="sm:h-auto sm:w-32 font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl active:scale-95">
+                                            Deploy Entry
+                                        </Button>
+                                    </div>
+                                </form>
+                                
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground opacity-40 border-b border-border/30 pb-3">Intel History Log</h4>
+                                    {vehicle.notes && vehicle.notes.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {vehicle.notes.map(note => (
+                                                <Card key={note.id} className="bg-muted/10 border-border/30 rounded-3xl overflow-hidden hover:bg-muted/20 transition-colors">
+                                                    <CardContent className="p-6">
+                                                        <p className="text-sm leading-relaxed font-medium text-foreground/90">{note.content}</p>
+                                                        <div className="flex items-center gap-4 mt-6 pt-4 border-t border-border/10">
+                                                            <Activity className="h-3 w-3 text-primary opacity-50" />
+                                                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                                                                Log Time: {new Date(note.createdAt).toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground/30 font-bold uppercase tracking-widest italic py-10 text-center">Zero intel nodes logged.</p>
+                                    )}
+                                </div>
+                            </TabsContent>
+                        </div>
                     </Tabs>
                 </CardContent>
             </Card>
@@ -251,17 +321,14 @@ const VehicleDetails = () => {
     );
 };
 
-const InfoBlock = ({ icon, label, value, children, isMono }) => (
-    <div className="space-y-1">
-        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-            <span className="text-xs">{icon}</span>
-            <Label className="text-[10px] uppercase tracking-wider font-bold">{label}</Label>
+const InfoNode = ({ icon, label, value }) => (
+    <div className="space-y-3">
+        <div className="flex items-center gap-2 text-primary opacity-50">
+            {React.cloneElement(icon, { size: 14 })}
+            <Label className="text-[10px] font-black uppercase tracking-widest">{label}</Label>
         </div>
-        <div className={cn(
-            "text-base font-medium p-2 bg-muted/30 rounded-md border border-border/50",
-            isMono && "font-mono text-xs break-all"
-        )}>
-            {value || children}
+        <div className="p-5 bg-background/50 border border-border/50 rounded-2xl shadow-inner">
+            <p className="text-sm md:text-base font-black text-foreground tracking-widest uppercase leading-tight truncate">{value}</p>
         </div>
     </div>
 );

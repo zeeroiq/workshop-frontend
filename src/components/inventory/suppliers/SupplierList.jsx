@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter, FaPhone, FaEnvelope, FaMapMarkerAlt, FaCreditCard, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PaginationComponent from "@/components/common/PaginationComponent";
+import ResponsiveActions from "@/components/common/ResponsiveActions";
+import { cn } from "@/lib/utils";
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
@@ -30,12 +32,9 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 size: pageSize,
                 sort: 'name,asc',
             };
-            if (searchTerm) {
-                params.search = searchTerm;
-            }
-            if (statusFilter !== 'all') {
-                params.status = statusFilter;
-            }
+            if (searchTerm) params.search = searchTerm;
+            if (statusFilter !== 'all') params.status = statusFilter;
+            
             const response = await inventoryService.getSuppliers(params);
             if (response?.data?.success && response.data) {
                 setSuppliers(response.data.content || []);
@@ -43,7 +42,6 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             } else {
                 setSuppliers([]);
                 setTotalPages(0);
-                toast.warn('Failed to load suppliers.');
             }
         } catch (error) {
             console.error('Error loading suppliers:', error);
@@ -58,8 +56,8 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         setCurrentPage(0);
     };
 
-    const handleStatusFilterChange = (e) => {
-        setStatusFilter(e.target.value);
+    const handleStatusFilterChange = (val) => {
+        setStatusFilter(val);
         setCurrentPage(0);
     };
 
@@ -76,7 +74,6 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             setSupplierToDelete(null);
             toast.success('Supplier deleted successfully.');
         } catch (error) {
-            console.error('Error deleting supplier:', error);
             toast.error('Failed to delete supplier.');
         }
     };
@@ -85,232 +82,199 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         setExpandedRow(expandedRow === id ? null : id);
     };
 
-    const STATUS_CLASSES = {
-        ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        INACTIVE: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        SUSPENDED: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-        DELETED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-    };
-
-    const humanizeStatus = (s) => (s || '')
-        .toLowerCase()
-        .replaceAll('_', ' ')
-        .replaceAll(/\b\w/g, (ch) => ch.toUpperCase()) || 'Unknown';
-
     const getStatusBadge = (status) => {
-        const key = (status || '').toUpperCase();
-        const statusClass = STATUS_CLASSES[key] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+        const s = (status || '').toUpperCase();
+        const colors = {
+            ACTIVE: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+            INACTIVE: 'bg-red-500/10 text-red-500 border-red-500/20',
+            SUSPENDED: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+            DELETED: 'bg-muted text-muted-foreground border-border/50',
+        };
         return (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
-                {humanizeStatus(key)}
+            <span className={cn("px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border", colors[s] || colors.DELETED)}>
+                {s || 'UNKNOWN'}
             </span>
         );
     };
 
-    if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading suppliers...</div>;
+    const getSupplierActions = (supplier) => [
+        {
+            label: "Inspect Details",
+            icon: <FaEye className="text-xs" />,
+            onClick: () => onViewDetails(supplier),
+            variant: "outline"
+        },
+        {
+            label: "Modify Record",
+            icon: <FaEdit className="text-xs" />,
+            onClick: () => onEdit(supplier),
+            variant: "outline"
+        },
+        {
+            label: "Purge Node",
+            icon: <FaTrash className="text-xs" />,
+            onClick: () => handleDeleteClick(supplier),
+            variant: "destructive"
+        }
+    ];
+
+    if (loading && suppliers.length === 0) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary shadow-lg shadow-primary/20"></div>
+            </div>
+        );
     }
 
     return (
-        <div className="bg-card p-4 rounded-lg">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                    <h2 className="text-xl font-semibold">Suppliers</h2>
-                    <p className="text-muted-foreground">Manage your supplier information</p>
+        <div className="space-y-8 w-full max-w-screen-2xl mx-auto">
+            {/* Header Transformation */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight uppercase leading-none">Logistics: Suppliers</h2>
+                    <p className="text-muted-foreground font-medium text-sm md:text-base opacity-70">Managing node for registered resource providers and fulfillment channels.</p>
                 </div>
-                <Button className="w-full sm:w-auto" onClick={onCreate}>
-                    <FaPlus className="mr-2" /> Add Supplier
+                <Button className="h-12 px-8 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 active:scale-95 w-full lg:w-auto" onClick={onCreate}>
+                    <FaPlus className="mr-2" /> Initialize Supplier
                 </Button>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="relative w-full md:w-1/2">
-                    <FaSearch className="absolute top-3 left-3 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search suppliers..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md w-full focus:ring-2 focus:ring-primary outline-none transition-all"
-                    />
-                </div>
-                <div className="relative w-full md:w-auto">
-                    <FaFilter className="absolute top-3 left-3 text-muted-foreground pointer-events-none" />
-                    <select
-                        value={statusFilter}
-                        onChange={handleStatusFilterChange}
-                        className="bg-input pl-10 pr-8 py-2 rounded-md appearance-none w-full outline-none focus:ring-2 focus:ring-primary transition-all cursor-pointer"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="ACTIVE">Active</option>
-                        <option value="INACTIVE">Inactive</option>
-                        <option value="SUSPENDED">Suspended</option>
-                        <option value="DELETED">Deleted</option>
-                        <option value="ARCHIVED">Archived</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Desktop View */}
-            <div className="hidden lg:block overflow-x-auto rounded-md border border-border/50">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/50 text-muted-foreground uppercase text-xs tracking-wider">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold">Name</th>
-                            <th className="px-6 py-4 font-semibold">Contact</th>
-                            <th className="px-6 py-4 font-semibold">Status</th>
-                            <th className="px-6 py-4 text-right font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
-                        {suppliers.map((supplier) => (
-                            <React.Fragment key={supplier.id}>
-                                <tr className="hover:bg-muted/30 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="font-medium text-primary">{supplier.name}</div>
-                                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                            <FaEnvelope className="text-[10px]" /> {supplier.email}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="font-medium">{supplier.contactPerson}</div>
-                                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                            <FaPhone className="text-[10px]" /> {supplier.phone}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">{getStatusBadge(supplier.status)}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => toggleRowExpansion(supplier.id)}>
-                                            <FaEllipsisV />
-                                        </Button>
-                                    </td>
-                                </tr>
-                                {expandedRow === supplier.id && (
-                                    <tr className="bg-muted/10">
-                                        <td colSpan="4" className="p-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-top-2 duration-200">
-                                                <div className="space-y-2">
-                                                    <h4 className="text-xs uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-2">
-                                                        <FaMapMarkerAlt /> Address
-                                                    </h4>
-                                                    <p className="text-sm">{supplier.address || 'No address provided'}</p>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <h4 className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Payment Terms</h4>
-                                                    <p className="text-sm">{supplier.paymentTerm || 'Standard'}</p>
-                                                </div>
-                                                {supplier.notes && (
-                                                    <div className="space-y-2">
-                                                        <h4 className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Notes</h4>
-                                                        <p className="text-sm italic text-muted-foreground">{supplier.notes}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/50">
-                                                <Button variant="outline" size="sm" onClick={() => onViewDetails(supplier)}>
-                                                    <FaEye className="mr-2" /> View Details
-                                                </Button>
-                                                <Button variant="outline" size="sm" onClick={() => onEdit(supplier)} className="text-blue-500 hover:text-blue-600">
-                                                    <FaEdit className="mr-2" /> Edit
-                                                </Button>
-                                                <Button variant="outline" size="sm" onClick={() => handleDeleteClick(supplier)} className="text-destructive hover:text-destructive/90">
-                                                    <FaTrash className="mr-2" /> Delete
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </React.Fragment>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile/Tablet View */}
-            <div className="lg:hidden space-y-4">
-                {suppliers.length === 0 ? (
-                    <div className="text-center py-16 bg-muted/20 rounded-lg">
-                        <h3 className="text-lg font-semibold">No suppliers found</h3>
-                        <p className="text-muted-foreground mb-4">Try adjusting your search or add a new supplier.</p>
-                        <Button onClick={onCreate}>
-                            <FaPlus className="mr-2" /> Add Supplier
-                        </Button>
+            <Card className="border-border/50 bg-card/30 backdrop-blur-md shadow-2xl overflow-hidden">
+                <CardHeader className="bg-muted/20 border-b border-border/50 p-6">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+                        <div className="relative flex-1">
+                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground opacity-50" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, node ID or contact..."
+                                value={searchTerm}
+                                onChange={handleSearchChange}
+                                className="w-full h-11 pl-10 bg-background/50 border border-border/50 rounded-xl focus:ring-primary/20 font-bold text-sm"
+                            />
+                        </div>
                     </div>
-                ) : (
-                    suppliers.map((supplier) => (
-                        <Card key={supplier.id} className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-                            <CardHeader className="pb-2">
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <CardTitle className="text-lg font-bold">{supplier.name}</CardTitle>
-                                        <p className="text-sm text-primary font-medium">{supplier.contactPerson}</p>
-                                    </div>
-                                    {getStatusBadge(supplier.status)}
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div className="space-y-1">
-                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Phone</p>
-                                        <p className="font-medium flex items-center gap-2">
-                                            <FaPhone className="text-[10px]" /> {supplier.phone}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Email</p>
-                                        <p className="font-medium flex items-center gap-2 truncate">
-                                            <FaEnvelope className="text-[10px]" /> {supplier.email}
-                                        </p>
-                                    </div>
-                                    <div className="col-span-2 space-y-1">
-                                        <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold">Address</p>
-                                        <p className="font-medium line-clamp-2">{supplier.address || '-'}</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-border/50">
-                                    <Button variant="outline" size="sm" onClick={() => onViewDetails(supplier)} className="flex-1 min-w-[80px]">
-                                        <FaEye className="mr-2" /> View
-                                    </Button>
-                                    <Button variant="outline" size="sm" onClick={() => onEdit(supplier)} className="flex-1 min-w-[80px] text-blue-500">
-                                        <FaEdit className="mr-2" /> Edit
-                                    </Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(supplier)} className="flex-1 min-w-[80px]">
-                                        <FaTrash className="mr-2" />
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
+                </CardHeader>
+                <CardContent className="p-0">
+                    {/* Desktop Matrix */}
+                    <div className="hidden lg:block overflow-x-auto">
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="bg-muted/10">
+                                <tr className="border-b border-border/30">
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Provider Node</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Contact Analyst</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60">Status</th>
+                                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] opacity-60 text-right">System Controls</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/20">
+                                {suppliers.map((supplier) => (
+                                    <React.Fragment key={supplier.id}>
+                                        <tr className="hover:bg-primary/[0.02] transition-colors group">
+                                            <td className="px-6 py-5">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-foreground text-sm uppercase tracking-tight group-hover:text-primary transition-colors">
+                                                        {supplier.name}
+                                                    </span>
+                                                    <span className="text-[10px] font-mono text-muted-foreground opacity-60 flex items-center gap-2 mt-1 uppercase">
+                                                        <FaEnvelope className="text-[8px]" /> {supplier.email || 'NO_DIGITAL_NODE'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-foreground uppercase">{supplier.contactPerson || 'UNASSIGNED'}</span>
+                                                    <span className="text-[10px] text-muted-foreground opacity-60 flex items-center gap-2 mt-1 uppercase font-black tracking-tighter">
+                                                        <FaPhone className="text-[8px]" /> {supplier.phone}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">{getStatusBadge(supplier.status)}</td>
+                                            <td className="px-6 py-5 text-right">
+                                                <ResponsiveActions actions={getSupplierActions(supplier)} />
+                                            </td>
+                                        </tr>
+                                    </React.Fragment>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile Unit Decomposition */}
+                    <div className="lg:hidden p-4 space-y-4">
+                        {suppliers.length === 0 ? (
+                            <div className="text-center py-20 bg-muted/5 rounded-3xl border border-dashed border-border/50">
+                                <p className="text-muted-foreground font-black uppercase tracking-widest text-xs opacity-50">Zero active nodes found</p>
+                            </div>
+                        ) : (
+                            suppliers.map((supplier) => (
+                                <Card key={supplier.id} className="border-border/50 bg-background/50 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden active:scale-[0.98] transition-all">
+                                    <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <CardTitle className="text-lg font-black uppercase tracking-tight text-foreground leading-none">
+                                                    {supplier.name}
+                                                </CardTitle>
+                                                <p className="text-[9px] font-black tracking-widest text-primary uppercase opacity-70">Logistics Node ID: #{supplier.id}</p>
+                                            </div>
+                                            <div className="shrink-0 flex items-center gap-2">
+                                                {getStatusBadge(supplier.status)}
+                                                <ResponsiveActions actions={getSupplierActions(supplier)} side="horizontal" />
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="p-5">
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm">
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center gap-1.5"><FaPhone className="text-[8px]" /> Hotline</p>
+                                                <p className="font-bold text-foreground text-xs">{supplier.phone}</p>
+                                            </div>
+                                            <div className="space-y-1 text-right">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center justify-end gap-1.5"><FaEnvelope className="text-[8px]" /> Digital Node</p>
+                                                <p className="font-bold text-foreground text-[11px] truncate">{supplier.email || 'N/A'}</p>
+                                            </div>
+                                            <div className="col-span-2 space-y-1 pt-2 border-t border-border/10">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50 flex items-center gap-2">
+                                                    <FaMapMarkerAlt className="text-[8px]" /> Physical Fulfillment Node
+                                                </p>
+                                                <p className="text-xs font-bold text-foreground opacity-80 leading-relaxed truncate">
+                                                    {supplier.address || 'NODATA_LOCATION_MISSING'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="pt-4 flex justify-center">
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             </div>
 
-            {totalPages > 1 && (
-                <div className="mt-8 flex justify-center">
-                    <PaginationComponent
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-            )}
-
+            {/* System Dialogs */}
             {deleteDialogOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-                        <CardHeader>
-                            <CardTitle className="text-destructive flex items-center gap-2">
-                                <FaTrash className="text-lg" /> Confirm Delete
-                            </CardTitle>
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[200] p-4 animate-in fade-in duration-300">
+                    <Card className="w-full max-w-md shadow-2xl border-destructive/20 bg-card/95 rounded-[2rem] overflow-hidden">
+                        <CardHeader className="bg-destructive/10 p-6 text-center border-b border-destructive/10">
+                            <FaTrash className="mx-auto text-3xl text-destructive mb-3" />
+                            <CardTitle className="text-xl font-black uppercase tracking-tight text-destructive">Node Decommissioning</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">Are you sure you want to delete supplier <span className="font-bold text-foreground">"{supplierToDelete?.name}"</span>? This action cannot be undone.</p>
-                            <div className="flex justify-end mt-8 gap-3">
-                                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                                    Cancel
+                        <CardContent className="p-8 text-center space-y-4">
+                            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                                You are about to purge provider node <span className="font-black text-foreground">"{supplierToDelete?.name}"</span> from the logistics matrix. This action is final and irreversible.
+                            </p>
+                            <div className="flex flex-col gap-3 pt-4">
+                                <Button variant="destructive" onClick={handleDeleteConfirm} className="h-14 font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-destructive/20 active:scale-95">
+                                    Finalize Deletion
                                 </Button>
-                                <Button variant="destructive" onClick={handleDeleteConfirm}>
-                                    Delete Supplier
+                                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="h-14 font-black uppercase tracking-widest rounded-2xl border-border/50 active:scale-95">
+                                    Abort Command
                                 </Button>
                             </div>
                         </CardContent>
