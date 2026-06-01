@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Edit, Trash, Eye, Plus, Search, Filter, AlertTriangle, Package } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Filter, AlertTriangle } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PartScannerModal from './PartScannerModal';
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from 'react-router-dom';
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
@@ -83,7 +82,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         {
             header: "Category",
             accessor: "category",
-            cell: (row) => <Badge variant="outline" className="bg-muted/30 border-border/50">{row.category}</Badge>
+            cell: (row) => <Badge variant="outline" className="bg-muted/30 border-border/50 text-[10px] uppercase">{row.category}</Badge>
         },
         {
             header: "Stock",
@@ -94,7 +93,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         {(() => {
                             const info = getStatusInfo(row.quantityInStock, row.minStockLevel);
                             return (
-                                <Badge variant={info.color === 'success' ? 'secondary' : info.color === 'warning' ? 'warning' : 'destructive'} className="text-[10px] h-5">
+                                <Badge variant={info.color === 'success' ? 'secondary' : info.color === 'warning' ? 'warning' : 'destructive'} className="text-[9px] h-5 uppercase font-bold">
                                     {info.icon}{info.text}
                                 </Badge>
                             );
@@ -105,7 +104,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         },
         {
             header: "Price",
-            cell: (row) => <span className="font-medium text-emerald-500">₹{row.mrp?.toFixed(2)}</span>
+            cell: (row) => <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{row.mrp?.toFixed(2)}</span>
         },
         {
             header: "Actions",
@@ -113,14 +112,14 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
             cell: (row, isTablet) => (
                 <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onViewDetails(row)}>
-                        <Eye className="h-4 w-4 text-emerald-500" />
+                        <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         {!isTablet && <span className="ml-2">View</span>}
                     </Button>
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>
                         <Edit className="h-4 w-4 text-primary" />
                         {!isTablet && <span className="ml-2 text-primary">Edit</span>}
                     </Button>
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => {
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(row);
                     }}>
@@ -146,7 +145,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         </CardTitle>
                         <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{part.partNumber}</p>
                     </div>
-                    <Badge variant={statusInfo.color === 'success' ? 'secondary' : statusInfo.color === 'warning' ? 'warning' : 'destructive'}>
+                    <Badge variant={statusInfo.color === 'success' ? 'secondary' : statusInfo.color === 'warning' ? 'warning' : 'destructive'} className="text-[10px] uppercase font-bold">
                         {statusInfo.text}
                     </Badge>
                 </CardHeader>
@@ -158,11 +157,11 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         </div>
                         <div>
                             <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Price</p>
-                            <p className="font-medium mt-1 text-emerald-500">₹{part.mrp?.toFixed(2)}</p>
+                            <p className="font-bold mt-1 text-emerald-600 dark:text-emerald-400">₹{part.mrp?.toFixed(2)}</p>
                         </div>
                         <div>
                             <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Category</p>
-                            <Badge variant="outline" className="mt-1">{part.category}</Badge>
+                            <Badge variant="outline" className="mt-1 text-[10px] uppercase">{part.category}</Badge>
                         </div>
                         <div>
                             <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Location</p>
@@ -184,7 +183,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         </Button>
                         <Button 
                             variant="destructive" 
-                            className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white border-none"
+                            className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive border-none"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(part);

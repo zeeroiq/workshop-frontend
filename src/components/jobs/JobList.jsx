@@ -8,12 +8,9 @@ import {
     IndianRupee,
     Trash,
     Search,
-    Filter,
     User,
-    Wrench,
-    Clock
+    Wrench
 } from 'lucide-react';
-import {formatDateAsEnUS} from "../helper/utils";
 import {getStatusBadge} from "./helper/utils";
 import {JOB_FILTER_OPTIONS} from "./helper/constants";
 import {jobService} from "@/services/jobService";
@@ -132,7 +129,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         {
             header: "Job ID",
             accessor: "jobNumber",
-            cell: (row) => <span className="font-mono font-bold text-emerald-500">{row.jobNumber}</span>
+            cell: (row) => <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{row.jobNumber}</span>
         },
         {
             header: "Customer",
@@ -168,7 +165,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
             header: "Cost",
             accessor: "cost",
             cell: (row) => (
-                <div className="flex items-center font-bold text-emerald-500">
+                <div className="flex items-center font-bold text-emerald-600 dark:text-emerald-400">
                     <IndianRupee size={14} className="mr-0.5" />
                     {row.cost?.toFixed(2)}
                 </div>
@@ -180,7 +177,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
             cell: (row, isTablet) => (
                 <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onViewJob(row)}>
-                        <Eye className="h-4 w-4 text-emerald-500" />
+                        <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         {!isTablet && <span className="ml-2">View</span>}
                     </Button>
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEditJob(row)}>
@@ -188,7 +185,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                         {!isTablet && <span className="ml-2 text-primary">Edit</span>}
                     </Button>
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => createInvoice(row.id)}>
-                        <FileText className="h-4 w-4 text-emerald-400" />
+                        <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         {!isTablet && <span className="ml-2">Invoice</span>}
                     </Button>
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
@@ -224,13 +221,13 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                     <div>
                         <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Customer</p>
                         <div className="flex items-center gap-2">
-                            <User size={12} className="text-emerald-500" />
+                            <User size={12} className="text-emerald-600 dark:text-emerald-400" />
                             <span className="font-medium">{job.customer}</span>
                         </div>
                     </div>
                     <div>
                         <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Cost</p>
-                        <div className="flex items-center font-bold text-emerald-500">
+                        <div className="flex items-center font-bold text-emerald-600 dark:text-emerald-400">
                             <IndianRupee size={12} className="mr-0.5" />
                             {job.cost?.toFixed(2)}
                         </div>
@@ -258,7 +255,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                     <Button variant="outline" size="lg" className="flex-1 h-12 gap-2" onClick={(e) => { e.stopPropagation(); onEditJob(job); }}>
                         <Edit size={18} />
                     </Button>
-                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-emerald-500" onClick={(e) => { e.stopPropagation(); createInvoice(job.id); }}>
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-emerald-600 dark:text-emerald-400" onClick={(e) => { e.stopPropagation(); createInvoice(job.id); }}>
                         <FileText size={18} />
                     </Button>
                     <Button variant="destructive" size="lg" className="flex-1 h-12 gap-2 bg-destructive/10 text-destructive border-none" onClick={(e) => { e.stopPropagation(); onDeleteJob(job.id); }}>

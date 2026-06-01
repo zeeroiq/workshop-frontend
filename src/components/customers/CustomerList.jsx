@@ -81,7 +81,7 @@ const CustomerList = () => {
             header: "Vehicles",
             accessor: "vehicleCount",
             cell: (row) => (
-                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">
+                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-bold">
                     {row.vehicleCount || 0}
                 </Badge>
             )
@@ -93,7 +93,7 @@ const CustomerList = () => {
                 <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" asChild>
                         <Link to={`/customers/${row.id}`} onClick={(e) => e.stopPropagation()}>
-                            <Eye className="h-4 w-4 text-emerald-500" />
+                            <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             {!isTablet && <span className="ml-2">View</span>}
                         </Link>
                     </Button>
@@ -103,7 +103,7 @@ const CustomerList = () => {
                             {!isTablet && <span className="ml-2 text-primary">Edit</span>}
                         </Link>
                     </Button>
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => {
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(row.id);
                     }}>
@@ -134,7 +134,7 @@ const CustomerList = () => {
                     <div>
                         <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Vehicles</p>
                         <div className="mt-1">
-                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">
+                            <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-bold">
                                 {customer.vehicleCount || 0}
                             </Badge>
                         </div>

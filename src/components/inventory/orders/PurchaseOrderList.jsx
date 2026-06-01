@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Plus, Search, Filter, Calendar, Truck, IndianRupee } from 'lucide-react';
+import { Eye, Edit, Plus, Search, Calendar, Truck, IndianRupee } from 'lucide-react';
 import { inventoryService } from "@/services/inventoryService";
 import { toast } from "react-toastify";
 import { Button } from '@/components/ui/button';
@@ -59,7 +59,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
         {
             header: "Order #",
             accessor: "orderNumber",
-            cell: (row) => <span className="font-mono font-bold text-emerald-500">{row.orderNumber}</span>
+            cell: (row) => <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{row.orderNumber}</span>
         },
         {
             header: "Supplier",
@@ -78,7 +78,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
         {
             header: "Total",
             cell: (row) => (
-                <div className="flex items-center font-bold text-emerald-500">
+                <div className="flex items-center font-bold text-emerald-600 dark:text-emerald-400">
                     <IndianRupee size={12} className="mr-0.5" />
                     {row.totalAmount.toFixed(2)}
                 </div>
@@ -87,7 +87,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
         {
             header: "Status",
             cell: (row) => (
-                <Badge variant={getStatusVariant(row.status)} className="text-[10px] uppercase">
+                <Badge variant={getStatusVariant(row.status)} className="text-[10px] uppercase font-bold">
                     {row.status}
                 </Badge>
             )
@@ -100,7 +100,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                 return (
                     <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onViewDetails(row)}>
-                            <Eye className="h-4 w-4 text-emerald-500" />
+                            <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             {!isTablet && <span className="ml-2">View</span>}
                         </Button>
                         {!isFinalized && (
@@ -129,20 +129,20 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
                         Ordered {formatDate(order.orderDate)}
                     </span>
                 </div>
-                <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                <Badge variant={getStatusVariant(order.status)} className="font-bold">{order.status}</Badge>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Supplier</p>
                         <div className="flex items-center gap-2">
-                            <Truck size={12} className="text-emerald-500" />
+                            <Truck size={12} className="text-emerald-600 dark:text-emerald-400" />
                             <span className="font-medium truncate">{order.supplierName}</span>
                         </div>
                     </div>
                     <div>
                         <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Total Amount</p>
-                        <div className="flex items-center font-bold text-emerald-500">
+                        <div className="flex items-center font-bold text-emerald-600 dark:text-emerald-400">
                             <IndianRupee size={12} className="mr-0.5" />
                             {order.totalAmount.toFixed(2)}
                         </div>

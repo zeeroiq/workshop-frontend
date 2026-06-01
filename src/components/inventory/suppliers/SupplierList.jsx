@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Edit, Trash, Eye, Plus, Search, Filter, Phone, Mail, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit, Trash, Eye, Plus, Search, User } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
@@ -62,7 +62,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const getStatusBadge = (status) => {
         const variant = status === 'ACTIVE' ? 'success' : status === 'INACTIVE' ? 'destructive' : 'secondary';
         return (
-            <Badge variant={variant} className="text-[10px] uppercase tracking-wider">
+            <Badge variant={variant} className="text-[10px] uppercase tracking-wider font-bold">
                 {status || 'UNKNOWN'}
             </Badge>
         );
@@ -82,7 +82,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             header: "Contact Person",
             cell: (row) => (
                 <div className="flex items-center gap-2">
-                    <User size={14} className="text-emerald-500" />
+                    <User size={14} className="text-emerald-600 dark:text-emerald-400" />
                     <span className="text-sm">{row.contactPerson || '-'}</span>
                 </div>
             )
@@ -102,7 +102,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             cell: (row, isTablet) => (
                 <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onViewDetails(row)}>
-                        <Eye className="h-4 w-4 text-emerald-500" />
+                        <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         {!isTablet && <span className="ml-2">View</span>}
                     </Button>
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>

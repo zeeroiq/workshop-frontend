@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, Car, User, Filter } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, User, Filter } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +73,7 @@ const VehicleList = () => {
             accessor: "customerName",
             cell: (row) => (
                 <div className="flex items-center gap-2">
-                    <User size={14} className="text-emerald-500" />
+                    <User size={14} className="text-emerald-600 dark:text-emerald-400" />
                     <span className="text-sm font-medium">{row.customerName || 'No owner'}</span>
                 </div>
             )
@@ -99,7 +99,7 @@ const VehicleList = () => {
                 <div className="flex items-center justify-end gap-2">
                     <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" asChild>
                         <Link to={`/vehicles/${row.id}`} onClick={(e) => e.stopPropagation()}>
-                            <Eye className="h-4 w-4 text-emerald-500" />
+                            <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             {!isTablet && <span className="ml-2">View</span>}
                         </Link>
                     </Button>
@@ -109,7 +109,7 @@ const VehicleList = () => {
                             {!isTablet && <span className="ml-2 text-primary">Edit</span>}
                         </Link>
                     </Button>
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={(e) => {
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(row.id);
                     }}>
