@@ -14,6 +14,16 @@ export const workshopMgmtService = {
             .then(response => response.data);
     },
 
+    updateUser: (workshopId, userId, userData) => {
+        return api.put(`${BASE_URL}/${workshopId || 1}/users/${userId}`, userData)
+            .then(response => response.data);
+    },
+
+    deleteUser: (workshopId, userId) => {
+        return api.delete(`${BASE_URL}/${workshopId || 1}/users/${userId}`)
+            .then(response => response.data);
+    },
+
     // Role & Permission management
     listRoles: (workshopId) => {
         return api.get(`${BASE_URL}/${workshopId || 1}/roles`)

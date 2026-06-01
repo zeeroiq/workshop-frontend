@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, UserPlus, Mail, Phone, ShieldCheck } from 'lucide-react';
+import { Edit, UserPlus, Mail, Phone, Trash } from 'lucide-react';
 import { workshopMgmtService } from '@/services/workshopMgmtService';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from 'react-toastify';
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 
 const UserList = ({ onEdit, onCreate }) => {
@@ -27,6 +28,21 @@ const UserList = ({ onEdit, onCreate }) => {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    const handleDelete = async (user) => {
+        if (!window.confirm(`Are you sure you want to remove ${user.firstName} from staff?`)) {
+            return;
+        }
+
+        try {
+            await workshopMgmtService.deleteUser(null, user.id);
+            toast.success('Staff member removed successfully');
+            fetchUsers();
+        } catch (err) {
+            console.error('Error deleting user:', err);
+            toast.error(err.response?.data?.message || 'Failed to remove staff member');
+        }
+    };
 
     const columns = [
         {
@@ -63,10 +79,16 @@ const UserList = ({ onEdit, onCreate }) => {
             header: "Actions",
             className: "text-right",
             cell: (row, isTablet) => (
-                <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>
-                    <Edit className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    {!isTablet && <span className="ml-2">Edit</span>}
-                </Button>
+                <div className="flex items-center justify-end gap-2">
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>
+                        <Edit className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        {!isTablet && <span className="ml-2">Edit</span>}
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(row)}>
+                        <Trash className="h-4 w-4" />
+                        {!isTablet && <span className="ml-2">Remove</span>}
+                    </Button>
+                </div>
             )
         }
     ];
@@ -101,10 +123,14 @@ const UserList = ({ onEdit, onCreate }) => {
                     </div>
                 </div>
                 
-                <div className="pt-4 border-t border-border/50">
-                    <Button variant="outline" className="w-full h-11 gap-2 border-border/50" onClick={(e) => { e.stopPropagation(); onEdit(user); }}>
+                <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                    <Button variant="outline" className="flex-1 h-11 gap-2 border-border/50" onClick={(e) => { e.stopPropagation(); onEdit(user); }}>
                         <Edit size={16} />
-                        <span>Edit Profile</span>
+                        <span>Edit</span>
+                    </Button>
+                    <Button variant="destructive" className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive border-none" onClick={(e) => { e.stopPropagation(); handleDelete(user); }}>
+                        <Trash size={16} />
+                        <span>Remove</span>
                     </Button>
                 </div>
             </CardContent>
