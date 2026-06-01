@@ -70,6 +70,7 @@ const Header = ({ onToggleSidebar }) => {
                     <Menu size={20} />
                 </Button>
                 
+                {/* Branding - Mobile only, as Desktop has it in Sidebar */}
                 <div className="flex items-center gap-2 lg:hidden">
                     {workshopInfo.logoUrl ? (
                         <img 
@@ -89,7 +90,7 @@ const Header = ({ onToggleSidebar }) => {
 
                 {/* Desktop Search Placeholder or Breadcrumbs could go here */}
                 <div className="hidden lg:flex items-center gap-2 text-muted-foreground">
-                    <span className="text-xs font-medium uppercase tracking-[0.2em]">Operational Console</span>
+                    <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Operational Console</span>
                 </div>
             </div>
 

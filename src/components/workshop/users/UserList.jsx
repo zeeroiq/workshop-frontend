@@ -58,8 +58,8 @@ const UserList = ({ onEdit, onCreate }) => {
             header: "Contact",
             cell: (row) => (
                 <div className="flex flex-col text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1"><Mail size={12} /> {row.email}</div>
-                    <div className="flex items-center gap-1"><Phone size={12} /> {row.phone}</div>
+                    <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><Mail size={10} /> {row.email}</div>
+                    <div className="flex items-center gap-1"><Phone size={10} /> {row.phone}</div>
                 </div>
             )
         },
@@ -80,11 +80,14 @@ const UserList = ({ onEdit, onCreate }) => {
             className: "text-right",
             cell: (row, isTablet) => (
                 <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={(e) => { e.stopPropagation(); onEdit(row); }}>
                         <Edit className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         {!isTablet && <span className="ml-2">Edit</span>}
                     </Button>
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(row)}>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive hover:bg-destructive/10" onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row);
+                    }}>
                         <Trash className="h-4 w-4" />
                         {!isTablet && <span className="ml-2">Remove</span>}
                     </Button>

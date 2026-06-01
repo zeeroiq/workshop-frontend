@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,7 @@ const UserForm = ({ user, onCancel, onSave }) => {
                 email: user.email || '',
                 phone: user.phone || '',
                 address: user.address || '',
-                roles: (Array.isArray(user.roles) ? user.roles : [user.roles]).map(r => r.replace('ROLE_', '')),
+                roles: Array.isArray(user.roles) ? user.roles.map(r => r.replace('ROLE_', '')) : [],
                 password: '',
             });
         }
@@ -54,17 +54,25 @@ const UserForm = ({ user, onCancel, onSave }) => {
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
-    const handleRoleChange = (roleName) => {
+    const handleRoleToggle = useCallback((roleName) => {
         setFormData(prev => {
-            const newRoles = prev.roles.includes(roleName)
-                ? prev.roles.filter(r => r !== roleName)
-                : [...prev.roles, roleName];
+            const currentRoles = prev.roles || [];
+            const isSelected = currentRoles.includes(roleName);
+            const newRoles = isSelected
+                ? currentRoles.filter(r => r !== roleName)
+                : [...currentRoles, roleName];
             return { ...prev, roles: newRoles };
         });
-    };
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (formData.roles.length === 0) {
+            toast.warn('Please assign at least one role.');
+            return;
+        }
+
         setLoading(true);
         setError(null);
         try {
@@ -134,24 +142,32 @@ const UserForm = ({ user, onCancel, onSave }) => {
                                 <Label className="text-base font-semibold">Assign Roles</Label>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-                                {availableRoles.map(role => (
-                                    <div key={role} className="flex items-center space-x-2 p-3 rounded-xl border border-border/50 hover:bg-emerald-500/5 transition-colors cursor-pointer group" onClick={() => handleRoleChange(role)}>
-                                        <Checkbox
-                                            id={`role-${role}`}
-                                            checked={formData.roles.includes(role)}
-                                            onCheckedChange={() => handleRoleChange(role)}
-                                            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                                        />
-                                        <div className="grid gap-1.5 leading-none">
+                                {availableRoles.map(role => {
+                                    const isChecked = formData.roles.includes(role);
+                                    return (
+                                        <div 
+                                            key={role} 
+                                            className="flex items-center space-x-3 p-3 rounded-xl border border-border/50 hover:bg-emerald-500/5 transition-all cursor-pointer group"
+                                            onClick={() => handleRoleToggle(role)}
+                                        >
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <Checkbox
+                                                    id={`role-${role}`}
+                                                    checked={isChecked}
+                                                    onCheckedChange={() => handleRoleToggle(role)}
+                                                    className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 transition-colors"
+                                                />
+                                            </div>
                                             <Label 
                                                 htmlFor={`role-${role}`}
-                                                className="text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:text-emerald-500 transition-colors"
+                                                className="text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:text-emerald-500 transition-colors flex-1"
+                                                onClick={(e) => e.preventDefault()} 
                                             >
                                                 {role.replace('_', ' ')}
                                             </Label>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                             {formData.roles.length === 0 && (
                                 <p className="text-[10px] text-destructive italic font-bold">At least one role must be assigned.</p>

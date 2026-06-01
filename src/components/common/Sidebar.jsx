@@ -19,14 +19,52 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { authService } from '@/services/authService';
+import { workshopService } from '@/services/workshopService';
+import { getAuthenticatedUrl } from "@/utils/storage";
 
 const Sidebar = ({ isExpanded, onClose }) => {
     const location = useLocation();
+    const user = authService.getUser();
     const [manageOpen, setManageOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(() => {
         if (typeof window === 'undefined') return true;
         return window.matchMedia('(min-width: 1024px)').matches;
     });
+
+    const [workshopInfo, setWorkshopInfo] = useState({
+        name: user?.workshopName || 'Vishwakarma',
+        logoUrl: null
+    });
+
+    useEffect(() => {
+        const fetchWorkshopInfo = async () => {
+            try {
+                const data = await workshopService.getSettings();
+                setWorkshopInfo({
+                    name: data.name,
+                    logoUrl: data.logoUrl
+                });
+            } catch (error) {
+                console.error('Failed to fetch workshop info:', error);
+            }
+        };
+
+        if (authService.isAuthenticated()) {
+            fetchWorkshopInfo();
+        }
+
+        const handleSettingsUpdate = (event) => {
+            if (event.detail) {
+                setWorkshopInfo({
+                    name: event.detail.name,
+                    logoUrl: event.detail.logoUrl
+                });
+            }
+        };
+
+        window.addEventListener('workshop-settings-updated', handleSettingsUpdate);
+        return () => window.removeEventListener('workshop-settings-updated', handleSettingsUpdate);
+    }, []);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(min-width: 1024px)');
@@ -88,16 +126,26 @@ const Sidebar = ({ isExpanded, onClose }) => {
                 )}
             >
                 <div className='flex h-16 items-center justify-between border-b border-border/50 px-6'>
-                    <div className='flex items-center gap-3'>
-                        <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20">
-                            <Wrench className="w-4 h-4 text-emerald-950" />
-                        </div>
+                    <div className='flex items-center gap-3 overflow-hidden'>
+                        {workshopInfo.logoUrl ? (
+                            <img 
+                                src={getAuthenticatedUrl(workshopInfo.logoUrl)} 
+                                alt="Logo" 
+                                className="h-8 w-8 object-contain rounded shadow-sm shrink-0" 
+                            />
+                        ) : (
+                            <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20 shrink-0">
+                                <Wrench className="w-4 h-4 text-emerald-950" />
+                            </div>
+                        )}
                         {showLabels && (
-                            <span className="text-lg font-black text-foreground tracking-tight">YourWorkshop</span>
+                            <span className="text-lg font-black text-foreground tracking-tight truncate">
+                                {workshopInfo.name}
+                            </span>
                         )}
                     </div>
                     {!isDesktop && (
-                        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-emerald-500/10 hover:text-emerald-500">
+                        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-emerald-500/10 hover:text-emerald-500 shrink-0">
                             <X size={20} />
                         </Button>
                     )}
