@@ -1,34 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote } from 'lucide-react';
+import { Plus, Eye, Edit, Trash, TextSearch, Send, Banknote, Search, Filter, Calendar } from 'lucide-react';
 import { invoiceService } from '@/services/invoiceService';
-import { jobService } from '@/services/jobService';
 import { INVOICE_STATUS_OPTIONS } from './constants/invoiceConstants';
 import { toast } from "react-toastify";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/components/ui/tabs";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
+import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 
 const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayment }) => {
     const [invoices, setInvoices] = useState([]);
@@ -60,10 +41,6 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
     };
 
     const handleSendInvoice = async (invoiceId) => {
@@ -101,6 +78,30 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         }
     };
 
+    const downloadInvoice = async (id) => {
+        try {
+            setLoading(true);
+            const response = await invoiceService.exportInvoice(id);
+            const blob = new Blob([response.data], {
+                type: response.headers['content-type'] || 'application/pdf'
+            });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `invoice-${id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('Invoice downloaded successfully!');
+        } catch (error) {
+            console.error('Error downloading invoice:', error);
+            toast.error('Failed to download invoice');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const getStatusVariant = (status) => {
         switch (status) {
             case 'PAID': return 'success';
@@ -111,181 +112,193 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         }
     };
 
-    const downloadInvoice = async (id) => {
-        try {
-            setLoading(true);
-            const response = await invoiceService.exportInvoice(id);
-            const blob = new Blob([response.data], {
-                type: response.headers['content-type'] || 'application/pdf'
-            });
-
-            if (blob.size === 0) {
-                throw new Error('Server returned empty PDF file');
-            }
-
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-
-            const contentDisposition = response.headers['content-disposition'];
-            let filename = `invoice-${id}.pdf`;
-
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-                if (filenameMatch && filenameMatch[1]) {
-                    filename = filenameMatch[1];
-                }
-            }
-
-            link.download = filename;
-            link.style.display = 'none';
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            window.URL.revokeObjectURL(url);
-
-            toast.success('Invoice downloaded successfully!');
-
-        } catch (error) {
-            console.error('Error downloading invoice:', error);
-            toast.error(error.message || 'Failed to download invoice');
-        } finally {
-            setLoading(false);
+    const columns = [
+        {
+            header: "Invoice #",
+            accessor: "invoiceNumber",
+            cell: (row) => <span className="font-mono font-bold text-emerald-500">{row.invoiceNumber}</span>
+        },
+        {
+            header: "Job #",
+            accessor: "jobNumber",
+            cell: (row) => <span className="text-muted-foreground">{row.jobNumber || '-'}</span>
+        },
+        {
+            header: "Customer",
+            accessor: "customerName",
+            cell: (row) => <span className="font-medium">{row.customerName}</span>
+        },
+        {
+            header: "Date",
+            cell: (row) => <span className="text-muted-foreground">{new Date(row.invoiceDate).toLocaleDateString()}</span>
+        },
+        {
+            header: "Amount",
+            cell: (row) => <span className="font-bold text-emerald-500">₹{row.totalAmount.toFixed(2)}</span>
+        },
+        {
+            header: "Status",
+            cell: (row) => (
+                <Badge variant={getStatusVariant(row.status)} className="capitalize">
+                    {row.status.toLowerCase()}
+                </Badge>
+            )
+        },
+        {
+            header: "Actions",
+            className: "text-right",
+            cell: (row, isTablet) => (
+                <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewInvoice(row)}>
+                        <Eye size={16} className="text-emerald-500" />
+                    </Button>
+                    {row.status !== 'PAID' && row.status !== 'CANCELLED' && (
+                        <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEditInvoice(row)}>
+                                <Edit size={16} className="text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onAddPayment(row)}>
+                                <Banknote size={16} className="text-emerald-500" />
+                            </Button>
+                        </>
+                    )}
+                    {row.status === 'DRAFT' && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSendInvoice(row.id)}>
+                            <Send size={16} className="text-blue-500" />
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => downloadInvoice(row.id)}>
+                        <TextSearch size={16} className="text-muted-foreground" />
+                    </Button>
+                    {row.status === 'DRAFT' && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteInvoice(row.id)}>
+                            <Trash size={16} className="text-destructive" />
+                        </Button>
+                    )}
+                </div>
+            )
         }
-    };
+    ];
 
-    const filteredAndSearchedInvoices = invoices.filter(invoice =>
+    const renderInvoiceCard = (invoice) => (
+        <Card 
+            className="overflow-hidden border-border/50 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+            onClick={() => onViewInvoice(invoice)}
+        >
+            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                <div className="flex flex-col">
+                    <CardTitle className="text-lg font-mono font-bold group-hover:text-emerald-500 transition-colors">
+                        {invoice.invoiceNumber}
+                    </CardTitle>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                        {new Date(invoice.invoiceDate).toLocaleDateString()}
+                    </span>
+                </div>
+                <Badge variant={getStatusVariant(invoice.status)} className="capitalize">
+                    {invoice.status.toLowerCase()}
+                </Badge>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Customer</p>
+                        <p className="font-medium truncate">{invoice.customerName}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Amount</p>
+                        <p className="font-bold text-emerald-500">₹{invoice.totalAmount.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Job #</p>
+                        <p className="font-mono text-xs">{invoice.jobNumber || '-'}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Due Date</p>
+                        <p className="font-medium">{new Date(invoice.dueDate).toLocaleDateString()}</p>
+                    </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+                    <Button variant="outline" size="lg" className="flex-1 h-12" onClick={(e) => { e.stopPropagation(); onViewInvoice(invoice); }}>
+                        <Eye size={18} />
+                    </Button>
+                    {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
+                        <Button variant="outline" size="lg" className="flex-1 h-12" onClick={(e) => { e.stopPropagation(); onEditInvoice(invoice); }}>
+                            <Edit size={18} />
+                        </Button>
+                    )}
+                    <Button variant="outline" size="lg" className="flex-1 h-12 text-emerald-500" onClick={(e) => { e.stopPropagation(); downloadInvoice(invoice.id); }}>
+                        <TextSearch size={18} />
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
+    const filteredInvoices = invoices.filter(invoice =>
         invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    return (
-        <div className="space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                    <h1 className="text-2xl font-bold">Invoices</h1>
-                    <p className="text-muted-foreground">Manage all invoices for your workshop</p>
-                </div>
-                <Button onClick={onCreateInvoice}><Plus className="mr-2 h-4 w-4" /> Create Invoice</Button>
+    const filters = (
+        <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="text"
+                    placeholder="Search by Invoice # or Customer..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-muted/30 border-border/50"
+                />
             </div>
+            <div className="flex gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-48 bg-muted/30 border-border/50">
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {INVOICE_STATUS_OPTIONS.map(status => (
+                            <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+    );
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>All Invoices</CardTitle>
-                    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-                        <Input
-                            type="text"
-                            placeholder="Search invoices..."
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            className="w-full sm:max-w-sm"
-                        />
-                        {/*<Button type="submit" variant="outline" size="icon">*/}
-                        {/*    <Search className="h-4 w-4" />*/}
-                        {/*</Button>*/}
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-                        <TabsList>
-                            <TabsTrigger value="all">All</TabsTrigger>
-                            {INVOICE_STATUS_OPTIONS.map(status => (
-                                <TabsTrigger key={status.value} value={status.value}>
-                                    {status.label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                        <TabsContent value={statusFilter}>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Invoice #</TableHead>
-                                        <TableHead>Job Number</TableHead>
-                                        <TableHead>Customer</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Due Date</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {loading ? (
-                                        <TableRow>
-                                            <TableCell colSpan="7" className="h-24 text-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : filteredAndSearchedInvoices.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan="7" className="h-24 text-center">
-                                                No invoices found.
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        filteredAndSearchedInvoices.map(invoice => (
-                                            <TableRow
-                                                key={invoice.id}
-                                                className="cursor-pointer"
-                                                onClick={() => onViewInvoice(invoice)}
-                                                onKeyDown={(event) => {
-                                                    if (event.key === 'Enter' || event.key === ' ') {
-                                                        event.preventDefault();
-                                                        onViewInvoice(invoice);
-                                                    }
-                                                }}
-                                                tabIndex={0}
-                                                role="button"
-                                            >
-                                                <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                                                <TableCell className="font-medium text-center">{invoice.jobNumber === null ? '-' : invoice.jobNumber}</TableCell>
-                                                <TableCell>{invoice.customerName}</TableCell>
-                                                <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
-                                                <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                                                <TableCell>₹{invoice.totalAmount.toFixed(2)}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant={getStatusVariant(invoice.status)}>
-                                                        {INVOICE_STATUS_OPTIONS.find(s => s.value === invoice.status)?.label || invoice.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onViewInvoice(invoice); }}><Eye className="h-4 w-4" /></Button>
-                                                        {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                            <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onEditInvoice(invoice); }}><Edit className="h-4 w-4" /></Button>
-                                                        )}
-                                                        {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
-                                                            <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); onAddPayment(invoice); }}><Banknote className="h-4 w-4" /></Button>
-                                                        )}
-                                                        {invoice.status === 'DRAFT' && (
-                                                            <>
-                                                                <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); handleSendInvoice(invoice.id); }}><Send className="h-4 w-4" /></Button>
-                                                                <Button variant="destructive" size="icon" onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(invoice.id); }}><Trash className="h-4 w-4" /></Button>
-                                                            </>
-                                                        )}
-                                                        {invoice.status === 'SENT' && (
-                                                            <Button variant="destructive" size="icon" onClick={(e) => { e.stopPropagation(); handleCancelInvoice(invoice.id); }}><Trash className="h-4 w-4" /></Button>
-                                                        )}
-                                                        <Button variant="outline" size="icon" onClick={(e) => { e.stopPropagation(); downloadInvoice(invoice.id); }}><TextSearch className="h-4 w-4" /></Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
+    const actions = (
+        <Button onClick={onCreateInvoice} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
+            <Plus size={16} className="mr-2" />
+            <span>New Invoice</span>
+        </Button>
+    );
 
-            <PaginationComponent
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
+    return (
+        <div className="pb-10">
+            <ResponsiveDataContainer
+                title="Invoices"
+                description="Manage billing and payments for your services"
+                actions={actions}
+                filters={filters}
+                columns={columns}
+                data={filteredInvoices}
+                renderCard={renderInvoiceCard}
+                onRowClick={onViewInvoice}
+                loading={loading}
+                emptyMessage="No invoices found."
             />
+            
+            {!loading && invoices.length > 0 && (
+                <div className="mt-6">
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
         </div>
     );
 };
