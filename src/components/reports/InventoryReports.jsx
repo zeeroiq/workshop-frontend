@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import {
-    FaBox,
-    FaExclamationTriangle,
-    FaArrowUp,
-    FaTools
-} from 'react-icons/fa';
+import React, { useState, useMemo } from 'react';
+import { 
+    Box, 
+    AlertTriangle, 
+    TrendingUp, 
+    Package, 
+    Layers, 
+    ArrowUpCircle,
+    ShoppingCart
+} from 'lucide-react';
 import { reportsService } from '@/services/reportsService';
 import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsConstants';
 import ExportControls from './ExportControls';
@@ -15,7 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-
+import { toast } from 'react-toastify';
+import { cn } from '@/lib/utils';
 
 const InventoryReports = () => {
     const [criteria, setCriteria] = useState({
@@ -30,17 +34,12 @@ const InventoryReports = () => {
     const [loading, setLoading] = useState(false);
 
     const handleCriteriaChange = (field, value) => {
-        setCriteria(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setCriteria(prev => ({ ...prev, [field]: value }));
     };
 
     const generateReport = async () => {
         try {
             setLoading(true);
-
-            // Prepare the request body
             const requestBody = {
                 reportType: criteria.reportType,
                 timePeriod: criteria.timePeriod,
@@ -50,148 +49,101 @@ const InventoryReports = () => {
             };
 
             const response = await reportsService.getInventoryStatusReport(requestBody);
-            setReportData(response.data);
+            if (response?.data?.success) {
+                setReportData(response.data);
+                toast.success('Inventory analytics ready');
+            }
         } catch (error) {
             console.error('Error generating inventory report:', error);
-            alert('Failed to generate report. Please try again.');
+            toast.error('Failed to run inventory analytics');
         } finally {
             setLoading(false);
         }
     };
 
-    const getExportCriteria = () => {
-        return {
-            reportType: criteria.reportType,
-            timePeriod: criteria.timePeriod,
-            startDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.startDate : undefined,
-            endDate: criteria.timePeriod === TIME_PERIODS.CUSTOM ? criteria.endDate : undefined,
-        };
-    };
-
     const getStockStatusBadge = (currentStock, minStockLevel) => {
-        let variant;
-        let text;
-        if (currentStock === 0) {
-            variant = 'destructive';
-            text = 'Out of Stock';
-        } else if (currentStock <= minStockLevel) {
-            variant = 'warning'; // Assuming a warning variant exists or can be defined
-            text = 'Low Stock';
-        } else {
-            variant = 'success'; // Assuming a success variant exists
-            text = 'In Stock';
-        }
-        return <Badge variant={variant}>{text}</Badge>;
+        if (currentStock === 0) return <Badge variant="destructive" className="font-bold uppercase text-[9px]">Out of Stock</Badge>;
+        if (currentStock <= minStockLevel) return <Badge variant="warning" className="font-bold uppercase text-[9px]">Low Stock</Badge>;
+        return <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[9px]">In Stock</Badge>;
     };
-
 
     const inventoryByCategoryConfig = {
         table: {
             columns: [
-                { header: 'Category', accessor: 'category', render: (row) => <div className="flex items-center"><FaTools className="mr-2" />{row.category}</div> },
-                { header: 'Item Count', accessor: 'itemCount' },
-                { header: 'Total Value', accessor: 'totalValue', render: (row) => `₹ ${row.totalValue?.toFixed(2) || '0.00'}` },
-                { header: 'Percentage of Total', render: (row, data) => {
+                { header: 'Category', cell: (row) => <div className="flex items-center gap-2 font-bold uppercase text-xs"><Package size={14} className="text-emerald-500" />{row.category}</div> },
+                { header: 'SKU Count', accessor: 'itemCount' },
+                { header: 'Inventory Value', render: (row) => <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{row.totalValue?.toFixed(2)}</span> },
+                { header: 'Weight', render: (row, data) => {
                         const totalValue = data.reduce((sum, item) => sum + item.totalValue, 0);
                         return `${((row.totalValue / totalValue) * 100).toFixed(1)}%`;
                     }}
             ]
         },
         pie: { dataKey: 'totalValue', nameKey: 'category' },
-        bar: { xAxisKey: 'category', bars: [{ dataKey: 'totalValue', name: 'Value' }] },
-        tooltipFormatter: (value) => `₹ ${Number(value).toFixed(2)}`
+        bar: { xAxisKey: 'category', bars: [{ dataKey: 'totalValue', name: 'Value (₹)' }] },
+        tooltipFormatter: (value) => `₹${Number(value).toFixed(2)}`
     };
 
-
     return (
-        <div className="container mx-auto py-6">
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h3 className="text-2xl font-bold">Inventory Status Report</h3>
-                <ExportControls getCriteria={getExportCriteria} />
+        <div className="space-y-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/50 pb-6">
+                <div className="space-y-1">
+                    <h3 className="text-2xl font-black tracking-tight flex items-center gap-2 text-foreground">
+                        <Layers className="text-emerald-500 h-6 w-6" /> Inventory Intelligence
+                    </h3>
+                    <p className="text-sm text-muted-foreground">Strategic stock and procurement analytics</p>
+                </div>
+                <ExportControls getCriteria={() => criteria} />
             </div>
 
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle>Report Filters</CardTitle>
+            <Card className="border-border/50 bg-muted/20 shadow-none">
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Logistics Filter</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-col gap-4 lg:flex-row lg:items-end">
-                    <div className="w-full lg:flex-1 lg:min-w-0">
+                <CardContent className="flex flex-col md:flex-row gap-6 items-end">
+                    <div className="flex-1 min-w-0 w-full">
                         <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
                     </div>
-
-                    <Button className="w-full flex-shrink-0 lg:w-auto" onClick={generateReport} disabled={loading}>
-                        {loading ? 'Generating...' : 'Generate Report'}
+                    <Button className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-10 font-bold px-8" onClick={generateReport} disabled={loading}>
+                        {loading ? 'Processing SKU Data...' : 'Run Inventory Audit'}
                     </Button>
                 </CardContent>
             </Card>
 
             {reportData && reportData.data && (
-                <div className="report-results space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Inventory Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Total Parts</CardTitle>
-                                        <FaBox className="text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{reportData.data.totalParts || 0}</div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Low Stock Parts</CardTitle>
-                                        <FaExclamationTriangle className="text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">{reportData.data.lowStockParts || 0}</div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-                                        <FaArrowUp className="text-muted-foreground" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold">₹ {reportData.data.totalInventoryValue?.toFixed(2) || '0.00'}</div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </CardContent>
-                    </Card>
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                        <MetricCard title="Total Catalog Size" value={reportData.data.totalParts} unit="SKUs" icon={<Box />} color="text-blue-500" />
+                        <MetricCard title="Low Stock Alerts" value={reportData.data.lowStockParts} unit="Items" icon={<AlertTriangle />} color="text-rose-500" isWarning={reportData.data.lowStockParts > 0} />
+                        <MetricCard title="Assets Valuation" value={reportData.data.totalInventoryValue} unit="₹" icon={<TrendingUp />} color="text-emerald-500" isCurrency />
+                    </div>
 
                     {reportData.data.lowStockItems && reportData.data.lowStockItems.length > 0 && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Low Stock Items</CardTitle>
+                        <Card className="border-rose-500/20 bg-rose-500/[0.02] overflow-hidden">
+                            <CardHeader className="border-b border-rose-500/10 flex flex-row items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-rose-500" />
+                                <CardTitle className="text-lg font-black uppercase tracking-tight text-rose-500">Critical Stock Depletion</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="p-0">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Part Name</TableHead>
-                                            <TableHead>Part Number</TableHead>
-                                            <TableHead>Current Stock</TableHead>
-                                            <TableHead>Minimum Stock Level</TableHead>
-                                            <TableHead>Value</TableHead>
-                                            <TableHead>Status</TableHead>
+                                        <TableRow className="bg-rose-500/5 hover:bg-rose-500/5">
+                                            <TableHead className="text-[10px] font-black uppercase tracking-widest text-rose-400">Part Description</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase tracking-widest text-rose-400 text-center">In Stock</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase tracking-widest text-rose-400 text-center">Min Level</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase tracking-widest text-rose-400 text-right">Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {reportData.data.lowStockItems.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{item.partName}</TableCell>
-                                                <TableCell>{item.partNumber}</TableCell>
-                                                <TableCell>{item.currentStock}</TableCell>
-                                                <TableCell>{item.minStockLevel}</TableCell>
-                                                <TableCell>₹ {item.value?.toFixed(2) || '0.00'}</TableCell>
+                                            <TableRow key={index} className="border-rose-500/10 hover:bg-rose-500/10 transition-colors">
                                                 <TableCell>
+                                                    <div className="font-bold text-foreground">{item.partName}</div>
+                                                    <div className="text-[10px] font-mono text-muted-foreground uppercase">{item.partNumber}</div>
+                                                </TableCell>
+                                                <TableCell className="text-center font-black">{item.currentStock}</TableCell>
+                                                <TableCell className="text-center text-muted-foreground text-xs">{item.minStockLevel}</TableCell>
+                                                <TableCell className="text-right">
                                                     {getStockStatusBadge(item.currentStock, item.minStockLevel)}
                                                 </TableCell>
                                             </TableRow>
@@ -203,22 +155,36 @@ const InventoryReports = () => {
                     )}
 
                     <DataVisualizer
-                        title="Inventory by Category"
+                        title="Categorical Asset Distribution"
                         data={reportData.data.categories}
                         availableViews={['table', 'pie', 'bar']}
                         viewConfig={inventoryByCategoryConfig}
                     />
-
-                </div>
-            )}
-
-            {reportData && !reportData.success && (
-                <div className="text-red-500 p-4">
-                    <p>{reportData.message || 'Failed to generate report'}</p>
                 </div>
             )}
         </div>
     );
 };
+
+const MetricCard = ({ title, value, unit, icon, color, isCurrency, isWarning }) => (
+    <div className={cn(
+        "bg-card/50 border border-border/50 p-6 rounded-2xl flex items-center gap-5 transition-all duration-300",
+        isWarning && "border-rose-500/30 shadow-[0_0_15px_rgba(239,68,68,0.05)]"
+    )}>
+        <div className={cn("p-4 rounded-xl bg-muted/50 shadow-inner", color)}>
+            {React.cloneElement(icon, { size: 28 })}
+        </div>
+        <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{title}</p>
+            <div className="flex items-baseline gap-1">
+                {isCurrency && <span className="text-lg font-bold text-muted-foreground">₹</span>}
+                <h4 className="text-3xl font-black tracking-tighter">
+                    {typeof value === 'number' ? (isCurrency ? value.toLocaleString() : value) : '0'}
+                </h4>
+                {!isCurrency && <span className="text-xs font-bold text-muted-foreground ml-1">{unit}</span>}
+            </div>
+        </div>
+    </div>
+);
 
 export default InventoryReports;

@@ -4,9 +4,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
+import { 
+    AlertCircle, 
+    CheckCircle2, 
+    Upload, 
+    Wrench, 
+    Mail, 
+    Phone, 
+    MapPin, 
+    FileText, 
+    Zap,
+    Image as ImageIcon
+} from "lucide-react";
 import { getAuthenticatedUrl } from "@/utils/storage";
+import { toast } from 'react-toastify';
+import { cn } from '@/lib/utils';
 
 const Settings = () => {
     const [settings, setSettings] = useState({
@@ -18,7 +32,6 @@ const Settings = () => {
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState(null);
     const [logoPreview, setLogoPreview] = useState(null);
 
     useEffect(() => {
@@ -34,7 +47,7 @@ const Settings = () => {
             }
         } catch (error) {
             console.error('Error fetching settings:', error);
-            setMessage({ type: 'error', text: 'Failed to load settings.' });
+            toast.error('Failed to sync workshop profile.');
         } finally {
             setLoading(false);
         }
@@ -49,7 +62,6 @@ const Settings = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Preview
         const reader = new FileReader();
         reader.onloadend = () => setLogoPreview(reader.result);
         reader.readAsDataURL(file);
@@ -59,10 +71,10 @@ const Settings = () => {
             const logoUrl = await workshopService.uploadLogo(file);
             window.dispatchEvent(new CustomEvent("workshop-settings-updated", { detail: { ...settings, logoUrl } }));
             setSettings(prev => ({ ...prev, logoUrl }));
-            setMessage({ type: 'success', text: 'Logo uploaded successfully.' });
+            toast.success('Brand identity updated successfully.');
         } catch (error) {
             console.error('Error uploading logo:', error);
-            setMessage({ type: 'error', text: 'Failed to upload logo.' });
+            toast.error('Identity upload failed.');
         } finally {
             setSaving(false);
         }
@@ -71,135 +83,197 @@ const Settings = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
-        setMessage(null);
 
         try {
             const updatedData = await workshopService.updateSettings(settings);
             window.dispatchEvent(new CustomEvent("workshop-settings-updated", { detail: updatedData }));
-            setMessage({ type: 'success', text: 'Settings updated successfully.' });
+            toast.success('Workshop profile synchronized.');
         } catch (error) {
             console.error('Error updating settings:', error);
-            setMessage({ type: 'error', text: 'Failed to update settings.' });
+            toast.error('Failed to update operational parameters.');
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <LoadingSpinner />;
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+                <LoadingSpinner />
+            </div>
+        );
+    }
 
     return (
-        <div className="container mx-auto py-6 max-w-4xl">
-            <h1 className="text-3xl font-bold mb-6">Workshop Settings</h1>
-
-            {message && (
-                <div className={`mb-6 p-4 rounded-lg flex items-center ${
-                    message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-                }`}>
-                    {message.type === 'success' ? <CheckCircle2 className="mr-2 h-5 w-5" /> : <AlertCircle className="mr-2 h-5 w-5" />}
-                    {message.text}
+        <div className="w-full max-w-5xl mx-auto space-y-8 pb-10">
+            <div className="flex flex-col gap-2 pb-2">
+                <div className="flex items-center gap-2 mb-1">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500/80">Profile Configuration</span>
                 </div>
-            )}
+                <h1 className="text-4xl font-black text-foreground tracking-tight">Workshop Settings</h1>
+                <p className="text-muted-foreground font-medium text-sm md:text-base">Configure your business identity and operational parameters.</p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-1">
-                    <CardHeader>
-                        <CardTitle>Workshop Logo</CardTitle>
-                        <CardDescription>Upload your brand identity</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col items-center">
-                        <div className="w-full aspect-square border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center mb-4 overflow-hidden bg-gray-50">
-                            {logoPreview ? (
-                                <img src={getAuthenticatedUrl(logoPreview)} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
-                            ) : (
-                                <Upload className="h-12 w-12 text-gray-300" />
-                            )}
-                        </div>
-                        <Label htmlFor="logo-upload" className="cursor-pointer">
-                            <Button variant="outline" asChild>
-                                <span>Change Logo</span>
-                            </Button>
-                            <input
-                                id="logo-upload"
-                                type="file"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleLogoUpload}
-                                disabled={saving}
-                            />
-                        </Label>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Logo Section */}
+                <div className="space-y-6">
+                    <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden rounded-2xl">
+                        <CardHeader className="border-b border-border/50 bg-muted/20">
+                            <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                                <ImageIcon size={18} className="text-emerald-500" /> Brand Identity
+                            </CardTitle>
+                            <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Workshop Logo Assets</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-8 flex flex-col items-center">
+                            <div className="relative group mb-6">
+                                <div className="h-40 w-40 rounded-2xl border-2 border-dashed border-border/50 flex items-center justify-center overflow-hidden bg-muted/30 group-hover:border-emerald-500/50 transition-all duration-300 shadow-inner">
+                                    {logoPreview ? (
+                                        <img 
+                                            src={logoPreview.startsWith('data:') ? logoPreview : getAuthenticatedUrl(logoPreview)} 
+                                            alt="Identity" 
+                                            className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" 
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                            <Upload className="h-10 w-10 opacity-20" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Upload Logo</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none"></div>
+                            </div>
 
-                <Card className="md:col-span-2">
-                    <CardHeader>
-                        <CardTitle>General Information</CardTitle>
-                        <CardDescription>Manage your workshop's public details</CardDescription>
+                            <div className="w-full space-y-3">
+                                <Label htmlFor="logo-upload" className="block w-full">
+                                    <div className="flex items-center justify-center gap-2 w-full h-11 px-4 rounded-xl border border-border/50 bg-background hover:bg-muted transition-all cursor-pointer font-bold text-xs">
+                                        <Upload size={16} className="text-emerald-500" />
+                                        <span>Update Branding</span>
+                                    </div>
+                                    <input
+                                        id="logo-upload"
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleLogoUpload}
+                                        disabled={saving}
+                                    />
+                                </Label>
+                                <p className="text-[9px] text-center text-muted-foreground uppercase font-bold tracking-tighter">Recommended: Square PNG/SVG, Max 2MB</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm rounded-2xl overflow-hidden hidden lg:block">
+                         <CardContent className="p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 rounded-lg bg-emerald-500/10">
+                                    <Zap size={20} className="text-emerald-500" />
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest">Active System</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Changes to workshop identity will reflect immediately across all invoices and reports. Ensure information accuracy for compliance.
+                            </p>
+                         </CardContent>
+                    </Card>
+                </div>
+
+                {/* Form Section */}
+                <Card className="lg:col-span-2 border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden rounded-2xl">
+                    <CardHeader className="border-b border-border/50 bg-muted/20">
+                        <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                            <Wrench size={18} className="text-emerald-500" /> Operational Parameters
+                        </CardTitle>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">General Workshop Information</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                    <CardContent className="p-8">
+                        <form onSubmit={handleSubmit} className="space-y-8">
                             <div className="space-y-2">
-                                <Label htmlFor="name">Workshop Name</Label>
+                                <Label htmlFor="name" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Workshop Corporate Name</Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     value={settings.name || ''}
                                     onChange={handleInputChange}
                                     required
+                                    className="h-12 bg-background/50 border-border/50 focus:border-emerald-500/50 font-bold"
+                                    placeholder="Enter workshop name"
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone Number</Label>
+                                    <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                        <Phone size={12} className="text-emerald-500" /> Operational Phone
+                                    </Label>
                                     <Input
                                         id="phone"
                                         name="phone"
                                         value={settings.phone || ''}
                                         onChange={handleInputChange}
+                                        className="h-12 bg-background/50 border-border/50 font-bold"
+                                        placeholder="+91 00000 00000"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email Address</Label>
+                                    <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                        <Mail size={12} className="text-emerald-500" /> Business Email
+                                    </Label>
                                     <Input
                                         id="email"
                                         name="email"
                                         type="email"
                                         value={settings.email || ''}
                                         onChange={handleInputChange}
+                                        className="h-12 bg-background/50 border-border/50 font-bold"
+                                        placeholder="office@yourworkshop.com"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="address">Address</Label>
-                                <Input
+                                <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <MapPin size={12} className="text-emerald-500" /> Physical Address
+                                </Label>
+                                <Textarea
                                     id="address"
                                     name="address"
                                     value={settings.address || ''}
                                     onChange={handleInputChange}
+                                    className="bg-background/50 border-border/50 min-h-[100px] font-bold py-4"
+                                    placeholder="Complete operational address"
                                 />
                             </div>
 
-                            <div className="space-y-2 pt-4 border-t">
-                                <CardTitle className="text-lg">Invoice Settings</CardTitle>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                            <div className="pt-6 border-t border-border/50">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <FileText size={18} className="text-emerald-500" />
+                                    <h4 className="text-sm font-black uppercase tracking-tight">Invoice Digitization</h4>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                                     <div className="space-y-2">
-                                        <Label htmlFor="invoicePrefix">Invoice Prefix</Label>
+                                        <Label htmlFor="invoicePrefix" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Serial Prefix</Label>
                                         <Input
                                             id="invoicePrefix"
                                             name="invoicePrefix"
                                             value={settings.invoicePrefix || 'INV'}
                                             onChange={handleInputChange}
                                             maxLength={10}
+                                            className="h-12 bg-background/50 border-border/50 font-mono font-bold text-emerald-600 dark:text-emerald-400"
                                         />
-                                        <p className="text-xs text-gray-500">Example: {settings.invoicePrefix || 'INV'}-2026-0001</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Preview: <span className="text-foreground">{settings.invoicePrefix || 'INV'}-2026-0001</span></p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="pt-4">
-                                <Button type="submit" className="w-full" disabled={saving}>
-                                    {saving ? 'Saving...' : 'Save Changes'}
+                            <div className="pt-4 flex flex-col sm:flex-row gap-4">
+                                <Button 
+                                    type="submit" 
+                                    className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 font-black uppercase tracking-widest" 
+                                    disabled={saving}
+                                >
+                                    {saving ? 'Synchronizing...' : 'Save Configuration'}
                                 </Button>
                             </div>
                         </form>
