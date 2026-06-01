@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaExclamationTriangle, FaFilter } from 'react-icons/fa';
+import { Edit, Trash, Eye, Plus, Search, Filter, AlertTriangle } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PartScannerModal from './PartScannerModal';
 import { Button } from '@/components/ui/button';
-import PartsDataTable from './PartsDataTable';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [partToDelete, setPartToDelete] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
 
     useEffect(() => {
@@ -20,7 +22,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const loadParts = async () => {
         try {
             setLoading(true);
-            const response = await inventoryService.getParts({ page: 0, size: 1000 }); // Fetch all parts
+            const response = await inventoryService.getParts({ page: 0, size: 1000 });
             setParts(response.data.content || []);
         } catch (error) {
             console.error('Error loading parts:', error);
@@ -30,174 +32,227 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
-    const handleDeleteClick = (part) => {
-        setPartToDelete(part);
-        setDeleteDialogOpen(true);
-    };
+    const handleDelete = async (part) => {
+        if (!window.confirm(`Are you sure you want to delete part "${part.name}"?`)) {
+            return;
+        }
 
-    const handleDeleteConfirm = async () => {
         try {
-            await inventoryService.deletePart(partToDelete.id);
-            setParts(parts.filter(part => part.id !== partToDelete.id));
-            setDeleteDialogOpen(false);
-            setPartToDelete(null);
+            await inventoryService.deletePart(part.id);
+            setParts(parts.filter(p => p.id !== part.id));
             toast.success('Part deleted successfully.');
-            loadParts(); // Refresh the list
         } catch (error) {
             console.error('Error deleting part:', error);
             toast.error('Failed to delete part.');
         }
     };
 
-    const handlePartAction = ({ type, data }) => {
-        if (type === 'edit') {
-            onEdit(data);
-        } else if (type === 'add') {
-            onCreate(data);
-        }
+    const getStatusInfo = (quantity, minQuantity) => {
+        if (quantity === 0) return { text: 'Out of Stock', color: 'destructive', icon: <AlertTriangle size={12} className="mr-1" /> };
+        if (quantity <= minQuantity) return { text: 'Low Stock', color: 'warning', icon: <AlertTriangle size={12} className="mr-1" /> };
+        return { text: 'In Stock', color: 'success', icon: null };
     };
 
-    const getStatusColor = (quantity, minQuantity) => {
-        if (quantity === 0) return 'bg-red-100 text-red-800';
-        if (quantity <= minQuantity) return 'bg-yellow-100 text-yellow-800';
-        return 'bg-green-100 text-green-800';
-    };
+    const filteredParts = useMemo(() => {
+        return parts.filter(part => {
+            const matchesSearch = 
+                part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                part.partNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                part.category?.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            if (statusFilter === 'all') return matchesSearch;
+            
+            const status = part.quantityInStock === 0 ? 'OUT_OF_STOCK' : 
+                          part.quantityInStock <= part.minStockLevel ? 'LOW_STOCK' : 'IN_STOCK';
+            
+            return matchesSearch && status === statusFilter;
+        });
+    }, [parts, searchTerm, statusFilter]);
 
-    const getStatusText = (quantity, minQuantity) => {
-        if (quantity === 0) return 'Out of Stock';
-        if (quantity <= minQuantity) return 'Low Stock';
-        return 'In Stock';
-    };
-
-    const columns = useMemo(() => [
+    const columns = [
         {
-            accessorKey: 'partNumber',
-            header: 'Part Number',
-            enableSorting: true,
+            header: "Part Info",
+            cell: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{row.name}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{row.partNumber}</span>
+                </div>
+            )
         },
         {
-            accessorKey: 'name',
-            header: 'Name',
-            enableSorting: true,
+            header: "Category",
+            accessor: "category",
+            cell: (row) => <Badge variant="outline" className="bg-muted/30 border-border/50 text-[10px] uppercase">{row.category}</Badge>
         },
         {
-            accessorKey: 'category',
-            header: 'Category',
-            enableSorting: true,
-        },
-        {
-            accessorKey: 'quantityInStock',
-            header: 'In Stock',
-            cell: ({ row }) => `${row.original.quantityInStock}`,
-            enableSorting: true,
-        },
-        {
-            accessorKey: 'costPrice',
-            header: 'Unit Price',
-            cell: ({ row }) => `₹${row.original.mrp?.toFixed(2)}`,
-            enableSorting: true,
-        },
-        {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ row }) => {
-                const { quantityInStock, minStockLevel } = row.original;
-                return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(quantityInStock, minStockLevel)}`}>
-                        {getStatusText(quantityInStock, minStockLevel)}
-                        {quantityInStock <= minStockLevel && <FaExclamationTriangle className="inline-block ml-1" />}
-                    </span>
-                );
-            },
-            enableSorting: true,
-        },
-        {
-            accessorKey: 'location',
-            header: 'Location',
-            enableSorting: true,
-        },
-        {
-            id: 'actions',
-            cell: ({ row }) => {
-                const part = row.original;
-                return (
-                    <div className="flex items-center space-x-2">
-                        <button className="text-primary hover:text-primary/80" onClick={() => onViewDetails(part)}>
-                            <FaEye />
-                        </button>
-                        <button className="text-blue-500 hover:text-blue-700" onClick={() => onEdit(part)}>
-                            <FaEdit />
-                        </button>
-                        <button className="text-red-500 hover:text-red-700" onClick={() => handleDeleteClick(part)}>
-                            <FaTrash />
-                        </button>
+            header: "Stock",
+            cell: (row) => (
+                <div className="flex flex-col gap-1">
+                    <span className="font-medium">{row.quantityInStock} units</span>
+                    <div className="flex items-center">
+                        {(() => {
+                            const info = getStatusInfo(row.quantityInStock, row.minStockLevel);
+                            return (
+                                <Badge variant={info.color === 'success' ? 'secondary' : info.color === 'warning' ? 'warning' : 'destructive'} className="text-[9px] h-5 uppercase font-bold">
+                                    {info.icon}{info.text}
+                                </Badge>
+                            );
+                        })()}
                     </div>
-                );
-            },
+                </div>
+            )
         },
-    ], [onViewDetails, onEdit]);
-
-    const filteredParts = useMemo(() => parts.filter(part => {
-        const status = getStatusText(part.quantityInStock, part.minStockLevel).replace(' ', '_').toUpperCase();
-        if (statusFilter !== 'all' && status !== statusFilter) {
-            return false;
-        }
-        return true;
-    }), [parts, statusFilter]);
-
-    if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading parts...</div>;
-    }
-
-    return (
-        <div className="bg-card p-4 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Parts Inventory</h3>
-                <div className="flex space-x-2">
-                    <PartScannerModal onPartAction={handlePartAction} />
-                    <Button className="text-md font-medium" variant="default" size="lg" onClick={onCreate}>
-                        <FaPlus className="mr-2" /> Add Part
+        {
+            header: "Price",
+            cell: (row) => <span className="font-bold text-emerald-600 dark:text-emerald-400">₹{row.mrp?.toFixed(2)}</span>
+        },
+        {
+            header: "Actions",
+            className: "text-right",
+            cell: (row, isTablet) => (
+                <div className="flex items-center justify-end gap-2">
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onViewDetails(row)}>
+                        <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        {!isTablet && <span className="ml-2">View</span>}
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>
+                        <Edit className="h-4 w-4 text-primary" />
+                        {!isTablet && <span className="ml-2 text-primary">Edit</span>}
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row);
+                    }}>
+                        <Trash className="h-4 w-4" />
+                        {!isTablet && <span className="ml-2">Delete</span>}
                     </Button>
                 </div>
-            </div>
+            )
+        }
+    ];
 
-            <div className="flex justify-between items-center mb-4">
-                <div className="relative">
-                    <FaFilter className="absolute top-3 left-3 text-muted-foreground" />
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-input pl-10 pr-4 py-2 rounded-md appearance-none"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="IN_STOCK">In Stock</option>
-                        <option value="LOW_STOCK">Low Stock</option>
-                        <option value="OUT_OF_STOCK">Out of Stock</option>
-                    </select>
-                </div>
-            </div>
-
-            <PartsDataTable
-                columns={columns}
-                data={filteredParts}
-            />
-
-            {deleteDialogOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-card p-6 rounded-lg shadow-lg">
-                        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-                        <p>Are you sure you want to delete part "{partToDelete?.name}"?</p>
-                        <div className="flex justify-end mt-6 space-x-4">
-                            <button className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md" onClick={() => setDeleteDialogOpen(false)}>
-                                Cancel
-                            </button>
-                            <button className="bg-destructive text-destructive-foreground hover:bg-destructive/80 px-4 py-2 rounded-md" onClick={handleDeleteConfirm}>
-                                Delete
-                            </button>
+    const renderPartCard = (part) => {
+        const statusInfo = getStatusInfo(part.quantityInStock, part.minStockLevel);
+        return (
+            <Card 
+                className="overflow-hidden border-border/50 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+                onClick={() => onViewDetails(part)}
+            >
+                <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-1">
+                        <CardTitle className="text-lg group-hover:text-emerald-500 transition-colors">
+                            {part.name}
+                        </CardTitle>
+                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{part.partNumber}</p>
+                    </div>
+                    <Badge variant={statusInfo.color === 'success' ? 'secondary' : statusInfo.color === 'warning' ? 'warning' : 'destructive'} className="text-[10px] uppercase font-bold">
+                        {statusInfo.text}
+                    </Badge>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Stock</p>
+                            <p className="font-medium mt-1">{part.quantityInStock} Units</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Price</p>
+                            <p className="font-bold mt-1 text-emerald-600 dark:text-emerald-400">₹{part.mrp?.toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Category</p>
+                            <Badge variant="outline" className="mt-1 text-[10px] uppercase">{part.category}</Badge>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Location</p>
+                            <p className="font-medium mt-1">{part.location || '-'}</p>
                         </div>
                     </div>
-                </div>
-            )}
+                    
+                    <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                        <Button 
+                            variant="outline" 
+                            className="flex-1 h-11 gap-2 border-border/50"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(part);
+                            }}
+                        >
+                            <Edit size={16} />
+                            <span>Edit</span>
+                        </Button>
+                        <Button 
+                            variant="destructive" 
+                            className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive border-none"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(part);
+                            }}
+                        >
+                            <Trash size={16} />
+                            <span>Delete</span>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
+
+    const filters = (
+        <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="text"
+                    placeholder="Search parts by name, number or category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-muted/30 border-border/50"
+                />
+            </div>
+            <div className="flex gap-2">
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                >
+                    <option value="all">All Statuses</option>
+                    <option value="IN_STOCK">In Stock</option>
+                    <option value="LOW_STOCK">Low Stock</option>
+                    <option value="OUT_OF_STOCK">Out of Stock</option>
+                </select>
+                <Button variant="outline" className="border-border/50 gap-2">
+                    <Filter size={16} />
+                    <span className="hidden sm:inline">More Filters</span>
+                </Button>
+            </div>
+        </div>
+    );
+
+    const actions = (
+        <div className="flex items-center gap-2">
+            <PartScannerModal onPartAction={({type, data}) => type === 'edit' ? onEdit(data) : onCreate(data)} />
+            <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 gap-2">
+                <Plus size={16} />
+                <span className="hidden sm:inline">Add Part</span>
+            </Button>
+        </div>
+    );
+
+    return (
+        <div className="pb-6">
+            <ResponsiveDataContainer
+                title="Parts Inventory"
+                description="Manage your workshop spare parts and stock levels"
+                actions={actions}
+                filters={filters}
+                columns={columns}
+                data={filteredParts}
+                renderCard={renderPartCard}
+                onRowClick={onViewDetails}
+                loading={loading}
+                emptyMessage="No parts found in inventory. Click 'Add Part' to stock new items."
+            />
         </div>
     );
 };

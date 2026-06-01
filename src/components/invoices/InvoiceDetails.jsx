@@ -54,7 +54,7 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
 
     return (
         <div className="container mx-auto py-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button onClick={onCancel} variant="outline">
                     <FaArrowLeft className="mr-2" /> Back to Invoices
                 </Button>
@@ -105,23 +105,23 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                         <CardTitle>Invoice Information</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-4">
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Invoice Number:</span>
                             <span>{invoice?.invoiceNumber || 'NA'}</span>
                         </div>
                         {
                             invoice?.jobNumber && (
-                                <div className="flex justify-between">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                                     <span className="text-muted-foreground">Job Number:</span>
                                     <span>{invoice?.jobNumber || 'NA'}</span>
                                 </div>
                             )
                         }
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Invoice Date:</span>
                             <span>{invoice?.invoiceDate || 'NA'}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Due Date:</span>
                             <span>{invoice?.dueDate || 'NA'}</span>
                         </div>
@@ -133,7 +133,7 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                         <CardTitle>Customer Information</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-4 flex-grow">
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Customer Name:</span>
                             <span>{invoice?.customerName || 'NA'}</span>
                         </div>
@@ -141,15 +141,15 @@ const InvoiceDetails = ({invoice, onEditInvoice, onCancel}) => {
                             <div className="text-center">Loading customer details...</div>
                         ) : showCustomerDetails && fetchedCustomerDetails ? (
                             <>
-                                <div className="flex justify-between">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                                     <span className="text-muted-foreground">Email:</span>
                                     <span>{fetchedCustomerDetails.email || 'NA'}</span>
                                 </div>
-                                <div className="flex justify-between">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                                     <span className="text-muted-foreground">Phone:</span>
                                     <span>{fetchedCustomerDetails.phone || 'NA'}</span>
                                 </div>
-                                <div className="flex justify-between">
+                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                                     <span className="text-muted-foreground">Address:</span>
                                     <span>{fetchedCustomerDetails.address || 'NA'}</span>
                                 </div>

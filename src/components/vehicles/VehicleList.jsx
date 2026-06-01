@@ -1,28 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, Car, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Edit, Trash, Eye, Plus, Search, User, Filter } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
+import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 
 const VehicleList = () => {
+    const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -68,111 +57,173 @@ const VehicleList = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    const columns = [
+        {
+            header: "Vehicle",
+            accessor: "vehicle",
+            cell: (row) => (
+                <div>
+                    <div className="font-semibold text-foreground">{row.make} {row.model}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.year}</div>
+                </div>
+            )
+        },
+        {
+            header: "Owner",
+            accessor: "customerName",
+            cell: (row) => (
+                <div className="flex items-center gap-2">
+                    <User size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-sm font-medium">{row.customerName || 'No owner'}</span>
+                </div>
+            )
+        },
+        {
+            header: "License Plate",
+            accessor: "licensePlate",
+            cell: (row) => (
+                <Badge variant="outline" className="font-mono bg-muted/30 border-border/50">
+                    {row.licensePlate}
+                </Badge>
+            )
+        },
+        {
+            header: "VIN",
+            accessor: "vin",
+            cell: (row) => <span className="text-xs font-mono text-muted-foreground">{row.vin || '-'}</span>
+        },
+        {
+            header: "Actions",
+            className: "text-right",
+            cell: (row, isTablet) => (
+                <div className="flex items-center justify-end gap-2">
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" asChild>
+                        <Link to={`/vehicles/${row.id}`} onClick={(e) => e.stopPropagation()}>
+                            <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            {!isTablet && <span className="ml-2">View</span>}
+                        </Link>
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" asChild>
+                        <Link to={`/vehicles/edit/${row.id}`} onClick={(e) => e.stopPropagation()}>
+                            <Edit className="h-4 w-4 text-primary" />
+                            {!isTablet && <span className="ml-2 text-primary">Edit</span>}
+                        </Link>
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row.id);
+                    }}>
+                        <Trash className="h-4 w-4" />
+                        {!isTablet && <span className="ml-2">Delete</span>}
+                    </Button>
+                </div>
+            )
+        }
+    ];
+
+    const renderVehicleCard = (vehicle) => (
+        <Card 
+            className="overflow-hidden border-border/50 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+            onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+        >
+            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-lg group-hover:text-emerald-500 transition-colors">
+                    {vehicle.make} {vehicle.model}
+                </CardTitle>
+                <Badge variant="outline" className="font-mono">{vehicle.licensePlate}</Badge>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Owner</p>
+                        <p className="font-medium mt-1 truncate">{vehicle.customerName || 'No owner'}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Year</p>
+                        <p className="font-medium mt-1">{vehicle.year}</p>
+                    </div>
+                    <div className="col-span-2">
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">VIN</p>
+                        <p className="font-mono text-xs mt-1 truncate">{vehicle.vin || '-'}</p>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                    <Button 
+                        variant="outline" 
+                        className="flex-1 h-11 gap-2 border-border/50"
+                        asChild
+                    >
+                        <Link to={`/vehicles/edit/${vehicle.id}`} onClick={(e) => e.stopPropagation()}>
+                            <Edit size={16} />
+                            <span>Edit</span>
+                        </Link>
+                    </Button>
+                    <Button 
+                        variant="destructive" 
+                        className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white border-none"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(vehicle.id);
+                        }}
+                    >
+                        <Trash size={16} />
+                        <span>Delete</span>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
+    const filters = (
+        <div className="flex flex-col md:flex-row gap-3">
+            <form onSubmit={handleSearch} className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="text"
+                    placeholder="Search vehicles by make, model, plate or owner..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-muted/30 border-border/50"
+                />
+            </form>
+            <Button variant="outline" className="border-border/50 gap-2">
+                <Filter size={16} />
+                <span>Filters</span>
+            </Button>
+        </div>
+    );
+
+    const actions = (
+        <Button asChild className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
+            <Link to="/vehicles/new"><Plus className="mr-2 h-4 w-4" /> Add Vehicle</Link>
+        </Button>
+    );
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">Vehicles</h1>
-                    <p className="text-muted-foreground">Manage your workshop vehicles</p>
-                </div>
-                <Button asChild>
-                    <Link to="/vehicles/new"><Plus className="mr-2 h-4 w-4" /> Add New Vehicle</Link>
-                </Button>
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>All Vehicles</CardTitle>
-                    <form onSubmit={handleSearch} className="flex items-center gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Search vehicles..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="max-w-sm"
-                        />
-                        <Button type="submit" variant="outline" size="icon">
-                            <Search className="h-4 w-4" />
-                        </Button>
-                    </form>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Vehicle</TableHead>
-                                <TableHead>Owner</TableHead>
-                                <TableHead>VIN</TableHead>
-                                <TableHead>License Plate</TableHead>
-                                <TableHead>Mileage</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {vehicles.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan="6" className="h-24 text-center">
-                                        No vehicles found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                vehicles.map((vehicle) => (
-                                    <TableRow key={vehicle.id}>
-                                        <TableCell>
-                                            <div className="font-medium">{vehicle.make} {vehicle.model}</div>
-                                            <div className="text-sm text-muted-foreground">{vehicle.year}</div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {vehicle.customerName ? (
-                                                <Link to={`/customers/${vehicle.customerId}`} className="flex items-center gap-2 hover:underline">
-                                                    <User className="h-4 w-4" />
-                                                    {vehicle.customerName}
-                                                </Link>
-                                            ) : (
-                                                'No owner'
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{vehicle.vin || '-'}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{vehicle.licensePlate}</Badge>
-                                        </TableCell>
-                                        <TableCell>{vehicle.currentMileage?.toLocaleString() || '0'} miles</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button variant="outline" size="icon" asChild>
-                                                    <Link to={`/vehicles/${vehicle.id}`}><Eye className="h-4 w-4" /></Link>
-                                                </Button>
-                                                <Button variant="outline" size="icon" asChild>
-                                                    <Link to={`/vehicles/edit/${vehicle.id}`}><Edit className="h-4 w-4" /></Link>
-                                                </Button>
-                                                <Button variant="destructive" size="icon" onClick={() => handleDelete(vehicle.id)}>
-                                                    <Trash className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-
-
-            <PaginationComponent
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
+        <div className="pb-10">
+            <ResponsiveDataContainer
+                title="Vehicles"
+                description="Manage customer vehicles and service history"
+                actions={actions}
+                filters={filters}
+                columns={columns}
+                data={vehicles}
+                renderCard={renderVehicleCard}
+                onRowClick={(row) => navigate(`/vehicles/${row.id}`)}
+                loading={loading}
+                emptyMessage="No vehicles found. Click 'Add Vehicle' to register a new vehicle."
             />
-
+            
+            {!loading && vehicles.length > 0 && (
+                <div className="mt-6 flex justify-center">
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
         </div>
     );
 };

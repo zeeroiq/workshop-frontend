@@ -41,7 +41,7 @@ const ExportControls = ({ getCriteria, formats = ['PDF', 'EXCEL', 'CSV'] }) => {
     };
 
     return (
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
             {formats.map(format => {
                 const formatKey = format.toUpperCase();
                 const formatValue = EXPORT_FORMATS[formatKey];

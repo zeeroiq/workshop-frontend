@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { formatDateForInput, isOrderEditable } from "../Utils";
 import api from "@/services/api";
 import { DatePicker } from '@/components/ui/date-picker';
+import { Button } from '@/components/ui/button';
 
 const Input = ({ label, children, ...props }) => (
     <div>
@@ -203,15 +204,15 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
 
     return (
         <div className="bg-card p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-xl font-semibold">{isEditMode ? 'Edit Purchase Order' : 'Create Purchase Order'}</h2>
-                <div className="flex space-x-2">
-                    <button className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md flex items-center" onClick={onCancel}>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button type="button" variant="outline" onClick={onCancel}>
                         <FaTimes className="mr-2" /> Cancel
-                    </button>
-                    <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={handleSubmit} disabled={loading}>
+                    </Button>
+                    <Button type="button" onClick={handleSubmit} disabled={loading}>
                         <FaSave className="mr-2" /> {loading ? 'Saving...' : 'Save Order'}
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -262,18 +263,18 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                 </div>
 
                 <div className="p-5 border border-border rounded-lg">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <h3 className="text-lg font-semibold">Order Items</h3>
                         {canEditItems && (
-                            <button type="button" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-1 rounded-md flex items-center text-sm" onClick={handleAddItem}>
+                            <Button type="button" size="sm" variant="secondary" onClick={handleAddItem}>
                                 <FaPlus className="mr-2" /> Add Item
-                            </button>
+                            </Button>
                         )}
                     </div>
                     <div className="space-y-4">
                         {formData.items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                                <div className="col-span-5">
+                            <div key={index} className="grid grid-cols-1 gap-4 items-start sm:grid-cols-12 sm:items-center">
+                                <div className="sm:col-span-5">
                                     <Input label="Part" name="partId" value={item.partId} onChange={(e) => handleItemChange(index, 'partId', e.target.value)} required>
                                         <select disabled={!canEditItems}>
                                             <option value="">Select Part</option>
@@ -284,21 +285,21 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                                         </select>
                                     </Input>
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                     <Input label="Quantity" name="quantity" type="number" min="1" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} required disabled={!canEditItems} />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                     <Input label="Unit Price" name="unitPrice" type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} required disabled={!canEditItems} />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="sm:col-span-2">
                                     <label className="text-sm font-medium text-muted-foreground">Total</label>
                                     <p className="mt-2">₹{(item.quantity * item.unitPrice).toFixed(2)}</p>
                                 </div>
-                                <div className="col-span-1 flex items-end">
+                                <div className="flex items-end sm:col-span-1">
                                     {canEditItems && (
-                                        <button type="button" className="text-red-500 hover:text-red-700" onClick={() => handleRemoveItem(index)}>
+                                        <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleRemoveItem(index)} aria-label={`Remove item ${index + 1}`}>
                                             <FaTrash />
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                             </div>
@@ -314,18 +315,6 @@ const PurchaseOrderForm = ({ order, onSave, onCancel }) => {
                     </div>
                 </div>
             </form>
-
-
-            <div className="flex justify-end items-center mb-6">
-                <div className="flex space-x-2">
-                    <button className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-md flex items-center" onClick={onCancel}>
-                        <FaTimes className="mr-2" /> Cancel
-                    </button>
-                    <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center" onClick={handleSubmit} disabled={loading}>
-                        <FaSave className="mr-2" /> {loading ? 'Saving...' : 'Save Order'}
-                    </button>
-                </div>
-            </div>
         </div>
     );
 };

@@ -79,9 +79,9 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-8 max-w-[1600px] mx-auto">
+        <div className="w-full max-w-7xl space-y-8 mx-auto">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-2">
+            <div className="flex flex-col gap-4 pb-2 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-1">
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
@@ -92,10 +92,10 @@ const Dashboard = () => {
                         Welcome back, <span className="text-emerald-600 dark:text-emerald-400 font-bold">{user?.workshopName}</span>. Analyzing live operational metrics.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
                     <div className="relative group">
                         <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger className="w-[180px] bg-background border-border text-foreground font-bold rounded-xl focus:ring-emerald-500/20 transition-all">
+                            <SelectTrigger className="w-full bg-background border-border text-foreground font-bold rounded-xl transition-all focus:ring-emerald-500/20 sm:w-48">
                                 <SelectValue placeholder="Select Range" />
                             </SelectTrigger>
                             <SelectContent className="bg-popover border-border text-popover-foreground">
@@ -157,7 +157,7 @@ const Dashboard = () => {
             <div className="grid gap-8 lg:grid-cols-3">
                 {/* Activity Feed */}
                 <Card className="lg:col-span-2 bg-card border-border rounded-2xl overflow-hidden backdrop-blur-sm shadow-sm">
-                    <CardHeader className="flex flex-row items-center justify-between p-6 border-b border-border/50">
+                    <CardHeader className="flex flex-col gap-3 border-b border-border/50 p-6 sm:flex-row sm:items-center sm:justify-between">
                         <div className="space-y-1">
                             <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Recent Activity Stream</CardTitle>
                             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Live Updates & Logged Events</p>
@@ -179,43 +179,45 @@ const Dashboard = () => {
                         <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Mission Control</CardTitle>
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Accelerated Operational Tasks</p>
                     </CardHeader>
-                    <CardContent className="p-6 grid grid-cols-2 gap-4">
-                        <QuickAction 
-                            to="/customers/new" 
-                            icon={<Users className="h-5 w-5" />} 
-                            label="Add Customer" 
-                            color="hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/30"
-                        />
-                        <QuickAction 
-                            to="/jobs/new" 
-                            icon={<Wrench className="h-5 w-5" />} 
-                            label="Create Job" 
-                            color="hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/30"
-                        />
-                        <QuickAction 
-                            to="/invoices/new" 
-                            icon={<FileText className="h-5 w-5" />} 
-                            label="Create Invoice" 
-                            color="hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/30"
-                        />
-                        <QuickAction 
-                            to="/inventory" 
-                            icon={<AlertTriangle className="h-5 w-5" />} 
-                            label="Check Stock" 
-                            color="hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30"
-                        />
-                        <QuickAction 
-                            to="/calendar" 
-                            icon={<Calendar className="h-5 w-5" />} 
-                            label="Calendar" 
-                            color="hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-500/30"
-                        />
-                        <QuickAction 
-                            to="/reports" 
-                            icon={<LineChart className="h-5 w-5" />} 
-                            label="Analytics" 
-                            color="hover:text-cyan-600 dark:hover:text-cyan-400 hover:border-cyan-500/30"
-                        />
+                    <CardContent className="p-6">
+                        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-2">
+                            <QuickAction
+                                to="/customers/new"
+                                icon={<Users className="h-5 w-5" />}
+                                label="Add Customer"
+                                color="hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/30"
+                            />
+                            <QuickAction
+                                to="/jobs/new"
+                                icon={<Wrench className="h-5 w-5" />}
+                                label="Create Job"
+                                color="hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/30"
+                            />
+                            <QuickAction
+                                to="/invoices/new"
+                                icon={<FileText className="h-5 w-5" />}
+                                label="Create Invoice"
+                                color="hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/30"
+                            />
+                            <QuickAction
+                                to="/inventory"
+                                icon={<AlertTriangle className="h-5 w-5" />}
+                                label="Check Stock"
+                                color="hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30"
+                            />
+                            <QuickAction
+                                to="/calendar"
+                                icon={<Calendar className="h-5 w-5" />}
+                                label="Calendar"
+                                color="hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-500/30"
+                            />
+                            <QuickAction
+                                to="/reports"
+                                icon={<LineChart className="h-5 w-5" />}
+                                label="Analytics"
+                                color="hover:text-cyan-600 dark:hover:text-cyan-400 hover:border-cyan-500/30"
+                            />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -224,14 +226,18 @@ const Dashboard = () => {
 };
 
 const QuickAction = ({ to, icon, label, color }) => (
-    <Button asChild variant="outline" className="h-24 flex-col gap-3 bg-background border-border rounded-xl transition-all duration-300 hover:bg-accent hover:-translate-y-1 group hover:text-inherit" style={{ color: "inherit" }}>
-        <Link to={to} className={color}>
-            <div className="p-2 rounded-lg bg-muted group-hover:bg-transparent transition-colors">
-                {icon}
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
-        </Link>
-    </Button>
+    <Link
+        to={to}
+        className={`group flex min-h-24 w-full min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-4 text-center text-foreground transition-all duration-300 hover:-translate-y-1 hover:bg-accent ${color}`}
+        aria-label={label}
+    >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted transition-colors group-hover:bg-transparent">
+            {icon}
+        </div>
+        <span className="w-full text-[10px] font-black uppercase tracking-widest leading-tight">
+            {label}
+        </span>
+    </Link>
 );
 
 export default Dashboard;

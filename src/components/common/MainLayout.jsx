@@ -1,7 +1,6 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { cn } from '@/lib/utils';
 
 const MainLayout = ({ 
   children, 
@@ -13,17 +12,12 @@ const MainLayout = ({
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300 font-['Plus_Jakarta_Sans',sans-serif]">
       <Sidebar isExpanded={sidebarExpanded} onClose={onCloseSidebar} />
       
-      <div className="flex flex-col flex-1">
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col min-w-0 lg:ml-64">
         <Header onToggleSidebar={onToggleSidebar} />
-        
-        <div className={cn(
-          "flex flex-col flex-1 transition-all duration-300 ease-in-out",
-          sidebarExpanded ? "ml-0 md:ml-64" : "ml-0 md:ml-20"
-        )}>
-          <main className="flex-1 p-4 md:p-8 pt-6">
-            {children}
-          </main>
-        </div>
+        <main className="flex-1 p-4 pt-6 sm:p-6 lg:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

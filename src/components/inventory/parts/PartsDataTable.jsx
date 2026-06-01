@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FaSearch, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 
-const PartsDataTable = ({ columns, data }) => {
+const PartsDataTable = ({ columns, data, onRowClick }) => {
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
     const [pagination, setPagination] = useState({
@@ -53,16 +53,22 @@ const PartsDataTable = ({ columns, data }) => {
         },
     });
 
+    const handleRowActivate = (row) => {
+        if (onRowClick) {
+            onRowClick(row.original);
+        }
+    };
+
     return (
         <div>
-            <div className="flex items-center justify-between py-4">
-                <div className="relative">
+            <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative w-full sm:max-w-xl">
                     <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search by part #, name, category, location..."
                         value={globalFilter ?? ''}
                         onChange={(event) => setGlobalFilter(event.target.value)}
-                        className="pl-10 pr-4 py-2 rounded-md w-80"
+                        className="w-full rounded-md pl-10 pr-4 py-2"
                     />
                 </div>
             </div>
@@ -98,6 +104,16 @@ const PartsDataTable = ({ columns, data }) => {
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && 'selected'}
+                                    className={onRowClick ? 'cursor-pointer' : ''}
+                                    onClick={onRowClick ? () => handleRowActivate(row) : undefined}
+                                    onKeyDown={onRowClick ? (event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            handleRowActivate(row);
+                                        }
+                                    } : undefined}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    role={onRowClick ? 'button' : undefined}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -122,13 +138,13 @@ const PartsDataTable = ({ columns, data }) => {
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-between space-x-2 py-4">
+            <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-muted-foreground">
                     {table.getFilteredRowModel().rows.length} of{' '}
                     {data.length} row(s) displayed.
                 </div>
-                <div className="flex items-center space-x-6">
-                    <div className="flex items-center space-x-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+                    <div className="flex items-center gap-2">
                         <p className="text-sm font-medium">Rows per page</p>
                         <Select
                             value={`${table.getState().pagination.pageSize}`}
@@ -136,7 +152,7 @@ const PartsDataTable = ({ columns, data }) => {
                                 table.setPageSize(Number(value));
                             }}
                         >
-                            <SelectTrigger className="h-8 w-[70px]">
+                            <SelectTrigger className="h-11 w-20 sm:h-8 sm:w-[70px]">
                                 <SelectValue placeholder={table.getState().pagination.pageSize} />
                             </SelectTrigger>
                             <SelectContent side="top">
@@ -148,11 +164,11 @@ const PartsDataTable = ({ columns, data }) => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                    <div className="flex w-auto items-center justify-center text-sm font-medium">
                         Page {table.getState().pagination.pageIndex + 1} of{' '}
                         {table.getPageCount()}
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
                             size="sm"

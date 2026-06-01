@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = ({ onToggleSidebar }) => {
-    const navigate = useNavigate();
     const user = authService.getUser();
     const [workshopInfo, setWorkshopInfo] = useState({
         name: user?.workshopName || 'Vishwakarma',
@@ -40,7 +39,6 @@ const Header = ({ onToggleSidebar }) => {
             fetchWorkshopInfo();
         }
 
-        // Listen for settings updates
         const handleSettingsUpdate = (event) => {
             if (event.detail) {
                 setWorkshopInfo({
@@ -60,64 +58,90 @@ const Header = ({ onToggleSidebar }) => {
     };
 
     return (
-        <header className="sticky top-0 z-50 flex items-center justify-between p-4 border-b bg-card/80 backdrop-blur-md">
+        <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border/50 bg-background/80 px-4 backdrop-blur-md lg:px-8">
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="md:flex">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="lg:hidden hover:bg-emerald-500/10 hover:text-emerald-500" 
+                    onClick={onToggleSidebar}
+                    aria-label="Toggle Menu"
+                >
                     <Menu size={20} />
                 </Button>
-                <div className="flex items-center gap-2">
+                
+                {/* Branding - Mobile only, as Desktop has it in Sidebar */}
+                <div className="flex items-center gap-2 lg:hidden">
                     {workshopInfo.logoUrl ? (
-                        <img src={getAuthenticatedUrl(workshopInfo.logoUrl)} alt="Logo" className="h-8 w-8 object-contain rounded" />
+                        <img 
+                            src={getAuthenticatedUrl(workshopInfo.logoUrl)} 
+                            alt="Logo" 
+                            className="h-7 w-7 object-contain rounded shadow-sm" 
+                        />
                     ) : (
-                        <div className="bg-primary p-1 rounded hidden sm:flex">
-                            <Wrench size={16} className="text-primary-foreground" />
+                        <div className="rounded bg-emerald-500 p-1 shadow-lg shadow-emerald-500/20">
+                            <Wrench size={14} className="text-emerald-950" />
                         </div>
                     )}
-                    <span className="font-bold text-lg tracking-tight hidden sm:block">
+                    <span className="text-sm font-bold tracking-tight truncate max-w-[120px]">
                         {workshopInfo.name}
                     </span>
                 </div>
+
+                {/* Desktop Search Placeholder or Breadcrumbs could go here */}
+                <div className="hidden lg:flex items-center gap-2 text-muted-foreground">
+                    <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Operational Console</span>
+                </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+                {/* Theme Toggle is now visible on all screen sizes */}
                 <ThemeToggle />
 
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell size={20} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
-                    <span className="sr-only">Notifications</span>
+                <Button variant="ghost" size="icon" className="relative hover:bg-emerald-500/10 group" aria-label="Notifications">
+                    <Bell size={20} className="group-hover:text-emerald-500 transition-colors" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full border-2 border-background animate-pulse" />
                 </Button>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="flex items-center gap-3 px-2 hover:bg-muted transition-colors">
-                            <UserCircle size={24} className="text-muted-foreground" />
-                            <div className="text-left hidden md:block">
-                                <p className="text-sm font-semibold leading-none">{user?.firstName} {user?.lastName}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                        <Button variant="ghost" className="flex items-center gap-3 px-1 lg:px-2 hover:bg-emerald-500/5 transition-all duration-300 rounded-full lg:rounded-lg">
+                            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                                <UserCircle size={20} className="text-emerald-500" />
+                            </div>
+                            <div className="text-left hidden lg:block">
+                                <p className="text-xs font-bold leading-none">{user?.firstName} {user?.lastName}</p>
+                                <p className="text-[9px] text-muted-foreground uppercase tracking-widest mt-1">
                                     {user?.roles?.[0]?.replace('ROLE_', '') || 'User'}
                                 </p>
                             </div>
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
-                                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    <DropdownMenuContent align="end" className="w-64 mt-2 border-border/50 bg-card/95 backdrop-blur-md">
+                        <DropdownMenuLabel className="font-normal p-4">
+                            <div className="flex flex-col space-y-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold">
+                                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold leading-none">{user?.firstName} {user?.lastName}</p>
+                                        <p className="text-xs leading-none text-muted-foreground mt-1">{user?.email}</p>
+                                    </div>
+                                </div>
                             </div>
                         </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild className="cursor-pointer">
+                        <DropdownMenuSeparator className="bg-border/50" />
+                        <DropdownMenuItem asChild className="cursor-pointer py-3 focus:bg-emerald-500/10 focus:text-emerald-500">
                             <Link to="/settings" className="flex items-center w-full">
-                                <Settings className="mr-2 h-4 w-4" />
-                                <span>Settings</span>
+                                <Settings className="mr-3 h-4 w-4" />
+                                <span className="font-medium">Workshop Settings</span>
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Logout</span>
+                        <DropdownMenuSeparator className="bg-border/50" />
+                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-3 text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            <LogOut className="mr-3 h-4 w-4" />
+                            <span className="font-medium">Logout Session</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

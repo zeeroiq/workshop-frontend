@@ -12,6 +12,7 @@ import {Label} from '@/components/ui/label';
 import {Textarea} from '@/components/ui/textarea';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from '@/components/ui/table';
 import PartScannerButton from '../common/PartScannerButton';
 import SearchableSelect from '../common/SearchableSelect';
 
@@ -304,9 +305,9 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
         <div className="container mx-auto py-6">
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <CardTitle>{isEdit ? 'Edit Invoice' : 'Create New Invoice'}</CardTitle>
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                             <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
                             <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Invoice'}</Button>
                         </div>
@@ -349,16 +350,16 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                 </Card>
 
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <CardTitle>Invoice Items</CardTitle>
-                        <div className="flex items-center space-x-4">
+                            <div className="flex flex-wrap items-center gap-3">
                             <PartScannerButton onPartScanned={addScannedPartItem} onPartAlreadyExists={isPartAlreadyInInvoice} />
-                            <RadioGroup defaultValue="LABOR" onValueChange={setItemType} className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-2">
+                            <RadioGroup defaultValue="LABOR" onValueChange={setItemType} className="flex flex-wrap items-center gap-4">
+                                <div className="flex items-center gap-2">
                                     <RadioGroupItem value="LABOR" id="r-labor" />
                                     <Label htmlFor="r-labor">Labor</Label>
                                 </div>
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center gap-2">
                                     <RadioGroupItem value="part" id="r-part" />
                                     <Label htmlFor="r-part">Part</Label>
                                 </div>
@@ -366,15 +367,15 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-12 gap-2 items-end mb-4">
+                        <div className="mb-4 grid grid-cols-1 gap-3 items-end sm:grid-cols-12 sm:gap-2">
                             {itemType?.toUpperCase() === 'LABOR' ? (
-                                <div className="col-span-5 space-y-2">
+                                <div className="space-y-2 sm:col-span-5">
                                     <Label>Description</Label>
                                     <Input name="description" value={newItem.description} onChange={handleItemChange} />
                                 </div>
                             ) : (
                                 <>
-                                    <div className="col-span-3 space-y-2">
+                                    <div className="space-y-2 sm:col-span-3">
                                         <SearchableSelect
                                             label="Part"
                                             fetcher={fetchParts}
@@ -387,63 +388,65 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                                             initialData={parts}
                                         />
                                     </div>
-                                    <div className="col-span-2 space-y-2">
+                                    <div className="space-y-2 sm:col-span-2">
                                         <Label>Discount (%)</Label>
                                         <Input type="number" name="discount" value={newItem.discount} onChange={handleItemChange} min="0" max="100" disabled={!newItem.isDiscountEditable} />
                                     </div>
                                 </>
                             )}
-                            <div className="col-span-1 space-y-2"><Label>Quantity</Label><Input type="number" name="quantity" value={newItem.quantity} onChange={handleItemChange} min="1" /></div>
-                            <div className="col-span-2 space-y-2"><Label>Unit Price</Label><Input type="number" name="unitPrice" value={newItem.unitPrice} onChange={handleItemChange} min="0" disabled={itemType === 'part'} /></div>
-                            <div className="col-span-2 space-y-2"><Label>Tax Rate (%)</Label><Input type="number" name="taxRate" value={newItem.taxRate} onChange={handleItemChange} min="0" /></div>
-                            <div className="col-span-2"><Button type="button" onClick={handleAddItem} className="w-full"><FaPlus className="mr-2" /> Add</Button></div>
+                            <div className="space-y-2 sm:col-span-1"><Label>Quantity</Label><Input type="number" name="quantity" value={newItem.quantity} onChange={handleItemChange} min="1" /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Unit Price</Label><Input type="number" name="unitPrice" value={newItem.unitPrice} onChange={handleItemChange} min="0" disabled={itemType === 'part'} /></div>
+                            <div className="space-y-2 sm:col-span-2"><Label>Tax Rate (%)</Label><Input type="number" name="taxRate" value={newItem.taxRate} onChange={handleItemChange} min="0" /></div>
+                            <div className="sm:col-span-2"><Button type="button" onClick={handleAddItem} className="w-full"><FaPlus className="mr-2" /> Add</Button></div>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-muted">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left">Description</th>
-                                        <th className="px-4 py-2 text-right">Qty</th>
-                                        <th className="px-4 py-2 text-right">Price</th>
-                                        <th className="px-4 py-2 text-right">Discount (%)</th>
-                                        <th className="px-4 py-2 text-right">Tax (%)</th>
-                                        <th className="px-4 py-2 text-right">Total</th>
-                                        <th className="px-4 py-2 text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {formData.items.map((item, index) => (
-                                        <tr key={index} className="border-b">
-                                            <td className="px-4 py-2">{item.itemType.toUpperCase() === 'LABOR' ? item.description : `[${item.partNumber}] ${item.description}`}</td>
-                                            <td className="px-4 py-2 text-right">
-                                                <Input
-                                                    type="number"
-                                                    value={item.quantity || 1}
-                                                    onChange={(e) => handleItemUpdate(index, 'quantity', e.target.value)}
-                                                    className="w-20 text-left inline-flex"
-                                                    min="1"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-2 text-right">₹{Number(item.unitPrice).toFixed(2)}</td>
-                                            <td className="px-4 py-2 text-right">
-                                                <Input
-                                                    type="number"
-                                                    value={item.discount || 0}
-                                                    onChange={(e) => handleItemUpdate(index, 'discount', e.target.value)}
-                                                    disabled={getDiscountDisabledState(item, index)}
-                                                    className="w-20 text-left inline-flex"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-2 text-right">{item.taxRate}</td>
-                                            <td className="px-4 py-2 text-right font-semibold">₹{Number(item.totalPrice).toFixed(2)}</td>
-                                            {/*<td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!formData.jobNumber && index < originalItemCount}><FaTrash /></Button></td>*/}
-                                            {/*TODO: FOR NOW KEEPING DELETE OPTION ENABLED FROM INVOICE PAGE, would revisit later*/}
-                                            <td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}><FaTrash /></Button></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="text-right">Qty</TableHead>
+                                    <TableHead className="text-right">Price</TableHead>
+                                    <TableHead className="text-right">Discount (%)</TableHead>
+                                    <TableHead className="text-right">Tax (%)</TableHead>
+                                    <TableHead className="text-right">Total</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {formData.items.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.itemType.toUpperCase() === 'LABOR' ? item.description : `[${item.partNumber}] ${item.description}`}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Input
+                                                type="number"
+                                                value={item.quantity || 1}
+                                                onChange={(e) => handleItemUpdate(index, 'quantity', e.target.value)}
+                                                className="w-full text-left sm:w-20"
+                                                min="1"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right">₹{Number(item.unitPrice).toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Input
+                                                type="number"
+                                                value={item.discount || 0}
+                                                onChange={(e) => handleItemUpdate(index, 'discount', e.target.value)}
+                                                disabled={getDiscountDisabledState(item, index)}
+                                                className="w-full text-left sm:w-20"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="text-right">{item.taxRate}</TableCell>
+                                        <TableCell className="text-right font-semibold">₹{Number(item.totalPrice).toFixed(2)}</TableCell>
+                                        {/*<td className="px-4 py-2 text-center"><Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} disabled={!!formData.jobNumber && index < originalItemCount}><FaTrash /></Button></td>*/}
+                                        {/*TODO: FOR NOW KEEPING DELETE OPTION ENABLED FROM INVOICE PAGE, would revisit later*/}
+                                        <TableCell className="text-right">
+                                            <Button type="button" size="icon" variant="ghost" onClick={() => handleRemoveItem(index)} aria-label={`Remove invoice item ${index + 1}`}>
+                                                <FaTrash />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </CardContent>
                 </Card>
 
@@ -458,8 +461,8 @@ const InvoiceForm = ({ invoice, onSave, onCancel }) => {
                 <div className="text-right text-2xl font-bold">
                     Total: ₹{calculateTotal().toFixed(2)}
                 </div>
-                <CardHeader className="flex flex-row justify-end">
-                    <div className="flex space-x-2">
+                <CardHeader className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                         <Button type="button" variant="outline" onClick={onCancel}><FaTimes className="mr-2" /> Cancel</Button>
                         <Button type="submit" disabled={saving}><FaSave className="mr-2" /> {saving ? 'Saving...' : 'Save Invoice'}</Button>
                     </div>

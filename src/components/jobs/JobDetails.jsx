@@ -3,6 +3,7 @@ import { FaArrowLeft, FaEdit, FaUser, FaCar, FaWrench, FaUserCog, FaFileAlt, FaC
 import { getStatusBadge, formatDate } from "./helper/utils";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const JobDetails = ({ job, onBack, onEdit }) => {
     if (!job) {
@@ -20,14 +21,14 @@ const JobDetails = ({ job, onBack, onEdit }) => {
 
     return (
         <div className="container mx-auto py-6 space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button onClick={onBack} variant="outline"><FaArrowLeft className="mr-2" /> Back to Jobs</Button>
                 <Button onClick={onEdit}><FaEdit className="mr-2" /> Edit Job</Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <CardTitle className="text-2xl font-bold">{job.service}</CardTitle>
                             <p className="text-sm text-muted-foreground">{job.jobNumber}</p>
@@ -67,28 +68,26 @@ const JobDetails = ({ job, onBack, onEdit }) => {
                 <Card>
                     <CardHeader><CardTitle>Parts & Labor</CardTitle></CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-muted">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left">Item</th>
-                                        <th className="px-4 py-2 text-right">Quantity</th>
-                                        <th className="px-4 py-2 text-right">Unit Price</th>
-                                        <th className="px-4 py-2 text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {job.items.map((item, index) => (
-                                        <tr key={index} className="border-b">
-                                            <td className="px-4 py-2">{item.type?.toUpperCase() === 'LABOR' ? item.description : `[${item.partNumber}]  ${item.partName}`}</td>
-                                            <td className="px-4 py-2 text-right">{item.quantity}</td>
-                                            <td className="px-4 py-2 text-right">₹ {item.rate.toFixed(2)}</td>
-                                            <td className="px-4 py-2 text-right font-semibold">₹ {(item.quantity * item.rate).toFixed(2)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Item</TableHead>
+                                    <TableHead className="text-right">Quantity</TableHead>
+                                    <TableHead className="text-right">Unit Price</TableHead>
+                                    <TableHead className="text-right">Total</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {job.items.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.type?.toUpperCase() === 'LABOR' ? item.description : `[${item.partNumber}]  ${item.partName}`}</TableCell>
+                                        <TableCell className="text-right">{item.quantity}</TableCell>
+                                        <TableCell className="text-right">₹ {item.rate.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right font-semibold">₹ {(item.quantity * item.rate).toFixed(2)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </CardContent>
                 </Card>
             )}

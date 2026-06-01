@@ -13,7 +13,7 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { 
+import {
   Rocket, 
   Shield, 
   Wrench, 
@@ -28,7 +28,9 @@ import {
   Smartphone,
   Bell,
   FileText,
-  Star
+  Star,
+  Menu,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import LoginModal from '@/components/auth/LoginModal';
@@ -44,6 +46,7 @@ const LandingPage = () => {
     phone: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -106,7 +109,7 @@ const LandingPage = () => {
       {/* Header */}
       <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex h-20 items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <div className="bg-emerald-500 p-2 rounded-xl shadow-lg shadow-emerald-500/20">
                 <Wrench className="w-6 h-6 text-emerald-950" />
@@ -116,7 +119,7 @@ const LandingPage = () => {
                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Workshop Intelligence</span>
               </div>
             </div>
-            <nav className="hidden md:flex items-center space-x-10">
+            <nav className="hidden lg:flex items-center space-x-10">
               <a href="#features" className="text-sm font-semibold text-muted-foreground hover:text-emerald-500 transition-all">Features</a>
               <a href="#automation" className="text-sm font-semibold text-muted-foreground hover:text-emerald-500 transition-all">Automation</a>
               <a href="#billing" className="text-sm font-semibold text-muted-foreground hover:text-emerald-500 transition-all">Billing</a>
@@ -129,9 +132,84 @@ const LandingPage = () => {
                 <a href="#onboard">Start Free Trial</a>
               </Button>
             </nav>
+            <div className="flex items-center gap-2 lg:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen((current) => !current)}
+                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                className="border border-border/60 bg-card/80"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
+
+      <div
+        className={cn(
+          'fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity duration-300 lg:hidden',
+          mobileMenuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        )}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+
+      <aside
+        className={cn(
+          'fixed inset-y-0 right-0 z-50 w-[min(88vw,22rem)] border-l border-border bg-background/95 p-6 shadow-2xl transition-transform duration-300 lg:hidden',
+          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        )}
+      >
+        <div className="flex h-full flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.25em] text-emerald-500">Menu</p>
+              <p className="text-xs font-medium text-muted-foreground">Workshop Intelligence</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className="grid gap-2">
+            <a
+              href="#features"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-emerald-500/30 hover:bg-accent/40"
+            >
+              Features
+            </a>
+            <a
+              href="#automation"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-emerald-500/30 hover:bg-accent/40"
+            >
+              Automation
+            </a>
+            <a
+              href="#billing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-emerald-500/30 hover:bg-accent/40"
+            >
+              Billing
+            </a>
+          </div>
+
+          <div className="grid gap-3 pt-2">
+            <LoginModal
+              trigger={
+                <button className="rounded-xl border border-border/60 bg-card/70 px-4 py-3 text-left text-sm font-semibold text-foreground transition-colors hover:border-emerald-500/30 hover:bg-accent/40">
+                  Sign In
+                </button>
+              }
+            />
+            <Button asChild className="w-full bg-emerald-600 text-white font-bold rounded-xl border-none shadow-lg shadow-emerald-500/10">
+              <a href="#onboard" onClick={() => setMobileMenuOpen(false)}>Start Free Trial</a>
+            </Button>
+          </div>
+        </div>
+      </aside>
 
       {/* 1. HERO SECTION */}
       <section className="relative pt-20 pb-32 overflow-hidden bg-background">
@@ -495,7 +573,7 @@ const LandingPage = () => {
         </div>
 
         {/* Footer */}
-        <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-40 pt-12 border-t border-border flex flex-col md:flex-row justify-between items-center gap-8 pb-12">
+        <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-40 pt-12 border-t border-border flex flex-col lg:flex-row justify-between items-center gap-8 pb-12">
           <div className="flex items-center gap-2.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
             <div className="bg-muted p-1.5 rounded-lg">
               <Wrench className="w-4 h-4 text-foreground" />
@@ -537,13 +615,13 @@ const FeatureCard = ({ image, icon, title, description }) => (
 );
 
 const AutomationLink = ({ title, description }) => (
-    <div className="group p-6 rounded-2xl border border-border bg-card/50 hover:bg-card hover:border-accent transition-all cursor-default">
+    <div className="group p-6 rounded-2xl border border-border bg-card/50 hover:bg-card hover:border-accent transition-all cursor-default [--feature-hover-emerald:#059669] dark:[--feature-hover-emerald:#34d399]">
         <div className="flex items-start gap-4">
             <div className="mt-1 bg-muted group-hover:bg-emerald-500 p-2 rounded-lg transition-colors">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 group-hover:text-emerald-950" />
             </div>
             <div>
-                <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h4>
+                <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-[color:var(--feature-hover-emerald)] transition-colors">{title}</h4>
                 <p className="text-muted-foreground font-medium leading-relaxed">{description}</p>
             </div>
         </div>
@@ -551,12 +629,12 @@ const AutomationLink = ({ title, description }) => (
 );
 
 const BillingPerk = ({ icon, title, description }) => (
-    <div className="group flex items-start gap-4 p-4 rounded-xl hover:bg-accent/50 transition-all cursor-default">
+    <div className="group flex items-start gap-4 p-4 rounded-xl hover:bg-accent/50 transition-all cursor-default [--feature-hover-emerald:#059669] dark:[--feature-hover-emerald:#34d399]">
         <div className="mt-1 bg-background shadow-md p-2.5 rounded-xl border border-border group-hover:scale-110 transition-transform">
             {icon}
         </div>
         <div>
-            <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h4>
+            <h4 className="text-lg font-black text-foreground mb-1 group-hover:text-[color:var(--feature-hover-emerald)] transition-colors">{title}</h4>
             <p className="text-muted-foreground font-medium leading-relaxed text-sm">{description}</p>
         </div>
     </div>

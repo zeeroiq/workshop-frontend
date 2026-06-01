@@ -22,7 +22,7 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
     if (!order) {
         return (
             <div className="container mx-auto py-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <Button onClick={onBack} variant="outline">
                         <FaArrowLeft className="mr-2" /> Back to Orders
                     </Button>
@@ -66,12 +66,12 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
 
     return (
         <div className="container mx-auto py-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button onClick={onBack} variant="outline">
                     <FaArrowLeft className="mr-2" /> Back to List
                 </Button>
                 <h2 className="text-2xl font-bold">Purchase Order Details</h2>
-                <div className="flex space-x-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button onClick={() => handleOrderEditClick(order, onEdit)} variant="outline">
                         <FaEdit className="mr-2" /> Edit
                     </Button>
@@ -87,23 +87,23 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
                         <CardTitle>Order Information</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-2">
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Order Number:</span>
                             <span>{order.orderNumber}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Order Date:</span>
                             <span>{formatDate(order.orderDate)}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Expected Delivery Date:</span>
                             <span>{formatDate(order.expectedDeliveryDate)}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Received Date:</span>
                             <span>{formatDate(order.receivedDate)}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Status:</span>
                             <span>{getStatusBadge(order.status)}</span>
                         </div>
@@ -115,11 +115,11 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
                         <CardTitle>Supplier Information</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-2">
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Supplier:</span>
                             <span>{order.supplierName}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Supplier ID:</span>
                             <span>{order.supplierId}</span>
                         </div>
@@ -131,7 +131,7 @@ const PurchaseOrderDetails = ({order, onBack, onEdit}) => {
                         <CardTitle>Financial Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-2">
-                        <div className="flex justify-between">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <span className="text-muted-foreground">Total Amount:</span>
                             <span>₹ {order.totalAmount.toFixed(2)}</span>
                         </div>

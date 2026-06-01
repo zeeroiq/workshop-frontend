@@ -142,7 +142,7 @@ const FinancialReports = () => {
 
     return (
         <div className="container mx-auto py-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-2xl font-bold">Financial Summary Report</h3>
                 <ExportControls getCriteria={getExportCriteria} />
             </div>
@@ -151,12 +151,12 @@ const FinancialReports = () => {
                 <CardHeader>
                     <CardTitle>Report Filters</CardTitle>
                 </CardHeader>
-                <CardContent className="flex flex-wrap items-end gap-4">
-                    <div className="flex-1 min-w-[180px]">
+                <CardContent className="flex flex-col gap-4 lg:flex-row lg:items-end">
+                    <div className="w-full lg:flex-1 lg:min-w-0">
                         <TimePeriodFilter criteria={criteria} onCriteriaChange={handleCriteriaChange} />
                     </div>
 
-                    <div className="flex-1 min-w-[180px] space-y-2">
+                    <div className="w-full space-y-2 lg:flex-1 lg:min-w-0">
                         <Label>
                             <FaUser className="inline-block mr-2" /> Customer
                         </Label>
@@ -178,7 +178,7 @@ const FinancialReports = () => {
                         </Select>
                     </div>
 
-                    <div className="flex-1 min-w-[180px] space-y-2">
+                    <div className="w-full space-y-2 lg:flex-1 lg:min-w-0">
                         <Label>
                             <FaUserCog className="inline-block mr-2" /> Mechanic
                         </Label>
@@ -200,11 +200,7 @@ const FinancialReports = () => {
                         </Select>
                     </div>
 
-                    <Button
-                        className="w-full md:w-auto flex-shrink-0"
-                        onClick={generateReport}
-                        disabled={loading}
-                    >
+                    <Button className="w-full flex-shrink-0 lg:w-auto" onClick={generateReport} disabled={loading}>
                         {loading ? 'Generating...' : 'Generate Report'}
                     </Button>
                 </CardContent>

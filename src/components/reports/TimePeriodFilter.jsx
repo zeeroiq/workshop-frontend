@@ -12,10 +12,7 @@ const TimePeriodFilter = ({ criteria, onCriteriaChange }) => {
                 <Label>
                     <FaFilter className="inline-block mr-2" /> Time Period
                 </Label>
-                <Select
-                    value={criteria.timePeriod}
-                    onValueChange={(value) => onCriteriaChange('timePeriod', value)}
-                >
+                <Select value={criteria.timePeriod} onValueChange={(value) => onCriteriaChange('timePeriod', value)}>
                     <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
@@ -31,7 +28,7 @@ const TimePeriodFilter = ({ criteria, onCriteriaChange }) => {
             </div>
 
             {criteria.timePeriod === TIME_PERIODS.CUSTOM && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Start Date</Label>
                         <Input

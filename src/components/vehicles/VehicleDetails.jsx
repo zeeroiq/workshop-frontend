@@ -92,11 +92,11 @@ const VehicleDetails = () => {
 
     return (
         <div className="container mx-auto py-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button onClick={() => navigate('/vehicles')} variant="outline">
                     <FaArrowLeft className="mr-2" /> Back to Vehicles
                 </Button>
-                <div className="flex space-x-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                     <Button asChild variant="outline">
                         <Link to={`/vehicles/edit/${id}`}><FaEdit className="mr-2" /> Edit</Link>
                     </Button>
@@ -114,7 +114,7 @@ const VehicleDetails = () => {
             </Card>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="w-full">
                     <TabsTrigger value="details"><FaCar className="mr-2" />Details</TabsTrigger>
                     <TabsTrigger value="history"><FaHistory className="mr-2" />Service History</TabsTrigger>
                     <TabsTrigger value="notes"><FaStickyNote className="mr-2" />Notes ({vehicle.notes?.length || 0})</TabsTrigger>
@@ -146,7 +146,7 @@ const VehicleDetails = () => {
                     {vehicle.customerId && (
                         <Card className="mt-6">
                             <CardHeader><CardTitle>Owner Information</CardTitle></CardHeader>
-                            <CardContent className="flex items-center justify-between">
+                            <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center">
                                     <FaUser className="text-2xl text-muted-foreground mr-4" />
                                     <div>
@@ -168,7 +168,7 @@ const VehicleDetails = () => {
                             {history.length > 0 ? (
                                 <div className="space-y-4">
                                     {history.map(record => (
-                                        <div key={record.jobId} className="flex justify-between items-center p-4 border rounded-lg">
+                                        <div key={record.jobId} className="flex flex-col gap-3 p-4 border rounded-lg sm:flex-row sm:items-center sm:justify-between">
                                             <div>
                                                 <p className="font-semibold">{record.serviceType} on {new Date(record.serviceDate).toLocaleDateString()}</p>
                                                 <p className="text-sm text-muted-foreground">{record.description}</p>
@@ -194,7 +194,7 @@ const VehicleDetails = () => {
                 <TabsContent value="notes" className="mt-4">
                     <Card>
                         <CardContent className="p-6 space-y-4">
-                            <form onSubmit={handleAddNote} className="flex items-start space-x-4">
+                            <form onSubmit={handleAddNote} className="flex flex-col gap-3 sm:flex-row sm:items-start">
                                 <Textarea
                                     value={noteContent}
                                     onChange={(e) => setNoteContent(e.target.value)}
