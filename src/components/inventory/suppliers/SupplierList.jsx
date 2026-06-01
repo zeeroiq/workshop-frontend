@@ -1,22 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaEllipsisV, FaFilter } from 'react-icons/fa';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Edit, Trash, Eye, Plus, Search, Filter, Phone, Mail, User } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
-import PaginationComponent from "@/components/common/PaginationComponent";
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PaginationComponent from "@/components/common/PaginationComponent";
+import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [supplierToDelete, setSupplierToDelete] = useState(null);
-    const [expandedRow, setExpandedRow] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [pageSize, setPageSize] = useState(10);
 
     useEffect(() => {
         loadSuppliers();
@@ -27,23 +26,15 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
             setLoading(true);
             const params = {
                 page: currentPage,
-                size: pageSize,
+                size: 10,
                 sort: 'name,asc',
+                ...(searchTerm && { search: searchTerm }),
+                ...(statusFilter !== 'all' && { status: statusFilter })
             };
-            if (searchTerm) {
-                params.search = searchTerm;
-            }
-            if (statusFilter !== 'all') {
-                params.status = statusFilter;
-            }
             const response = await inventoryService.getSuppliers(params);
-            if (response?.data?.success && response.data) {
+            if (response?.data?.success) {
                 setSuppliers(response.data.content || []);
                 setTotalPages(response.data.totalPages || 0);
-            } else {
-                setSuppliers([]);
-                setTotalPages(0);
-                toast.warn('Failed to load suppliers.');
             }
         } catch (error) {
             console.error('Error loading suppliers:', error);
@@ -53,231 +44,177 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(0);
-    };
+    const handleDelete = async (supplier) => {
+        if (!window.confirm(`Are you sure you want to delete supplier "${supplier.name}"?`)) {
+            return;
+        }
 
-    const handleStatusFilterChange = (e) => {
-        setStatusFilter(e.target.value);
-        setCurrentPage(0);
-    };
-
-    const handleDeleteClick = (supplier) => {
-        setSupplierToDelete(supplier);
-        setDeleteDialogOpen(true);
-    };
-
-    const handleDeleteConfirm = async () => {
         try {
-            await inventoryService.deleteSupplier(supplierToDelete.id);
-            loadSuppliers();
-            setDeleteDialogOpen(false);
-            setSupplierToDelete(null);
+            await inventoryService.deleteSupplier(supplier.id);
             toast.success('Supplier deleted successfully.');
+            loadSuppliers();
         } catch (error) {
             console.error('Error deleting supplier:', error);
             toast.error('Failed to delete supplier.');
         }
     };
 
-    const toggleRowExpansion = (id) => {
-        setExpandedRow(expandedRow === id ? null : id);
-    };
-
-    const STATUS_CLASSES = {
-        ACTIVE: 'bg-green-100 text-green-800',
-        INACTIVE: 'bg-red-100 text-red-800',
-        SUSPENDED: 'bg-orange-100 text-orange-800',
-        DELETED: 'bg-brown-100 text-brown-800',
-    };
-
-    const humanizeStatus = (s) => (s || '')
-        .toLowerCase()
-        .replaceAll('_', ' ')
-        .replaceAll(/\b\w/g, (ch) => ch.toUpperCase()) || 'Unknown';
-
     const getStatusBadge = (status) => {
-        const key = (status || '').toUpperCase();
-        const statusClass = STATUS_CLASSES[key] || 'bg-gray-100 text-gray-800';
+        const variant = status === 'ACTIVE' ? 'success' : status === 'INACTIVE' ? 'destructive' : 'secondary';
         return (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
-                {humanizeStatus(key)}
-            </span>
+            <Badge variant={variant} className="text-[10px] uppercase tracking-wider">
+                {status || 'UNKNOWN'}
+            </Badge>
         );
     };
 
-    if (loading) {
-        return <div className="flex justify-center items-center h-64">Loading suppliers...</div>;
-    }
-
-    return (
-        <div className="bg-card p-4 rounded-lg">
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                    <h2 className="text-xl font-semibold">Suppliers</h2>
-                    <p className="text-muted-foreground">Manage your supplier information</p>
+    const columns = [
+        {
+            header: "Supplier Name",
+            cell: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{row.name}</span>
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{row.email || '-'}</span>
                 </div>
-                <Button type="button" onClick={onCreate}>
-                    <FaPlus className="mr-2" /> Add Supplier
-                </Button>
-            </div>
-
-            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="relative w-full lg:flex-1">
-                    <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search suppliers..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="min-h-11 w-full rounded-md border border-border bg-input pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:min-h-10"
-                    />
+            )
+        },
+        {
+            header: "Contact Person",
+            cell: (row) => (
+                <div className="flex items-center gap-2">
+                    <User size={14} className="text-emerald-500" />
+                    <span className="text-sm">{row.contactPerson || '-'}</span>
                 </div>
-                <div className="relative w-full lg:w-auto">
-                    <FaFilter className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-                    <select
-                        value={statusFilter}
-                        onChange={handleStatusFilterChange}
-                        className="min-h-11 w-full appearance-none rounded-md border border-border bg-input pl-10 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring lg:min-h-10 lg:w-auto"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="ACTIVE">Active</option>
-                        <option value="INACTIVE">Inactive</option>
-                        <option value="SUSPENDED">Suspended</option>
-                        <option value="DELETED">Deleted</option>
-                        <option value="ARCHIVED">Archived</option>
-                    </select>
+            )
+        },
+        {
+            header: "Phone",
+            accessor: "phone",
+            cell: (row) => <span className="text-muted-foreground">{row.phone || '-'}</span>
+        },
+        {
+            header: "Status",
+            cell: (row) => getStatusBadge(row.status)
+        },
+        {
+            header: "Actions",
+            className: "text-right",
+            cell: (row, isTablet) => (
+                <div className="flex items-center justify-end gap-2">
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onViewDetails(row)}>
+                        <Eye className="h-4 w-4 text-emerald-500" />
+                        {!isTablet && <span className="ml-2">View</span>}
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" onClick={() => onEdit(row)}>
+                        <Edit className="h-4 w-4 text-primary" />
+                        {!isTablet && <span className="ml-2 text-primary">Edit</span>}
+                    </Button>
+                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(row);
+                    }}>
+                        <Trash className="h-4 w-4" />
+                        {!isTablet && <span className="ml-2">Delete</span>}
+                    </Button>
                 </div>
-            </div>
+            )
+        }
+    ];
 
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {suppliers.length === 0 ? (
-                        <TableRow>
-                            <TableCell colSpan={4} className="py-16 text-center text-muted-foreground">
-                                <div className="flex flex-col items-center gap-3">
-                                    <h3 className="text-lg font-semibold text-foreground">No suppliers found</h3>
-                                    <p>Try adjusting your search or add a new supplier.</p>
-                                    <Button type="button" onClick={onCreate}>
-                                        <FaPlus className="mr-2" /> Add Supplier
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        suppliers.map((supplier) => (
-                            <React.Fragment key={supplier.id}>
-                                <TableRow
-                                    className="cursor-pointer"
-                                    onClick={() => onViewDetails(supplier)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === 'Enter' || event.key === ' ') {
-                                            event.preventDefault();
-                                            onViewDetails(supplier);
-                                        }
-                                    }}
-                                    tabIndex={0}
-                                    role="button"
-                                >
-                                    <TableCell>
-                                        <div className="font-medium">{supplier.name}</div>
-                                        <div className="text-muted-foreground">{supplier.email}</div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div>{supplier.contactPerson}</div>
-                                        <div className="text-muted-foreground">{supplier.phone}</div>
-                                    </TableCell>
-                                    <TableCell>{getStatusBadge(supplier.status)}</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleRowExpansion(supplier.id);
-                                            }} aria-label={`Toggle details for ${supplier.name}`}>
-                                                <FaEllipsisV />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                                {expandedRow === supplier.id && (
-                                    <TableRow className="bg-muted/20">
-                                        <TableCell colSpan={4} className="p-4">
-                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                                                <div>
-                                                    <h4 className="font-semibold">Address</h4>
-                                                    <p className="text-muted-foreground">{supplier.address || '-'}</p>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-semibold">Payment Terms</h4>
-                                                    <p className="text-muted-foreground">{supplier.paymentTerm || '-'}</p>
-                                                </div>
-                                                {supplier.notes && (
-                                                    <div>
-                                                        <h4 className="font-semibold">Notes</h4>
-                                                        <p className="text-muted-foreground">{supplier.notes}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                                                <Button type="button" variant="outline" onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onViewDetails(supplier);
-                                                }}>
-                                                    <FaEye className="mr-2" /> View
-                                                </Button>
-                                                <Button type="button" variant="outline" onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onEdit(supplier);
-                                                }}>
-                                                    <FaEdit className="mr-2" /> Edit
-                                                </Button>
-                                                <Button type="button" variant="destructive" onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteClick(supplier);
-                                                }}>
-                                                    <FaTrash className="mr-2" /> Delete
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </React.Fragment>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-            {totalPages > 1  && (
-            <div className="mt-4 flex justify-center">
-                <PaginationComponent
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+    const renderSupplierCard = (supplier) => (
+        <Card 
+            className="overflow-hidden border-border/50 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+            onClick={() => onViewDetails(supplier)}
+        >
+            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-lg group-hover:text-emerald-500 transition-colors">
+                    {supplier.name}
+                </CardTitle>
+                {getStatusBadge(supplier.status)}
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Contact</p>
+                        <p className="font-medium mt-1 truncate">{supplier.contactPerson || '-'}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Phone</p>
+                        <p className="font-medium mt-1">{supplier.phone || '-'}</p>
+                    </div>
+                    <div className="col-span-2">
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Email</p>
+                        <p className="font-medium mt-1 truncate">{supplier.email || '-'}</p>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                    <Button variant="outline" className="flex-1 h-11 gap-2 border-border/50" onClick={(e) => { e.stopPropagation(); onEdit(supplier); }}>
+                        <Edit size={16} />
+                        <span>Edit</span>
+                    </Button>
+                    <Button variant="destructive" className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive border-none" onClick={(e) => { e.stopPropagation(); handleDelete(supplier); }}>
+                        <Trash size={16} />
+                        <span>Delete</span>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+
+    const filters = (
+        <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="text"
+                    placeholder="Search by name, contact or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-muted/30 border-border/50"
                 />
             </div>
-            )}
-            {deleteDialogOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-[calc(100vw-2rem)] max-w-md rounded-lg bg-card p-6 shadow-lg">
-                        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
-                        <p className="text-muted-foreground">Are you sure you want to delete supplier "{supplierToDelete?.name}"?</p>
-                        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button type="button" variant="destructive" onClick={handleDeleteConfirm}>
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
+            <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            >
+                <option value="all">All Statuses</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="SUSPENDED">Suspended</option>
+            </select>
+        </div>
+    );
+
+    const actions = (
+        <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 gap-2">
+            <Plus size={16} />
+            <span>Add Supplier</span>
+        </Button>
+    );
+
+    return (
+        <div className="pb-6">
+            <ResponsiveDataContainer
+                title="Suppliers"
+                description="Manage your vendor partnerships and contact details"
+                actions={actions}
+                filters={filters}
+                columns={columns}
+                data={suppliers}
+                renderCard={renderSupplierCard}
+                onRowClick={onViewDetails}
+                loading={loading}
+                emptyMessage="No suppliers found."
+            />
+            {totalPages > 1 && (
+                <div className="mt-6 flex justify-center">
+                    <PaginationComponent
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
         </div>

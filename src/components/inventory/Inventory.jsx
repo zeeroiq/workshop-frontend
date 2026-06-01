@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Truck, Users, List } from 'lucide-react';
+import { Truck, Users, List } from 'lucide-react';
 import PartList from './parts/PartList';
 import PartForm from './parts/PartForm';
 import PartDetails from './parts/PartDetails';
@@ -10,7 +10,6 @@ import PurchaseOrderForm from './orders/PurchaseOrderForm';
 import PurchaseOrderDetails from './orders/PurchaseOrderDetails';
 import SupplierDetails from "./suppliers/SupplierDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Inventory = () => {
     const [currentView, setCurrentView] = useState('list');
@@ -29,9 +28,9 @@ const Inventory = () => {
     };
 
     const handleCreate = (initialData = null) => {
-    setEditItem(initialData);
-    setCurrentView('form');
-};
+        setEditItem(initialData);
+        setCurrentView('form');
+    };
 
     const handleBackToList = () => {
         setCurrentView('list');
@@ -51,19 +50,6 @@ const Inventory = () => {
         setSelectedItem(null);
         setEditItem(null);
     };
-
-    const renderContent = (tab) => {
-        switch (tab) {
-            case 'parts':
-                return renderPartViews();
-            case 'suppliers':
-                return renderSupplierViews();
-            case 'orders':
-                return renderPurchaseOrderViews();
-            default:
-                return null;
-        }
-    }
 
     const renderPartViews = () => {
         switch (currentView) {
@@ -114,31 +100,26 @@ const Inventory = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="w-full">
-                    <TabsTrigger value="parts"><List className="mr-2 h-4 w-4" /> Parts</TabsTrigger>
-                    <TabsTrigger value="suppliers"><Users className="mr-2 h-4 w-4" /> Suppliers</TabsTrigger>
-                    <TabsTrigger value="orders"><Truck className="mr-2 h-4 w-4" /> Purchase Orders</TabsTrigger>
+                <TabsList className="w-full bg-muted/30 border-border/50 p-1 mb-6">
+                    <TabsTrigger value="parts" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-emerald-950 font-bold">
+                        <List className="mr-2 h-4 w-4" /> Parts
+                    </TabsTrigger>
+                    <TabsTrigger value="suppliers" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-emerald-950 font-bold">
+                        <Users className="mr-2 h-4 w-4" /> Suppliers
+                    </TabsTrigger>
+                    <TabsTrigger value="orders" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-emerald-950 font-bold">
+                        <Truck className="mr-2 h-4 w-4" /> Orders
+                    </TabsTrigger>
                 </TabsList>
-                <TabsContent value="parts">
-                    <Card>
-                        <CardContent className="pt-6">
-                            {renderContent('parts')}
-                        </CardContent>
-                    </Card>
+                
+                <TabsContent value="parts" className="mt-0">
+                    {renderPartViews()}
                 </TabsContent>
-                <TabsContent value="suppliers">
-                    <Card>
-                        <CardContent className="pt-6">
-                            {renderContent('suppliers')}
-                        </CardContent>
-                    </Card>
+                <TabsContent value="suppliers" className="mt-0">
+                    {renderSupplierViews()}
                 </TabsContent>
-                <TabsContent value="orders">
-                    <Card>
-                        <CardContent className="pt-6">
-                            {renderContent('orders')}
-                        </CardContent>
-                    </Card>
+                <TabsContent value="orders" className="mt-0">
+                    {renderPurchaseOrderViews()}
                 </TabsContent>
             </Tabs>
         </div>

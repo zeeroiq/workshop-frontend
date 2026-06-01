@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, UserCircle, LogOut, Menu, Wrench, Settings, Search } from 'lucide-react';
+import { Bell, UserCircle, LogOut, Menu, Wrench, Settings } from 'lucide-react';
 import { authService } from '@/services/authService';
 import { workshopService } from '@/services/workshopService';
 import { getAuthenticatedUrl } from "@/utils/storage";
@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Header = ({ onToggleSidebar }) => {
-    const navigate = useNavigate();
     const user = authService.getUser();
     const [workshopInfo, setWorkshopInfo] = useState({
         name: user?.workshopName || 'Vishwakarma',
@@ -94,10 +93,9 @@ const Header = ({ onToggleSidebar }) => {
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 lg:gap-4">
-                <div className="hidden sm:flex">
-                    <ThemeToggle />
-                </div>
+            <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+                {/* Theme Toggle is now visible on all screen sizes */}
+                <ThemeToggle />
 
                 <Button variant="ghost" size="icon" className="relative hover:bg-emerald-500/10 group" aria-label="Notifications">
                     <Bell size={20} className="group-hover:text-emerald-500 transition-colors" />
