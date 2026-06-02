@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, Filter } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Filter, Users } from 'lucide-react';
 import { customerService } from '@/services/customerService';
 import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import { cn } from "@/lib/utils";
 
 const CustomerList = () => {
     const navigate = useNavigate();
@@ -173,21 +174,47 @@ const CustomerList = () => {
     );
 
     const filters = (
-        <div className="flex flex-col md:flex-row gap-3">
-            <form onSubmit={handleSearch} className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    type="text"
-                    placeholder="Search customers by name, phone or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-muted/30 border-border/50"
-                />
-            </form>
-            <Button variant="outline" className="border-border/50 gap-2">
-                <Filter size={16} />
-                <span>Filters</span>
-            </Button>
+        <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-3">
+                <form onSubmit={handleSearch} className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search customers by name, phone or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-muted/30 border-border/50"
+                    />
+                </form>
+                <Button variant="outline" className="border-border/50 gap-2">
+                    <Filter size={16} />
+                    <span>Filters</span>
+                </Button>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { label: 'With Vehicles', value: 'has-vehicles' },
+                    { label: 'No Vehicles', value: 'no-vehicles' },
+                    { label: 'Recent', value: 'recent' }
+                ].map(filter => (
+                    <button
+                        key={filter.value}
+                        className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
+                            "bg-muted/30 text-muted-foreground border-border/50 hover:border-emerald-500/50 hover:text-foreground"
+                        )}
+                        onClick={() => {
+                            toast.info(`Filtering by ${filter.label}...`);
+                        }}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 
@@ -209,7 +236,10 @@ const CustomerList = () => {
                 renderCard={renderCustomerCard}
                 onRowClick={(row) => navigate(`/customers/${row.id}`)}
                 loading={loading}
-                emptyMessage="No customers found. Click 'Add Customer' to create your first record."
+                emptyMessage="You have no customers registered yet. Onboard your first customer to start tracking history."
+                emptyIcon={Users}
+                emptyActionLabel="Onboard First Customer"
+                onEmptyAction={() => navigate('/customers/new')}
             />
             
             {!loading && customers.length > 0 && (

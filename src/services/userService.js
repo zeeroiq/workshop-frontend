@@ -16,4 +16,8 @@ export const userService = {
                 return response;
             });
     },
+
+    createUser: (userData) => 
+        api.post('/auth/register', userData)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 };

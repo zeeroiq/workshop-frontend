@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import JobList from './JobList';
 import JobForm from './JobForm';
 import JobDetails from './JobDetails';
@@ -11,7 +11,6 @@ const Jobs = () => {
     const [activeView, setActiveView] = useState('list');
     const [selectedJob, setSelectedJob] = useState(null);
     const [loading, setLoading] = useState(false);
-    // const [jobs, setJobs] = useState([]);
 
     const handleViewJob = (job) => {
         setSelectedJob(job);
@@ -28,67 +27,90 @@ const Jobs = () => {
         setActiveView('form');
     };
 
+    const refreshJobData = useCallback(async () => {
+        if (!selectedJob?.id) return;
+        try {
+            const response = await jobService.getJobById(selectedJob.id);
+            if (response?.data) {
+                // Transform data for view
+                const apiJob = response.data;
+                const [vehicle, license] = (apiJob.vehicleDetails || ' - ').split(' - ');
+                const serviceItems = apiJob.items?.filter(item => item.type === 'LABOR')
+                    .map(item => item.description)
+                    .join(', ');
+
+                setSelectedJob({
+                    id: apiJob.id,
+                    jobNumber: apiJob.jobNumber,
+                    customer: apiJob.customerName,
+                    customerId: apiJob.customerId,
+                    vehicle: vehicle?.trim(),
+                    license: license?.trim(),
+                    service: serviceItems || apiJob.description,
+                    technicianId: apiJob.technicianId,
+                    technician: apiJob.technicianName,
+                    status: apiJob?.status?.toLowerCase()?.replace(/_/g, '-'), 
+                    estimatedCompletion: apiJob.completedAt || apiJob.updatedAt, 
+                    cost: apiJob.totalCost,
+                    createdAt: apiJob.createdAt,
+                    updatedAt: apiJob.updatedAt,
+                    completedAt: apiJob.completedAt,
+                    description: apiJob.description,
+                    notes: apiJob.notes || [],
+                    items: apiJob.items || [],
+                });
+            }
+        } catch (error) {
+            console.error('Refresh failed:', error);
+        }
+    }, [selectedJob?.id]);
+
     const handleSaveJob = async (jobData) => {
-        // Prepare payload for the API
         const payload = { ...jobData };
 
-        // Transform notes from a single string to an array of objects
         if (payload.notes && typeof payload.notes === 'string') {
             payload.notes = payload.notes
                 .split('\n')
-                .filter(content => content.trim() !== '') // Remove empty lines
+                .filter(content => content.trim() !== '')
                 .map(content => ({ content }));
         } else {
-            payload.notes = payload.notes || []; // Ensure it's an empty array if no notes
+            payload.notes = payload.notes || [];
         }
         
-        if (jobData.jobNumber) {
-            try {
-                // Update existing job
+        try {
+            if (jobData.jobNumber) {
                 const response = await jobService.updateJobBuNumber(payload.jobNumber, payload);
                 if (response.status === 200 && response.data) {
-                    // On successful update, reload all jobs to ensure data consistency
-                    await jobService.getAllJobs();
-                    if (response?.data?.invoiceNumber) {
-                        toast.success(`Created invoice ${response.data.invoiceNumber} for job ${response.data.jobNumber}`);
-                    } else {
-                        toast.success(`${response.data.jobNumber} updated successfully!`);
-                    }
+                    toast.success(`${response.data.jobNumber} synchronized successfully!`);
                 } else {
                     toast.error(`Error while updating job: ${response.message}`);
                 }
-            } catch (error) {
-                console.log(error.response.data.message)
-                toast.error(`Error while updating job: ${error}`);
-            }
-            // setJobs(jobs.map(job => job.id === jobData.id ? jobData : job));
-        } else {
-            try {
-                // Create new job
+            } else {
                 const response = await jobService.createJob(payload);
                 if (response.status === 201 && response.data) {
-                    await jobService.getAllJobs(); // Reload to get the new job with all server-generated data
-                    toast.success(`${response.data.jobNumber} created successfully!`);
+                    toast.success(`${response.data.jobNumber} initialized successfully!`);
                 } else {
                     toast.error(`Error while creating job: ${response.message}`);
                 }
-
-            } catch (error) {
-                toast.error(`Error while creating job: ${error}`);
             }
+            setActiveView('list');
+            setSelectedJob(null);
+        } catch (error) {
+            console.error('Job save error:', error);
+            toast.error(`Critical error during archival: ${error.response?.data?.message || error.message}`);
         }
-        setActiveView('list');
     };
 
     const handleDeleteJob = async (jobId) => {
-        const response =  await jobService.deleteJob(jobId);
-        if (response?.status === 200) {
-            // await loadJobs(); // wont be needed as we already removed it from UI optimistically
-            // setJobs(jobs.filter(job => job.jobNumber !== jobId));
-            toast.success(`Job ${jobId} deleted successfully!`);
-        } else {
-            console.error("error deleting job:", response.details);
-            toast.error(`Error while deleting job: ${response.message}`);
+        try {
+            const response =  await jobService.deleteJob(jobId);
+            if (response?.status === 200) {
+                toast.success(`Job record purged.`);
+            } else {
+                toast.error(`Error while purging record: ${response.message}`);
+            }
+        } catch (error) {
+            toast.error(`Purge failed: ${error.response?.data?.message || error.message}`);
         }
     };
 
@@ -102,7 +124,6 @@ const Jobs = () => {
             case 'list':
                 return (
                     <JobList
-                        // jobs={jobs}
                         onViewJob={handleViewJob}
                         onEditJob={handleEditJob}
                         onDeleteJob={handleDeleteJob}
@@ -124,25 +145,23 @@ const Jobs = () => {
                         job={selectedJob}
                         onBack={handleBackToList}
                         onEdit={() => handleEditJob(selectedJob)}
+                        onRefresh={refreshJobData}
                     />
                 );
             case 'calendar':
                 return (
                     <JobCalendar
-                        // jobs={jobs}
                         onSelectJob={handleViewJob}
                         onBack={handleBackToList}
                     />
                 );
             default:
-                return <JobList
-                    // jobs={jobs}
-                    onCreateJob={handleCreateJob} />;
+                return <JobList onCreateJob={handleCreateJob} />;
         }
     };
 
     return (
-        <div className="jobs-module">
+        <div className="w-full">
             {renderView()}
         </div>
     );

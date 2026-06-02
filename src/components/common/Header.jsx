@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Omnisearch from './Omnisearch';
 
 const Header = ({ onToggleSidebar }) => {
     const user = authService.getUser();
@@ -114,9 +115,11 @@ const Header = ({ onToggleSidebar }) => {
                     </TooltipProvider>
                 </Link>
 
-                {/* Desktop Search Placeholder or Breadcrumbs could go here */}
-                <div className="hidden lg:flex items-center gap-2 text-muted-foreground">
-                    <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Operational Console</span>
+                <div className="hidden lg:flex items-center gap-6">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Operational Console</span>
+                    </div>
+                    <Omnisearch />
                 </div>
             </div>
 

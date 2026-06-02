@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import ExportControls from "./ExportControls";
 import DataVisualizer from "./DataVisualizer";
 import TimePeriodFilter from "./TimePeriodFilter";
+import PinToDashboard from "./PinToDashboard";
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,11 +130,19 @@ const FinancialReports = () => {
                     </h3>
                     <p className="text-sm text-muted-foreground">Comprehensive revenue and expense analysis</p>
                 </div>
-                <ExportControls getCriteria={() => ({
-                    ...criteria,
-                    mechanicId: criteria.mechanicId !== 'all' ? Number(criteria.mechanicId) : undefined,
-                    customerId: criteria.customerId !== 'all' ? Number(criteria.customerId) : undefined,
-                })} />
+                <div className="flex items-center gap-2">
+                    <PinToDashboard 
+                        title="Revenue Distribution" 
+                        reportType="FINANCIAL" 
+                        chartType="PIE" 
+                        config={criteria} 
+                    />
+                    <ExportControls getCriteria={() => ({
+                        ...criteria,
+                        mechanicId: criteria.mechanicId !== 'all' ? Number(criteria.mechanicId) : undefined,
+                        customerId: criteria.customerId !== 'all' ? Number(criteria.customerId) : undefined,
+                    })} />
+                </div>
             </div>
 
             <Card className="border-border/50 bg-muted/20 shadow-none">

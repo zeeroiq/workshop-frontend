@@ -9,7 +9,8 @@ import {
     Trash,
     Search,
     User,
-    Wrench
+    Wrench,
+    Filter
 } from 'lucide-react';
 import {getStatusBadge} from "./helper/utils";
 import {JOB_FILTER_OPTIONS} from "./helper/constants";
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import { cn } from "@/lib/utils";
 
 const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar}) => {
 
@@ -267,33 +269,60 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     );
 
     const filters = (
-        <div className="flex flex-col lg:flex-row gap-3">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    type="text"
-                    placeholder="Search by Job Number..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-muted/30 border-border/50"
-                />
+        <div className="space-y-4">
+            <div className="flex flex-col lg:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search by Job Number..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-muted/30 border-border/50"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <Select value={activeTab} onValueChange={setActiveTab}>
+                        <SelectTrigger className="w-full sm:w-48 bg-muted/30 border-border/50">
+                            <SelectValue placeholder="Filter by Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Jobs</SelectItem>
+                            {JOB_FILTER_OPTIONS.map(status => (
+                                <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button variant="outline" className="border-border/50" onClick={onShowCalendar}>
+                        <Calendar size={16} className="mr-2" />
+                        <span className="hidden sm:inline">Calendar</span>
+                    </Button>
+                </div>
             </div>
-            <div className="flex gap-2">
-                <Select value={activeTab} onValueChange={setActiveTab}>
-                    <SelectTrigger className="w-full sm:w-48 bg-muted/30 border-border/50">
-                        <SelectValue placeholder="Filter by Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Jobs</SelectItem>
-                        {JOB_FILTER_OPTIONS.map(status => (
-                            <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Button variant="outline" className="border-border/50" onClick={onShowCalendar}>
-                    <Calendar size={16} className="mr-2" />
-                    <span className="hidden sm:inline">Calendar</span>
-                </Button>
+            
+            <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { label: 'In Progress', value: 'in-progress' },
+                    { label: 'Awaiting Parts', value: 'awaiting-parts' },
+                    { label: 'Ready', value: 'completed' },
+                    { label: 'Billing', value: 'invoiced' }
+                ].map(filter => (
+                    <button
+                        key={filter.value}
+                        onClick={() => setActiveTab(filter.value)}
+                        className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
+                            activeTab === filter.value 
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
+                                : "bg-muted/30 text-muted-foreground border-border/50 hover:border-emerald-500/50 hover:text-foreground"
+                        )}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
             </div>
         </div>
     );
@@ -317,7 +346,10 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                 renderCard={renderJobCard}
                 onRowClick={onViewJob}
                 loading={loading}
-                emptyMessage="No jobs found matching your criteria."
+                emptyMessage="No service jobs found matching your criteria. Start a new job to begin tracking workshop output."
+                emptyIcon={Wrench}
+                emptyActionLabel="Create First Job"
+                onEmptyAction={onCreateJob}
             />
             
             {!loading && jobs.length > 0 && (

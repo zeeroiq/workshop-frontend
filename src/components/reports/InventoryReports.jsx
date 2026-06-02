@@ -13,6 +13,7 @@ import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsC
 import ExportControls from './ExportControls';
 import DataVisualizer from './DataVisualizer';
 import TimePeriodFilter from './TimePeriodFilter';
+import PinToDashboard from './PinToDashboard';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,7 +94,15 @@ const InventoryReports = () => {
                     </h3>
                     <p className="text-sm text-muted-foreground">Strategic stock and procurement analytics</p>
                 </div>
-                <ExportControls getCriteria={() => criteria} />
+                <div className="flex items-center gap-2">
+                    <PinToDashboard 
+                        title="Inventory Allocation" 
+                        reportType="INVENTORY" 
+                        chartType="BAR" 
+                        config={criteria} 
+                    />
+                    <ExportControls getCriteria={() => criteria} />
+                </div>
             </div>
 
             <Card className="border-border/50 bg-muted/20 shadow-none">

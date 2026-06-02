@@ -11,6 +11,8 @@ import {
     TableRow 
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
+import EmptyState from '../feedback/EmptyState';
+import { FileSearch } from 'lucide-react';
 
 const ResponsiveDataContainer = ({ 
     title, 
@@ -22,7 +24,10 @@ const ResponsiveDataContainer = ({
     renderCard,
     onRowClick,
     loading = false,
-    emptyMessage = "No records found."
+    emptyMessage = "No records found.",
+    emptyIcon: EmptyIcon = FileSearch,
+    emptyActionLabel,
+    onEmptyAction
 }) => {
     const [viewMode, setViewMode] = useState('table');
     const isMobile = useMediaQuery('(max-width: 767px)');
@@ -71,11 +76,13 @@ const ResponsiveDataContainer = ({
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
                 </div>
             ) : data.length === 0 ? (
-                <Card className="border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                        <p>{emptyMessage}</p>
-                    </CardContent>
-                </Card>
+                <EmptyState 
+                    icon={EmptyIcon}
+                    title="No results found"
+                    description={emptyMessage}
+                    actionLabel={emptyActionLabel}
+                    onAction={onEmptyAction}
+                />
             ) : activeView === 'table' ? (
                 <Card className="overflow-hidden border-border/50 shadow-sm">
                     <div className="overflow-x-auto">

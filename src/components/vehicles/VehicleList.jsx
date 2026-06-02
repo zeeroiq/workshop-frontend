@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, User, Filter } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Filter, Car } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import { cn } from "@/lib/utils";
 
 const VehicleList = () => {
     const navigate = useNavigate();
@@ -60,21 +61,11 @@ const VehicleList = () => {
     const columns = [
         {
             header: "Vehicle",
-            accessor: "vehicle",
+            accessor: "make",
             cell: (row) => (
-                <div>
-                    <div className="font-semibold text-foreground">{row.make} {row.model}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.year}</div>
-                </div>
-            )
-        },
-        {
-            header: "Owner",
-            accessor: "customerName",
-            cell: (row) => (
-                <div className="flex items-center gap-2">
-                    <User size={14} className="text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-sm font-medium">{row.customerName || 'No owner'}</span>
+                <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{row.make} {row.model}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.year} Model</span>
                 </div>
             )
         },
@@ -82,15 +73,24 @@ const VehicleList = () => {
             header: "License Plate",
             accessor: "licensePlate",
             cell: (row) => (
-                <Badge variant="outline" className="font-mono bg-muted/30 border-border/50">
+                <Badge variant="outline" className="font-mono font-bold bg-muted/30 border-border/50">
                     {row.licensePlate}
                 </Badge>
             )
         },
         {
-            header: "VIN",
-            accessor: "vin",
-            cell: (row) => <span className="text-xs font-mono text-muted-foreground">{row.vin || '-'}</span>
+            header: "Customer",
+            accessor: "customerName",
+            cell: (row) => <div className="text-sm font-medium">{row.customerName}</div>
+        },
+        {
+            header: "Mileage",
+            accessor: "currentMileage",
+            cell: (row) => (
+                <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                    {row.currentMileage?.toLocaleString()} <span className="text-[10px] text-muted-foreground uppercase ml-1">KM</span>
+                </div>
+            )
         },
         {
             header: "Actions",
@@ -127,24 +127,31 @@ const VehicleList = () => {
             onClick={() => navigate(`/vehicles/${vehicle.id}`)}
         >
             <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-lg group-hover:text-emerald-500 transition-colors">
-                    {vehicle.make} {vehicle.model}
-                </CardTitle>
-                <Badge variant="outline" className="font-mono">{vehicle.licensePlate}</Badge>
+                <div className="flex flex-col">
+                    <CardTitle className="text-lg group-hover:text-emerald-500 transition-colors">
+                        {vehicle.make} {vehicle.model}
+                    </CardTitle>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                        {vehicle.year} Production
+                    </span>
+                </div>
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                    <Car size={20} />
+                </div>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Owner</p>
-                        <p className="font-medium mt-1 truncate">{vehicle.customerName || 'No owner'}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">License</p>
+                        <Badge variant="outline" className="font-mono font-bold border-border/50 bg-background">{vehicle.licensePlate}</Badge>
                     </div>
                     <div>
-                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Year</p>
-                        <p className="font-medium mt-1">{vehicle.year}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Odometer</p>
+                        <p className="font-black text-sm">{vehicle.currentMileage?.toLocaleString() || '---'} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">KM</span></p>
                     </div>
                     <div className="col-span-2">
-                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">VIN</p>
-                        <p className="font-mono text-xs mt-1 truncate">{vehicle.vin || '-'}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Customer</p>
+                        <p className="font-bold text-foreground">{vehicle.customerName}</p>
                     </div>
                 </div>
                 
@@ -176,21 +183,47 @@ const VehicleList = () => {
     );
 
     const filters = (
-        <div className="flex flex-col md:flex-row gap-3">
-            <form onSubmit={handleSearch} className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    type="text"
-                    placeholder="Search vehicles by make, model, plate or owner..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-muted/30 border-border/50"
-                />
-            </form>
-            <Button variant="outline" className="border-border/50 gap-2">
-                <Filter size={16} />
-                <span>Filters</span>
-            </Button>
+        <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-3">
+                <form onSubmit={handleSearch} className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search by license plate, make, model or customer..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-muted/30 border-border/50"
+                    />
+                </form>
+                <Button variant="outline" className="border-border/50 gap-2">
+                    <Filter size={16} />
+                    <span>Filters</span>
+                </Button>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { label: 'Recently Serviced', value: 'recent' },
+                    { label: 'High Mileage', value: 'high-mileage' },
+                    { label: 'Fleet Vehicles', value: 'fleet' }
+                ].map(filter => (
+                    <button
+                        key={filter.value}
+                        className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
+                            "bg-muted/30 text-muted-foreground border-border/50 hover:border-emerald-500/50 hover:text-foreground"
+                        )}
+                        onClick={() => {
+                            toast.info(`Filtering by ${filter.label}...`);
+                        }}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 
@@ -204,7 +237,7 @@ const VehicleList = () => {
         <div className="pb-10">
             <ResponsiveDataContainer
                 title="Vehicles"
-                description="Manage customer vehicles and service history"
+                description="Fleet management and service history tracking"
                 actions={actions}
                 filters={filters}
                 columns={columns}
@@ -212,7 +245,10 @@ const VehicleList = () => {
                 renderCard={renderVehicleCard}
                 onRowClick={(row) => navigate(`/vehicles/${row.id}`)}
                 loading={loading}
-                emptyMessage="No vehicles found. Click 'Add Vehicle' to register a new vehicle."
+                emptyMessage="You have no vehicles registered yet. Register your first vehicle to start tracking service cycles."
+                emptyIcon={Car}
+                emptyActionLabel="Register First Vehicle"
+                onEmptyAction={() => navigate('/vehicles/new')}
             />
             
             {!loading && vehicles.length > 0 && (

@@ -19,6 +19,7 @@ import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
 import { dashboardService } from '@/services/dashboardService';
 import { authService } from '@/services/authService';
+import { workshopService } from '@/services/workshopService';
 import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -43,6 +44,7 @@ import {
     Bar 
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import SetupWizard from '../workshop/SetupWizard';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -57,11 +59,24 @@ const Dashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('monthly');
+    const [showSetup, setShowSetup] = useState(false);
     const user = authService.getUser();
 
     useEffect(() => {
         fetchDashboardStats();
+        checkSetupStatus();
     }, [timeRange]);
+
+    const checkSetupStatus = async () => {
+        try {
+            const status = await workshopService.getSetupStatus();
+            if (!status.isSetupComplete && user?.roles?.includes('ROLE_ADMIN')) {
+                setShowSetup(true);
+            }
+        } catch (error) {
+            console.error('Failed to check setup status:', error);
+        }
+    };
 
     const fetchDashboardStats = async () => {
         setLoading(true);
@@ -70,7 +85,6 @@ const Dashboard = () => {
             if (response?.data?.success) {
                 const data = response.data.data;
                 
-                // Mocking trend data if API doesn't provide it yet
                 const mockRevenueTrend = [
                     { name: 'Mon', value: 4500 },
                     { name: 'Tue', value: 5200 },
@@ -114,6 +128,8 @@ const Dashboard = () => {
 
     return (
         <div className="w-full max-w-7xl space-y-8 mx-auto pb-10">
+            {showSetup && <SetupWizard onComplete={() => setShowSetup(false)} />}
+
             {/* Header Section */}
             <div className="flex flex-col gap-4 pb-2 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-1">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Edit, Trash, Eye, Plus, Search, Filter, AlertTriangle } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Filter, AlertTriangle, Package } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import PartScannerModal from './PartScannerModal';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import { cn } from "@/lib/utils";
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
@@ -199,32 +200,58 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     };
 
     const filters = (
-        <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    type="text"
-                    placeholder="Search parts by name, number or category..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-muted/30 border-border/50"
-                />
+        <div className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Search parts by name, number or category..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 bg-muted/30 border-border/50"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    >
+                        <option value="all">All Statuses</option>
+                        <option value="IN_STOCK">In Stock</option>
+                        <option value="LOW_STOCK">Low Stock</option>
+                        <option value="OUT_OF_STOCK">Out of Stock</option>
+                    </select>
+                    <Button variant="outline" className="border-border/50 gap-2">
+                        <Filter size={16} />
+                        <span className="hidden sm:inline">More Filters</span>
+                    </Button>
+                </div>
             </div>
-            <div className="flex gap-2">
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                >
-                    <option value="all">All Statuses</option>
-                    <option value="IN_STOCK">In Stock</option>
-                    <option value="LOW_STOCK">Low Stock</option>
-                    <option value="OUT_OF_STOCK">Out of Stock</option>
-                </select>
-                <Button variant="outline" className="border-border/50 gap-2">
-                    <Filter size={16} />
-                    <span className="hidden sm:inline">More Filters</span>
-                </Button>
+
+            <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { label: 'Out of Stock', value: 'OUT_OF_STOCK' },
+                    { label: 'Low Stock', value: 'LOW_STOCK' },
+                    { label: 'High Value', value: 'high-value' }
+                ].map(filter => (
+                    <button
+                        key={filter.value}
+                        onClick={() => setStatusFilter(filter.value)}
+                        className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
+                            statusFilter === filter.value 
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
+                                : "bg-muted/30 text-muted-foreground border-border/50 hover:border-emerald-500/50 hover:text-foreground"
+                        )}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
             </div>
         </div>
     );
@@ -251,7 +278,10 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 renderCard={renderPartCard}
                 onRowClick={onViewDetails}
                 loading={loading}
-                emptyMessage="No parts found in inventory. Click 'Add Part' to stock new items."
+                emptyMessage="Your parts catalog is empty. Populate your inventory to track stock levels and billing."
+                emptyIcon={Package}
+                emptyActionLabel="Stock New Part"
+                onEmptyAction={onCreate}
             />
         </div>
     );

@@ -6,6 +6,11 @@ export const workshopService = {
         return response.data;
     },
 
+    getSetupStatus: async () => {
+        const response = await api.get('/workshop/settings/setup-status');
+        return response.data;
+    },
+
     updateSettings: async (settings) => {
         const response = await api.put('/workshop/settings', settings);
         return response.data;
