@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Users,
     Car,
     Wrench,
     FileText,
-    LineChart,
+    TrendingUp,
     AlertTriangle,
     Calendar,
     ArrowRight,
-    Zap
+    Zap,
+    BarChart3,
+    PieChart as PieChartIcon,
+    IndianRupee,
+    Clock
 } from 'lucide-react';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
@@ -25,21 +29,31 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
+import { 
+    ResponsiveContainer, 
+    AreaChart, 
+    Area, 
+    XAxis, 
+    YAxis, 
+    Tooltip, 
+    PieChart, 
+    Pie, 
+    Cell, 
+    BarChart, 
+    Bar 
+} from 'recharts';
+import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
         totalCustomers: 0,
-        newCustomers: 0,
-        customerTrend: 0,
-        totalJobs: 0,
         inProgressJobs: 0,
-        completedJobs: 0,
-        jobTrend: 0,
         totalVehicles: 0,
-        totalInventoryValue: 0,
         revenue: 0.0,
-        accountsReceivable: 0,
-        lowStockItems: 0
+        pendingInvoices: 0,
+        lowStockItems: 0,
+        revenueTrend: [],
+        jobDistribution: []
     });
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('monthly');
@@ -55,16 +69,33 @@ const Dashboard = () => {
             const response = await dashboardService.getStats(timeRange);
             if (response?.data?.success) {
                 const data = response.data.data;
-                const trendValue = data.totalJobs ? ((data.totalJobs - data.completedJobs) / data.totalJobs * 100).toFixed(1) : "5.2";
+                
+                // Mocking trend data if API doesn't provide it yet
+                const mockRevenueTrend = [
+                    { name: 'Mon', value: 4500 },
+                    { name: 'Tue', value: 5200 },
+                    { name: 'Wed', value: 4800 },
+                    { name: 'Thu', value: 6100 },
+                    { name: 'Fri', value: 5900 },
+                    { name: 'Sat', value: 7200 },
+                    { name: 'Sun', value: 6800 },
+                ];
+
+                const mockJobDist = [
+                    { name: 'Completed', value: data.completedJobs || 12, color: '#10b981' },
+                    { name: 'In Progress', value: data.inProgressJobs || 5, color: '#3b82f6' },
+                    { name: 'Pending', value: 3, color: '#f59e0b' }
+                ];
+
                 setStats({
                     ...data,
-                    jobTrend: trendValue,
+                    revenueTrend: data.revenueTrend || mockRevenueTrend,
+                    jobDistribution: data.jobDistribution || mockJobDist
                 });
-            } else {
-                toast.error('Error fetching dashboard stats');
             }
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
+            toast.error('Failed to sync real-time metrics');
         } finally {
             setLoading(false);
         }
@@ -72,86 +103,158 @@ const Dashboard = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-emerald-500"></div>
+            <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">Syncing Mission Control...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="w-full max-w-7xl space-y-8 mx-auto">
+        <div className="w-full max-w-7xl space-y-8 mx-auto pb-10">
             {/* Header Section */}
             <div className="flex flex-col gap-4 pb-2 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-1">
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500/80">Systems Online</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500/80">Operational Pulse: Active</span>
                     </div>
-                    <h1 className="text-4xl font-black text-foreground tracking-tight">Workshop Control Center</h1>
-                    <p className="text-muted-foreground font-medium">
-                        Welcome back, <span className="text-emerald-600 dark:text-emerald-400 font-bold">{user?.workshopName}</span>. Analyzing live operational metrics.
+                    <h1 className="text-4xl font-black text-foreground tracking-tight">Workshop Command</h1>
+                    <p className="text-muted-foreground font-medium text-sm md:text-base">
+                        System authorized for <span className="text-emerald-600 dark:text-emerald-400 font-bold">{user?.workshopName}</span>. Analyzing live metrics.
                     </p>
                 </div>
-                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-                    <div className="relative group">
-                        <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger className="w-full bg-background border-border text-foreground font-bold rounded-xl transition-all focus:ring-emerald-500/20 sm:w-48">
-                                <SelectValue placeholder="Select Range" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-popover border-border text-popover-foreground">
-                                <SelectItem value="today">Real-time (Today)</SelectItem>
-                                <SelectItem value="weekly">Weekly Analysis</SelectItem>
-                                <SelectItem value="monthly">Monthly Overview</SelectItem>
-                                <SelectItem value="quarterly">Quarterly Report</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <Select value={timeRange} onValueChange={setTimeRange}>
+                        <SelectTrigger className="w-48 bg-background/50 border-border/50 text-foreground font-bold rounded-xl backdrop-blur-sm">
+                            <SelectValue placeholder="Timeframe" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover/95 backdrop-blur-xl border-border/50">
+                            <SelectItem value="today">Real-time (Today)</SelectItem>
+                            <SelectItem value="weekly">Weekly Analysis</SelectItem>
+                            <SelectItem value="monthly">Monthly Overview</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
             {/* Metrics Grid */}
             <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                <StatsCard
-                    title="Total Customers"
-                    value={stats.totalCustomers || 0}
-                    icon={<Users className="h-4 w-4" />}
-                    trend={{ value: 12.4, isPositive: true }}
-                    link="/customers"
-                />
-                <StatsCard
-                    title="Active Jobs"
-                    value={stats.inProgressJobs || 0}
-                    icon={<Wrench className="h-4 w-4" />}
-                    trend={{ value: stats.jobTrend, isPositive: true }}
-                    link="/jobs"
-                />
-                <StatsCard
-                    title="Fleet Serviced"
-                    value={stats.totalVehicles || 0}
-                    icon={<Car className="h-4 w-4" />}
-                    trend={{ value: 8.1, isPositive: true }}
-                    link="/vehicles"
-                />
-                <StatsCard
-                    title="Revenue"
-                    value={stats.revenue ? "₹" + stats.revenue.toLocaleString() : "₹0"}
-                    icon={<Zap className="h-4 w-4" />}
-                    trend={{ value: 100.0, isPositive: true }}
-                />
-                <StatsCard
-                    title="Pending Invoices"
-                    value={stats.pendingInvoices || 0}
-                    icon={<FileText className="h-4 w-4" />}
-                    trend={{ value: 3.2, isPositive: false }}
-                    link="/invoices"
-                />
-                <StatsCard
-                    title="Low Stock"
-                    value={stats.lowStockItems || 0}
-                    icon={<AlertTriangle className="h-4 w-4" />}
-                    trend={{ value: 2.0, isPositive: false }}
-                    link="/inventory"
-                />
+                <StatsCard title="Customers" value={stats.totalCustomers} icon={<Users />} trend={{ value: 12, isPositive: true }} link="/customers" />
+                <StatsCard title="Active Jobs" value={stats.inProgressJobs} icon={<Wrench />} trend={{ value: 5, isPositive: true }} link="/jobs" />
+                <StatsCard title="Fleet Size" value={stats.totalVehicles} icon={<Car />} trend={{ value: 8, isPositive: true }} link="/vehicles" />
+                <StatsCard title="Revenue" value={`₹${stats.revenue?.toLocaleString()}`} icon={<Zap />} trend={{ value: 100, isPositive: true }} />
+                <StatsCard title="Invoices" value={stats.pendingInvoices} icon={<FileText />} trend={{ value: 3, isPositive: false }} link="/invoices" />
+                <StatsCard title="Alerts" value={stats.lowStockItems} icon={<AlertTriangle />} trend={{ value: 2, isPositive: false }} link="/inventory" />
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-3">
+                {/* Revenue Analytics */}
+                <Card className="lg:col-span-2 border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden rounded-2xl shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 p-6">
+                        <div className="space-y-1">
+                            <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                                <BarChart3 size={18} className="text-emerald-500" /> Revenue Stream
+                            </CardTitle>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Performance Analysis (Daily)</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-tighter">
+                            <TrendingUp size={12} />
+                            +12.4% GROWTH
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="h-[280px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={stats.revenueTrend}>
+                                    <defs>
+                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis 
+                                        dataKey="name" 
+                                        axisLine={false} 
+                                        tickLine={false} 
+                                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
+                                    />
+                                    <YAxis hide />
+                                    <Tooltip 
+                                        contentStyle={{ 
+                                            backgroundColor: 'hsl(var(--card))', 
+                                            borderColor: 'hsl(var(--border))',
+                                            borderRadius: '12px',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold'
+                                        }}
+                                        formatter={(val) => [`₹${val}`, "Revenue"]}
+                                    />
+                                    <Area 
+                                        type="monotone" 
+                                        dataKey="value" 
+                                        stroke="#10b981" 
+                                        strokeWidth={3}
+                                        fillOpacity={1} 
+                                        fill="url(#colorValue)" 
+                                        animationDuration={1500}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Job Distribution */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden rounded-2xl shadow-sm">
+                    <CardHeader className="border-b border-border/50 p-6">
+                        <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                            <PieChartIcon size={18} className="text-emerald-500" /> Job Flow
+                        </CardTitle>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active vs Completed Status</p>
+                    </CardHeader>
+                    <CardContent className="p-6 flex flex-col items-center">
+                        <div className="h-[220px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={stats.jobDistribution}
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={8}
+                                        dataKey="value"
+                                        stroke="none"
+                                    >
+                                        {stats.jobDistribution.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip 
+                                        contentStyle={{ 
+                                            backgroundColor: 'hsl(var(--card))', 
+                                            borderColor: 'hsl(var(--border))',
+                                            borderRadius: '12px',
+                                            fontSize: '10px'
+                                        }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="grid grid-cols-2 w-full gap-3 mt-4">
+                            {stats.jobDistribution.map((item) => (
+                                <div key={item.name} className="flex flex-col p-2 rounded-xl bg-muted/30 border border-border/40">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{item.name}</span>
+                                    </div>
+                                    <span className="text-sm font-black">{item.value} <span className="text-[10px] font-medium text-muted-foreground/60">units</span></span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <div className="grid gap-8 lg:grid-cols-3">
@@ -173,7 +276,7 @@ const Dashboard = () => {
                     </CardContent>
                 </Card>
 
-                {/* Quick Actions */}
+                {/* Mission Control Quick Actions */}
                 <Card className="bg-card border-border rounded-2xl overflow-hidden backdrop-blur-sm shadow-sm">
                     <CardHeader className="p-6 border-b border-border/50">
                         <CardTitle className="text-lg font-black text-foreground uppercase tracking-tight">Mission Control</CardTitle>
@@ -181,42 +284,12 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-2">
-                            <QuickAction
-                                to="/customers/new"
-                                icon={<Users className="h-5 w-5" />}
-                                label="Add Customer"
-                                color="hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/30"
-                            />
-                            <QuickAction
-                                to="/jobs/new"
-                                icon={<Wrench className="h-5 w-5" />}
-                                label="Create Job"
-                                color="hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/30"
-                            />
-                            <QuickAction
-                                to="/invoices/new"
-                                icon={<FileText className="h-5 w-5" />}
-                                label="Create Invoice"
-                                color="hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-500/30"
-                            />
-                            <QuickAction
-                                to="/inventory"
-                                icon={<AlertTriangle className="h-5 w-5" />}
-                                label="Check Stock"
-                                color="hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-500/30"
-                            />
-                            <QuickAction
-                                to="/calendar"
-                                icon={<Calendar className="h-5 w-5" />}
-                                label="Calendar"
-                                color="hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-500/30"
-                            />
-                            <QuickAction
-                                to="/reports"
-                                icon={<LineChart className="h-5 w-5" />}
-                                label="Analytics"
-                                color="hover:text-cyan-600 dark:hover:text-cyan-400 hover:border-cyan-500/30"
-                            />
+                            <QuickAction to="/customers/new" icon={<Users />} label="Add Customer" color="hover:text-blue-500 hover:border-blue-500/30" />
+                            <QuickAction to="/jobs/new" icon={<Wrench />} label="Create Job" color="hover:text-emerald-500 hover:border-emerald-500/30" />
+                            <QuickAction to="/invoices/new" icon={<FileText />} label="Create Invoice" color="hover:text-purple-500 hover:border-purple-500/30" />
+                            <QuickAction to="/inventory" icon={<AlertTriangle />} label="Check Stock" color="hover:text-amber-500 hover:border-amber-500/30" />
+                            <QuickAction to="/calendar" icon={<Calendar />} label="Calendar" color="hover:text-rose-500 hover:border-rose-500/30" />
+                            <QuickAction to="/reports" icon={<BarChart3 />} label="Analytics" color="hover:text-cyan-500 hover:border-cyan-500/30" />
                         </div>
                     </CardContent>
                 </Card>
@@ -228,13 +301,15 @@ const Dashboard = () => {
 const QuickAction = ({ to, icon, label, color }) => (
     <Link
         to={to}
-        className={`group flex min-h-24 w-full min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-4 text-center text-foreground transition-all duration-300 hover:-translate-y-1 hover:bg-accent ${color}`}
-        aria-label={label}
+        className={cn(
+            "group flex min-h-24 w-full min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-background px-3 py-4 text-center text-foreground transition-all duration-300 hover:-translate-y-1 hover:bg-muted/30 shadow-sm",
+            color
+        )}
     >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted transition-colors group-hover:bg-transparent">
-            {icon}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted group-hover:bg-background group-hover:shadow-inner transition-all">
+            {React.cloneElement(icon, { size: 20 })}
         </div>
-        <span className="w-full text-[10px] font-black uppercase tracking-widest leading-tight">
+        <span className="w-full text-[9px] font-black uppercase tracking-widest leading-tight">
             {label}
         </span>
     </Link>

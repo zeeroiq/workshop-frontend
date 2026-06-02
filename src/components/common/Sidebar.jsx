@@ -36,6 +36,19 @@ const Sidebar = ({ isExpanded, onClose }) => {
         logoUrl: null
     });
 
+    const getDisplayName = (name) => {
+        if (!name) return "";
+        if (name.length <= 15) return name;
+        return name
+            .split(/\s+/)
+            .filter(word => word.length > 0)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+    };
+
+    const isLongName = workshopInfo.name && workshopInfo.name.length > 15;
+
     useEffect(() => {
         const fetchWorkshopInfo = async () => {
             try {
@@ -126,24 +139,39 @@ const Sidebar = ({ isExpanded, onClose }) => {
                 )}
             >
                 <div className='flex h-16 items-center justify-between border-b border-border/50 px-6'>
-                    <div className='flex items-center gap-3 overflow-hidden'>
-                        {workshopInfo.logoUrl ? (
-                            <img 
-                                src={getAuthenticatedUrl(workshopInfo.logoUrl)} 
-                                alt="Logo" 
-                                className="h-8 w-8 object-contain rounded shadow-sm shrink-0" 
-                            />
-                        ) : (
-                            <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20 shrink-0">
-                                <Wrench className="w-4 h-4 text-emerald-950" />
-                            </div>
-                        )}
-                        {showLabels && (
-                            <span className="text-lg font-black text-foreground tracking-tight truncate">
-                                {workshopInfo.name}
-                            </span>
-                        )}
-                    </div>
+                    <TooltipProvider>
+                        <Link 
+                            to="/dashboard" 
+                            className='flex items-center gap-3 overflow-hidden group cursor-pointer'
+                            onClick={handleNavigate}
+                        >
+                            {workshopInfo.logoUrl ? (
+                                <img 
+                                    src={getAuthenticatedUrl(workshopInfo.logoUrl)} 
+                                    alt="Logo" 
+                                    className="h-8 w-8 object-contain rounded shadow-sm shrink-0 group-hover:scale-110 transition-transform" 
+                                />
+                            ) : (
+                                <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg shadow-emerald-500/20 shrink-0 group-hover:scale-110 transition-transform">
+                                    <Wrench className="w-4 h-4 text-emerald-950" />
+                                </div>
+                            )}
+                            {showLabels && (
+                                <Tooltip delayDuration={300}>
+                                    <TooltipTrigger asChild>
+                                        <span className="text-lg font-black text-foreground tracking-tight truncate group-hover:text-emerald-500 transition-colors">
+                                            {getDisplayName(workshopInfo.name)}
+                                        </span>
+                                    </TooltipTrigger>
+                                    {isLongName && (
+                                        <TooltipContent side="bottom" className="bg-emerald-500 text-emerald-950 font-bold border-none">
+                                            {workshopInfo.name}
+                                        </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            )}
+                        </Link>
+                    </TooltipProvider>
                     {!isDesktop && (
                         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-emerald-500/10 hover:text-emerald-500 shrink-0">
                             <X size={20} />
