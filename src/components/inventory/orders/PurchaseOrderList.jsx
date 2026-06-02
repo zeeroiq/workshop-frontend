@@ -59,7 +59,7 @@ const PurchaseOrderList = ({ onViewDetails, onEdit, onCreate }) => {
         {
             header: "Order #",
             accessor: "orderNumber",
-            cell: (row) => <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{row.orderNumber}</span>
+            cell: (row) => <span className="font-mono font-bold">{row.orderNumber}</span>
         },
         {
             header: "Supplier",

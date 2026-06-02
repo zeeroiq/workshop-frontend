@@ -116,7 +116,7 @@ const InvoiceList = ({ onViewInvoice, onEditInvoice, onCreateInvoice, onAddPayme
         {
             header: "Invoice #",
             accessor: "invoiceNumber",
-            cell: (row) => <span className="font-mono font-bold text-emerald-500">{row.invoiceNumber}</span>
+            cell: (row) => <span className="font-mono font-bold">{row.invoiceNumber}</span>
         },
         {
             header: "Job #",
