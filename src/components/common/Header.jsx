@@ -14,6 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Header = ({ onToggleSidebar }) => {
     const user = authService.getUser();
@@ -21,6 +22,19 @@ const Header = ({ onToggleSidebar }) => {
         name: user?.workshopName || 'Vishwakarma',
         logoUrl: null
     });
+
+    const getDisplayName = (name) => {
+        if (!name) return "";
+        if (name.length <= 15) return name;
+        return name
+            .split(/\s+/)
+            .filter(word => word.length > 0)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+    };
+
+    const isLongName = workshopInfo.name && workshopInfo.name.length > 15;
 
     useEffect(() => {
         const fetchWorkshopInfo = async () => {
@@ -71,22 +85,34 @@ const Header = ({ onToggleSidebar }) => {
                 </Button>
                 
                 {/* Branding - Mobile only, as Desktop has it in Sidebar */}
-                <div className="flex items-center gap-2 lg:hidden">
+                <Link to="/dashboard" className="flex items-center gap-2 lg:hidden group">
                     {workshopInfo.logoUrl ? (
                         <img 
                             src={getAuthenticatedUrl(workshopInfo.logoUrl)} 
                             alt="Logo" 
-                            className="h-7 w-7 object-contain rounded shadow-sm" 
+                            className="h-7 w-7 object-contain rounded shadow-sm group-hover:scale-110 transition-transform" 
                         />
                     ) : (
-                        <div className="rounded bg-emerald-500 p-1 shadow-lg shadow-emerald-500/20">
+                        <div className="rounded bg-emerald-500 p-1 shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                             <Wrench size={14} className="text-emerald-950" />
                         </div>
                     )}
-                    <span className="text-sm font-bold tracking-tight truncate max-w-[120px]">
-                        {workshopInfo.name}
-                    </span>
-                </div>
+                    
+                    <TooltipProvider>
+                        <Tooltip delayDuration={300}>
+                            <TooltipTrigger asChild>
+                                <span className="text-sm font-bold tracking-tight truncate max-w-[120px] group-hover:text-emerald-500 transition-colors">
+                                    {getDisplayName(workshopInfo.name)}
+                                </span>
+                            </TooltipTrigger>
+                            {isLongName && (
+                                <TooltipContent side="bottom" className="bg-emerald-500 text-emerald-950 font-bold border-none">
+                                    {workshopInfo.name}
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </TooltipProvider>
+                </Link>
 
                 {/* Desktop Search Placeholder or Breadcrumbs could go here */}
                 <div className="hidden lg:flex items-center gap-2 text-muted-foreground">
