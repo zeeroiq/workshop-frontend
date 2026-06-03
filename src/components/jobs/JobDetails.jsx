@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { jobService } from '@/services/jobService';
 import { inventoryService } from '@/services/inventoryService';
+import { authService } from '@/services/authService';
 import { toast } from 'react-toastify';
 import { 
     Dialog, 
@@ -38,16 +39,21 @@ import {
     DialogHeader, 
     DialogTitle,
     DialogTrigger,
-    DialogDescription
+    DialogDescription,
+    DialogFooter
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 const JobDetails = ({ job, onBack, onEdit, onRefresh }) => {
     const [loading, setLoading] = useState(false);
     const [isAddPartOpen, setIsAddPartOpen] = useState(false);
+    const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
     const [partSearch, setPartPartSearch] = useState('');
+    const [newNote, setNewNote] = useState('');
     const [partResults, setPartResults] = useState([]);
     const [searchingParts, setSearchingParts] = useState(false);
+    const user = authService.getUser();
 
     useEffect(() => {
         const timer = setTimeout(async () => {
@@ -116,6 +122,25 @@ const JobDetails = ({ job, onBack, onEdit, onRefresh }) => {
             onRefresh?.();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to add part');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddNote = async () => {
+        if (!newNote.trim()) return;
+        setLoading(true);
+        try {
+            await jobService.addJobNote(job.id, {
+                content: newNote,
+                authorId: user?.id
+            });
+            toast.success('Note added successfully');
+            setNewNote('');
+            setIsAddNoteOpen(false);
+            onRefresh?.();
+        } catch (error) {
+            toast.error('Failed to add note');
         } finally {
             setLoading(false);
         }
@@ -378,9 +403,34 @@ const JobDetails = ({ job, onBack, onEdit, onRefresh }) => {
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em]">No intelligence logged</p>
                                 </div>
                             )}
-                            <Button variant="outline" className="w-full h-11 border-dashed border-border/50 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/5 hover:border-emerald-500/30 rounded-xl mt-2">
-                                <Plus size={14} className="mr-2" /> Add Field Note
-                            </Button>
+                            
+                            <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full h-11 border-dashed border-border/50 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/5 hover:border-emerald-500/30 rounded-xl mt-2">
+                                        <Plus size={14} className="mr-2" /> Add Field Note
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md border-border/50 bg-card/95 backdrop-blur-xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-lg font-black uppercase tracking-tight">Add Intelligence</DialogTitle>
+                                        <DialogDescription className="text-xs font-bold uppercase tracking-widest">Log technical details or updates for this job.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-4">
+                                        <Textarea 
+                                            placeholder="Enter note content..." 
+                                            value={newNote}
+                                            onChange={(e) => setNewNote(e.target.value)}
+                                            className="min-h-[120px] bg-muted/30 border-border/50 font-medium"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button onClick={handleAddNote} disabled={loading || !newNote.trim()} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-11">
+                                            {loading ? <Loader2 className="animate-spin h-4 w-4" /> : 'Log Note'}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </CardContent>
                     </Card>
 

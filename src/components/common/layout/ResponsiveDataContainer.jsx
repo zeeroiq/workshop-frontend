@@ -117,8 +117,8 @@ const ResponsiveDataContainer = ({
                                                 key={colIndex}
                                                 className={cn("py-3", col.className)}
                                             >
-                                                {typeof col.cell === 'function' 
-                                                    ? col.cell(row, isTablet) 
+                                                {typeof (col.cell || col.render) === 'function' 
+                                                    ? (col.cell || col.render)(row, isTablet) 
                                                     : row[col.accessor]}
                                             </TableCell>
                                         ))}

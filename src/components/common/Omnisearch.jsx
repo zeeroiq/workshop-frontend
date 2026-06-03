@@ -9,7 +9,10 @@ import {
     Command,
     Loader2,
     ArrowRight,
-    History
+    History,
+    FileText,
+    Truck,
+    ShoppingCart
 } from 'lucide-react';
 import { 
     Dialog, 
@@ -29,7 +32,10 @@ const Omnisearch = () => {
         customers: [],
         vehicles: [],
         jobs: [],
-        parts: []
+        parts: [],
+        invoices: [],
+        suppliers: [],
+        purchaseOrders: []
     });
     const [loading, setLoading] = useState(false);
     const [history, setHistory] = useState(() => {
@@ -68,7 +74,10 @@ const Omnisearch = () => {
                     setLoading(false);
                 }
             } else {
-                setResults({ customers: [], vehicles: [], jobs: [], parts: [] });
+                setResults({ 
+                    customers: [], vehicles: [], jobs: [], parts: [], 
+                    invoices: [], suppliers: [], purchaseOrders: [] 
+                });
             }
         }, 300);
 
@@ -110,6 +119,21 @@ const Omnisearch = () => {
                 label = `${item.name} (${item.partNumber})`;
                 icon = 'package';
                 break;
+            case 'invoice':
+                path = `/invoices/${item.id}`;
+                label = `${item.invoiceNumber} - ${item.customerName}`;
+                icon = 'invoice';
+                break;
+            case 'supplier':
+                path = `/inventory`; // Suppliers usually managed in inventory
+                label = `${item.name}`;
+                icon = 'supplier';
+                break;
+            case 'purchaseOrder':
+                path = `/inventory`; 
+                label = `${item.orderNumber} - ${item.supplierName}`;
+                icon = 'po';
+                break;
             default:
                 break;
         }
@@ -118,17 +142,33 @@ const Omnisearch = () => {
         navigate(path);
     };
 
-    const hasResults = results.customers.length > 0 || results.vehicles.length > 0 || results.jobs.length > 0 || results.parts.length > 0;
+    const hasResults = results.customers.length > 0 || results.vehicles.length > 0 || 
+                       results.jobs.length > 0 || results.parts.length > 0 || 
+                       results.invoices.length > 0 || results.suppliers.length > 0 || 
+                       results.purchaseOrders.length > 0;
+
+    const getIcon = (type) => {
+        switch(type) {
+            case 'user': return <User size={16}/>;
+            case 'car': return <Car size={16}/>;
+            case 'wrench': return <Wrench size={16}/>;
+            case 'package': return <Package size={16}/>;
+            case 'invoice': return <FileText size={16}/>;
+            case 'supplier': return <Truck size={16}/>;
+            case 'po': return <ShoppingCart size={16}/>;
+            default: return <Search size={16}/>;
+        }
+    };
 
     return (
         <>
             <button 
                 onClick={() => setIsOpen(true)}
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-muted-foreground bg-muted/30 border border-border/50 rounded-xl hover:bg-muted/50 transition-all group"
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-xs font-bold text-muted-foreground bg-muted/30 border border-border/50 rounded-xl hover:bg-muted/50 transition-all group"
             >
                 <Search size={14} className="group-hover:text-emerald-500 transition-colors" />
-                <span>Search everything...</span>
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+                <span className="hidden sm:inline">Search everything...</span>
+                <kbd className="hidden lg:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                     <span className="text-xs">⌘</span>K
                 </kbd>
             </button>
@@ -137,13 +177,13 @@ const Omnisearch = () => {
                 <DialogContent className="max-w-2xl p-0 overflow-hidden border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl">
                     <div className="sr-only">
                         <DialogTitle>Global Search</DialogTitle>
-                        <DialogDescription>Search for customers, vehicles, jobs, and parts.</DialogDescription>
+                        <DialogDescription>Search for customers, vehicles, jobs, parts, invoices, and suppliers.</DialogDescription>
                     </div>
 
                     <div className="flex items-center border-b border-border/50 px-4 h-14">
                         <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
                         <input
-                            placeholder="Type to find customers, vehicles, jobs or parts..."
+                            placeholder="Type to find anything..."
                             className="flex h-full w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground font-bold"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -153,7 +193,7 @@ const Omnisearch = () => {
                         {!loading && <Command className="h-4 w-4 text-muted-foreground opacity-50" />}
                     </div>
                     
-                    <div className="max-h-[450px] overflow-y-auto p-2 custom-scrollbar">
+                    <div className="max-h-[500px] overflow-y-auto p-2 custom-scrollbar">
                         {query.length < 2 && history.length > 0 && (
                             <div className="mb-4">
                                 <h3 className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 flex items-center gap-2">
@@ -162,7 +202,7 @@ const Omnisearch = () => {
                                 {history.map((item, idx) => (
                                     <SearchResultItem 
                                         key={idx}
-                                        icon={item.icon === 'user' ? <User size={16}/> : item.icon === 'car' ? <Car size={16}/> : item.icon === 'wrench' ? <Wrench size={16}/> : <Package size={16}/>}
+                                        icon={getIcon(item.icon)}
                                         label={item.label}
                                         onClick={() => {
                                             setIsOpen(false);
@@ -222,15 +262,57 @@ const Omnisearch = () => {
                             </SearchGroup>
                         )}
 
+                        {results.invoices.length > 0 && (
+                            <SearchGroup label="Invoices">
+                                {results.invoices.map(i => (
+                                    <SearchResultItem 
+                                        key={i.id} 
+                                        icon={<FileText size={16} className="text-purple-500" />} 
+                                        label={i.invoiceNumber}
+                                        sublabel={`${i.customerName} - ₹${i.totalAmount}`}
+                                        onClick={() => handleSelect('invoice', i)}
+                                    />
+                                ))}
+                            </SearchGroup>
+                        )}
+
                         {results.parts.length > 0 && (
-                            <SearchGroup label="Inventory">
+                            <SearchGroup label="Inventory Parts">
                                 {results.parts.map(p => (
                                     <SearchResultItem 
                                         key={p.id} 
-                                        icon={<Package size={16} className="text-purple-500" />} 
+                                        icon={<Package size={16} className="text-sky-500" />} 
                                         label={p.name}
                                         sublabel={p.partNumber}
                                         onClick={() => handleSelect('part', p)}
+                                    />
+                                ))}
+                            </SearchGroup>
+                        )}
+
+                        {results.suppliers.length > 0 && (
+                            <SearchGroup label="Suppliers">
+                                {results.suppliers.map(s => (
+                                    <SearchResultItem 
+                                        key={s.id} 
+                                        icon={<Truck size={16} className="text-rose-500" />} 
+                                        label={s.name}
+                                        sublabel={s.phone}
+                                        onClick={() => handleSelect('supplier', s)}
+                                    />
+                                ))}
+                            </SearchGroup>
+                        )}
+
+                        {results.purchaseOrders.length > 0 && (
+                            <SearchGroup label="Purchase Orders">
+                                {results.purchaseOrders.map(po => (
+                                    <SearchResultItem 
+                                        key={po.id} 
+                                        icon={<ShoppingCart size={16} className="text-orange-500" />} 
+                                        label={po.orderNumber}
+                                        sublabel={po.supplierName}
+                                        onClick={() => handleSelect('purchaseOrder', po)}
                                     />
                                 ))}
                             </SearchGroup>
@@ -258,7 +340,7 @@ const Omnisearch = () => {
 
 const SearchGroup = ({ label, children }) => (
     <div className="mb-4 last:mb-0">
-        <h3 className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+        <h3 className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 border-b border-border/10 mb-1">
             {label}
         </h3>
         {children}

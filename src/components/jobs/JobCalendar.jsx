@@ -32,10 +32,10 @@ const JobCalendar = ({ jobs, onSelectJob, onBack }) => {
     };
 
     const getJobsForDate = (date) => {
-        return jobs.filter(job => {
+        return jobs?.filter(job => {
             const jobDate = new Date(job.estimatedCompletion);
             return jobDate.toDateString() === date.toDateString();
-        });
+        }) || [];
     };
 
     const renderCalendar = () => {
