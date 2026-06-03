@@ -1,9 +1,10 @@
 import api from './api';
 
 export const vehicleService = {
-    getAll: (page = 0, size = 10, search = '') => {
+    getAll: (page = 0, size = 10, search = '', filter = 'ALL') => {
         const params = { page, size };
         if (search) params.search = search;
+        if (filter) params.filter = filter;
         return api.get('/vehicles', { params })
             .then(response => {
                 if (response.data && response.data.success) {

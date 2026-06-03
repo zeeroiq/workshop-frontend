@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, Filter, Car } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Filter, Car, History, Wrench, AlertTriangle, Loader2 } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,251 +8,227 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
-import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
+import ResponsiveDataContainer from '../common/layout/ResponsiveDataContainer';
 
 const VehicleList = () => {
-    const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [activeFilter, setActiveFilter] = useState('ALL');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchVehicles();
-    }, [currentPage]);
+    }, [currentPage, searchTerm, activeFilter]);
 
     const fetchVehicles = async () => {
         setLoading(true);
         try {
-            const response = await vehicleService.getAll(currentPage, 10, searchTerm);
-            setVehicles(response.data.content);
-            setTotalPages(response.data.totalPages);
+            // Backend now supports 'activeFilter' directly in getAll.
+            const response = await vehicleService.getAll(currentPage, 10, searchTerm, activeFilter);
+            if (response.data) {
+                setVehicles(response.data.content || []);
+                setTotalPages(response.data.totalPages || 0);
+            }
         } catch (error) {
-            toast.error('Failed to fetch vehicles');
             console.error('Error fetching vehicles:', error);
+            toast.error('Failed to sync fleet data');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        setCurrentPage(0);
-        fetchVehicles();
-    };
-
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this vehicle?')) {
-            return;
-        }
-
-        try {
-            await vehicleService.delete(id);
-            toast.success('Vehicle deleted successfully');
-            fetchVehicles();
-        } catch (error) {
-            toast.error('Failed to delete vehicle');
-            console.error('Delete error:', error);
+        if (window.confirm('Decommission this vehicle from the fleet registry?')) {
+            try {
+                await vehicleService.delete(id);
+                toast.success('Vehicle decommissioned successfully');
+                fetchVehicles();
+            } catch (error) {
+                console.error('Delete error:', error);
+                toast.error('Failed to decommission asset');
+            }
         }
     };
+
+    const renderCard = (vehicle) => (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-muted group-hover:bg-background transition-colors">
+                        <Car size={20} className="text-emerald-500" />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-sm tracking-tight">{vehicle.make} {vehicle.model}</h4>
+                        <p className="text-[10px] font-mono text-muted-foreground uppercase">{vehicle.licensePlate}</p>
+                    </div>
+                </div>
+                <Badge variant="outline" className="font-mono text-[10px] bg-background border-border/50">
+                    {vehicle.year}
+                </Badge>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 py-2 border-y border-border/30">
+                <div className="space-y-0.5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Owner</p>
+                    <p className="text-xs font-bold truncate">{vehicle.customerName || 'Private Fleet'}</p>
+                </div>
+                <div className="space-y-0.5 text-right">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Odometer</p>
+                    <p className="text-xs font-bold">{vehicle.mileage?.toLocaleString() || 0} KM</p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+                <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg border-border/50 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={() => navigate(`/vehicles/${vehicle.id}`)}>
+                    <Eye size={14} /> Full Intel
+                </Button>
+                <Button variant="outline" size="sm" className="h-9 w-9 rounded-lg border-border/50 p-0" onClick={() => navigate(`/vehicles/edit/${vehicle.id}`)}>
+                    <Edit size={14} />
+                </Button>
+                <Button variant="outline" size="sm" className="h-9 w-9 rounded-lg border-border/50 p-0 text-rose-500 hover:bg-rose-500/10" onClick={() => handleDelete(vehicle.id)}>
+                    <Trash size={14} />
+                </Button>
+            </div>
+        </div>
+    );
 
     const columns = [
         {
-            header: "Vehicle",
-            accessor: "make",
-            cell: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-semibold text-foreground">{row.make} {row.model}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{row.year} Model</span>
+            header: 'Asset Identity',
+            render: (v) => (
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-muted/50">
+                        <Car size={18} className="text-emerald-500" />
+                    </div>
+                    <div>
+                        <div className="font-bold text-sm">{v.make} {v.model}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase">{v.licensePlate}</div>
+                    </div>
                 </div>
             )
         },
         {
-            header: "License Plate",
-            accessor: "licensePlate",
-            cell: (row) => (
-                <Badge variant="outline" className="font-mono font-bold bg-muted/30 border-border/50">
-                    {row.licensePlate}
-                </Badge>
-            )
+            header: 'Year',
+            render: (v) => <span className="font-mono text-xs font-bold">{v.year}</span>
         },
         {
-            header: "Customer",
-            accessor: "customerName",
-            cell: (row) => <div className="text-sm font-medium">{row.customerName}</div>
-        },
-        {
-            header: "Mileage",
-            accessor: "currentMileage",
-            cell: (row) => (
-                <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    {row.currentMileage?.toLocaleString()} <span className="text-[10px] text-muted-foreground uppercase ml-1">KM</span>
+            header: 'Owner Mapping',
+            render: (v) => (
+                <div className="text-xs font-bold text-foreground/80">
+                    {v.customerName || <span className="text-muted-foreground opacity-50 italic">Unassigned</span>}
                 </div>
             )
         },
         {
-            header: "Actions",
-            className: "text-right",
-            cell: (row, isTablet) => (
+            header: 'Odometer',
+            render: (v) => <span className="font-black text-xs">{v.mileage?.toLocaleString() || 0} <span className="text-[9px] text-muted-foreground ml-0.5">KM</span></span>
+        },
+        {
+            header: 'Actions',
+            className: 'text-right',
+            render: (v) => (
                 <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" asChild>
-                        <Link to={`/vehicles/${row.id}`} onClick={(e) => e.stopPropagation()}>
-                            <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                            {!isTablet && <span className="ml-2">View</span>}
-                        </Link>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-500" onClick={() => navigate(`/vehicles/${v.id}`)}>
+                        <Eye size={14} />
                     </Button>
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2" asChild>
-                        <Link to={`/vehicles/edit/${row.id}`} onClick={(e) => e.stopPropagation()}>
-                            <Edit className="h-4 w-4 text-primary" />
-                            {!isTablet && <span className="ml-2 text-primary">Edit</span>}
-                        </Link>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => navigate(`/vehicles/edit/${v.id}`)}>
+                        <Edit size={14} />
                     </Button>
-                    <Button variant="ghost" size={isTablet ? "icon" : "sm"} className="h-8 w-auto px-2 text-destructive" onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(row.id);
-                    }}>
-                        <Trash className="h-4 w-4" />
-                        {!isTablet && <span className="ml-2">Delete</span>}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:bg-rose-500/10" onClick={() => handleDelete(v.id)}>
+                        <Trash size={14} />
                     </Button>
                 </div>
             )
         }
     ];
 
-    const renderVehicleCard = (vehicle) => (
-        <Card 
-            className="overflow-hidden border-border/50 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
-            onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-        >
-            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
-                <div className="flex flex-col">
-                    <CardTitle className="text-lg group-hover:text-emerald-500 transition-colors">
-                        {vehicle.make} {vehicle.model}
-                    </CardTitle>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                        {vehicle.year} Production
-                    </span>
-                </div>
-                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
-                    <Car size={20} />
-                </div>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">License</p>
-                        <Badge variant="outline" className="font-mono font-bold border-border/50 bg-background">{vehicle.licensePlate}</Badge>
+    return (
+        <div className="w-full max-w-7xl mx-auto space-y-8 pb-10">
+            {/* Header Section */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/50 pb-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500/80">Registry: Active</span>
                     </div>
-                    <div>
-                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Odometer</p>
-                        <p className="font-black text-sm">{vehicle.currentMileage?.toLocaleString() || '---'} <span className="text-[10px] text-muted-foreground font-medium uppercase ml-1">KM</span></p>
-                    </div>
-                    <div className="col-span-2">
-                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Customer</p>
-                        <p className="font-bold text-foreground">{vehicle.customerName}</p>
-                    </div>
+                    <h1 className="text-4xl font-black text-foreground tracking-tight">Fleet Intelligence</h1>
+                    <p className="text-muted-foreground font-medium">Monitoring <span className="text-foreground font-bold">{totalPages * 10}+</span> high-performance assets.</p>
                 </div>
-                
-                <div className="flex items-center gap-3 pt-4 border-t border-border/50">
-                    <Button 
-                        variant="outline" 
-                        className="flex-1 h-11 gap-2 border-border/50"
-                        asChild
-                    >
-                        <Link to={`/vehicles/edit/${vehicle.id}`} onClick={(e) => e.stopPropagation()}>
-                            <Edit size={16} />
-                            <span>Edit</span>
+                <div className="flex items-center gap-3">
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                        <Input
+                            placeholder="Search by VIN or Plate..."
+                            className="pl-10 w-64 h-12 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <Button asChild className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px]">
+                        <Link to="/vehicles/new" className="flex items-center gap-2">
+                            <Plus size={16} strokeWidth={3} /> Register Asset
                         </Link>
                     </Button>
-                    <Button 
-                        variant="destructive" 
-                        className="flex-1 h-11 gap-2 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white border-none"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(vehicle.id);
-                        }}
-                    >
-                        <Trash size={16} />
-                        <span>Delete</span>
-                    </Button>
                 </div>
-            </CardContent>
-        </Card>
-    );
-
-    const filters = (
-        <div className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-3">
-                <form onSubmit={handleSearch} className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Search by license plate, make, model or customer..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 bg-muted/30 border-border/50"
-                    />
-                </form>
-                <Button variant="outline" className="border-border/50 gap-2">
-                    <Filter size={16} />
-                    <span>Filters</span>
-                </Button>
             </div>
-            
-            <div className="flex flex-wrap gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
-                    <Filter size={10} /> Quick Filters:
-                </span>
+
+            {/* Quick Filters */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
                 {[
-                    { label: 'Recently Serviced', value: 'recent' },
-                    { label: 'High Mileage', value: 'high-mileage' },
-                    { label: 'Fleet Vehicles', value: 'fleet' }
+                    { id: 'ALL', label: 'All Assets', icon: <Car size={14} /> },
+                    { id: 'UNDER_MAINTENANCE', label: 'In Service', icon: <Wrench size={14} /> },
+                    { id: 'HISTORY_PENDING', label: 'Pending Docs', icon: <History size={14} /> },
+                    { id: 'ALERT', label: 'Alerts', icon: <AlertTriangle size={14} /> }
                 ].map(filter => (
                     <button
-                        key={filter.value}
-                        className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
-                            "bg-muted/30 text-muted-foreground border-border/50 hover:border-emerald-500/50 hover:text-foreground"
-                        )}
+                        key={filter.id}
                         onClick={() => {
-                            toast.info(`Filtering by ${filter.label}...`);
+                            setActiveFilter(filter.id);
+                            toast.info(`Filtering by ${filter.label}`);
                         }}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
+                            activeFilter === filter.id 
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
+                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
+                        )}
                     >
+                        {filter.icon}
                         {filter.label}
                     </button>
                 ))}
             </div>
-        </div>
-    );
 
-    const actions = (
-        <Button asChild className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
-            <Link to="/vehicles/new"><Plus className="mr-2 h-4 w-4" /> Add Vehicle</Link>
-        </Button>
-    );
+            {loading && vehicles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Fleet Registry...</p>
+                </div>
+            ) : vehicles.length === 0 ? (
+                <Card className="border-dashed border-border/50 bg-card/30">
+                    <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="p-4 rounded-full bg-muted/50 mb-4">
+                            <Search size={32} className="text-muted-foreground opacity-20" />
+                        </div>
+                        <h3 className="text-lg font-black uppercase tracking-tight mb-1">No Assets Found</h3>
+                        <p className="text-sm text-muted-foreground mb-6">Your search parameters returned zero registry matches.</p>
+                        <Button variant="outline" onClick={() => { setSearchTerm(''); setActiveFilter('ALL'); }} className="rounded-xl border-border/50 uppercase text-[10px] font-black tracking-widest">
+                            Clear Parameters
+                        </Button>
+                    </CardContent>
+                </Card>
+            ) : (
+                <div className="space-y-6">
+                    <ResponsiveDataContainer
+                        data={vehicles}
+                        renderCard={renderCard}
+                        columns={columns}
+                    />
 
-    return (
-        <div className="pb-10">
-            <ResponsiveDataContainer
-                title="Vehicles"
-                description="Fleet management and service history tracking"
-                actions={actions}
-                filters={filters}
-                columns={columns}
-                data={vehicles}
-                renderCard={renderVehicleCard}
-                onRowClick={(row) => navigate(`/vehicles/${row.id}`)}
-                loading={loading}
-                emptyMessage="You have no vehicles registered yet. Register your first vehicle to start tracking service cycles."
-                emptyIcon={Car}
-                emptyActionLabel="Register First Vehicle"
-                onEmptyAction={() => navigate('/vehicles/new')}
-            />
-            
-            {!loading && vehicles.length > 0 && (
-                <div className="mt-6 flex justify-center">
                     <PaginationComponent
                         currentPage={currentPage}
                         totalPages={totalPages}

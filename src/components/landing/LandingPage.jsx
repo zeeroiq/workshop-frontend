@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { onboardingService } from '@/services/onboardingService';
+import { authService } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -37,6 +38,7 @@ import LoginModal from '@/components/auth/LoginModal';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [formData, setFormData] = useState({
     workshopName: '',
@@ -79,7 +81,27 @@ const LandingPage = () => {
     setIsSubmitting(true);
     try {
       await onboardingService.registerWorkshop(formData);
-      toast.success('Workshop registered successfully! Please sign in.');
+      toast.success('Workshop registered successfully! Initializing workspace...');
+      
+      // Auto-login after successful registration
+      try {
+          const response = await authService.login(formData.email, formData.password);
+          if (response?.data?.success) {
+              const { token, user } = response.data.data;
+              authService.setToken(token);
+              authService.setUser(user);
+              toast.success(`Welcome to ${user.workshopName}!`);
+              navigate('/dashboard');
+          } else {
+              toast.info('Registration complete. Please sign in to continue.');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+      } catch (loginError) {
+          console.error('Auto-login failed:', loginError);
+          toast.info('Registration complete. Please sign in to access your dashboard.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
       setFormData({
         workshopName: '',
         fullName: '',
@@ -87,7 +109,6 @@ const LandingPage = () => {
         password: '',
         phone: '',
       });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Onboarding error:', error);
       toast.error(error.response?.data?.message || 'Failed to register workshop. Please try again.');

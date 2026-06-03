@@ -15,7 +15,8 @@ import {
     Dialog, 
     DialogContent, 
     DialogHeader, 
-    DialogTitle 
+    DialogTitle,
+    DialogDescription
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { searchService } from '@/services/searchService';
@@ -134,6 +135,11 @@ const Omnisearch = () => {
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="max-w-2xl p-0 overflow-hidden border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl">
+                    <div className="sr-only">
+                        <DialogTitle>Global Search</DialogTitle>
+                        <DialogDescription>Search for customers, vehicles, jobs, and parts.</DialogDescription>
+                    </div>
+
                     <div className="flex items-center border-b border-border/50 px-4 h-14">
                         <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
                         <input

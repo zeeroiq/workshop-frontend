@@ -13,7 +13,9 @@ import {
     ShieldCheck, 
     AlertCircle,
     Package,
-    History
+    History,
+    IndianRupee,
+    Loader2
 } from 'lucide-react';
 import {customerService} from "@/services/customerService";
 import {userService} from "@/services/userService";
@@ -76,29 +78,29 @@ const JobForm = ({ job, onSave, onCancel }) => {
                     customerService.getAll(0, 10)
                 ]);
 
-                const technicians = techRes?.data || [];
-                const parts = partsRes?.data?.content || [];
-                let customers = custRes?.data?.content || [];
+                const techniciansList = techRes?.data || [];
+                const partsList = partsRes?.data?.content || [];
+                let customersList = custRes?.data?.content || [];
 
                 if (isEdit && job.customerId) {
                     const detailedCustomerRes = await customerService.getWithVehicles(job.customerId);
                     const detailedCustomer = detailedCustomerRes.data;
                     if (detailedCustomer) {
-                        const customerExists = customers.some(c => c.id === detailedCustomer.id);
+                        const customerExists = customersList.some(c => c.id === detailedCustomer.id);
                         if (customerExists) {
-                            customers = customers.map(c => c.id === detailedCustomer.id ? detailedCustomer : c);
+                            customersList = customersList.map(c => c.id === detailedCustomer.id ? detailedCustomer : c);
                         } else {
-                            customers = [...customers, detailedCustomer];
+                            customersList = [...customersList, detailedCustomer];
                         }
                     }
                 }
 
-                setTechnicians(technicians);
-                setParts(parts);
-                setCustomers(customers);
+                setTechnicians(techniciansList);
+                setParts(partsList);
+                setCustomers(customersList);
 
                 if (isEdit) {
-                    const customerForVehicles = customers.find(c => c.id.toString() === job.customerId?.toString());
+                    const customerForVehicles = customersList.find(c => c.id.toString() === job.customerId?.toString());
                     setSelectedCustomerVehicles(customerForVehicles);
 
                     const vehicleFromJob = customerForVehicles?.vehicles?.find(v => v.licensePlate === job.license || v.id.toString() === job.vehicleId?.toString());
@@ -116,12 +118,12 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         customerName: customerForVehicles ? `${customerForVehicles.firstName} ${customerForVehicles.lastName}` : '',
                         vehicle: vehicleFromJob ? `${vehicleFromJob.year} ${vehicleFromJob.make} ${vehicleFromJob.model}` : '',
                         license: vehicleFromJob ? vehicleFromJob.licensePlate : '',
-                        technician: technicians.find(t => t.id.toString() === job.technicianId?.toString())?.firstName || job.technician,
+                        technician: techniciansList.find(t => t.id.toString() === job.technicianId?.toString())?.firstName || job.technician,
                         estimatedCompletion: job.estimatedCompletion ? new Date(job.estimatedCompletion).toISOString().slice(0, 16) : '',
                         items: job.items?.map(item => {
                             const newItem = { ...item, discount: item.discount || 0 };
                             if (newItem.type === 'PART') {
-                                const partDetails = parts.find(p => p.id.toString() === newItem.partId?.toString());
+                                const partDetails = partsList.find(p => p.id.toString() === newItem.partId?.toString());
                                 return {
                                     ...newItem,
                                     partId: newItem.partId ? newItem.partId.toString() : '',
@@ -143,7 +145,7 @@ const JobForm = ({ job, onSave, onCancel }) => {
         };
 
         loadJobData();
-    }, [job]);
+    }, [job, isEdit]);
 
     useEffect(() => {
         const totalItemsCost = formData.items.reduce((total, item) => {
@@ -178,22 +180,10 @@ const JobForm = ({ job, onSave, onCancel }) => {
                         return [...prev, detailedCustomer];
                     });
                     setSelectedCustomerVehicles(detailedCustomer);
-
-                    setFormData(prev => ({
-                        ...prev,
-                        customerId: value,
-                        customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`,
-                        selectedVehicleLicense: '',
-                        vehicle: '',
-                        license: ''
-                    }));
-                } else {
-                    setSelectedCustomerVehicles(null);
-                    setFormData(prev => ({ ...prev, selectedVehicleLicense: '', vehicle: '', license: '' }));
+                    setFormData(prev => ({ ...prev, customerName: `${detailedCustomer.firstName} ${detailedCustomer.lastName}`, vehicle: '', license: '', selectedVehicleLicense: '' }));
                 }
             } catch (error) {
                 toast.error("Failed to load customer vehicles.");
-                setSelectedCustomerVehicles(null);
             } finally {
                 setLoading(false);
             }
