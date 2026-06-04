@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import { cn } from '@/lib/utils';
 import ResponsiveDataContainer from '../common/layout/ResponsiveDataContainer';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const VehicleList = () => {
     const [vehicles, setVehicles] = useState([]);
@@ -60,46 +61,53 @@ const VehicleList = () => {
         }
     };
 
-    const renderCard = (vehicle) => (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-muted group-hover:bg-background transition-colors">
-                        <Car size={20} className="text-emerald-500" />
+    const renderVehicleCard = (vehicle) => (
+        <Card 
+            className="overflow-hidden border-border/50 hover:bg-card/80 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+            onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+        >
+            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                <div className="space-y-0.5">
+                    <CardTitle className="text-mg font-black group-hover:text-emerald-500 transition-colors">
+                        {vehicle.make} {vehicle.model}
+                    </CardTitle>
+                    <p className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">{vehicle.licensePlate}</p>
+                </div>
+                <Badge variant="outline" className="bg-background border-border/50 text-[10px] font-mono font-black">{vehicle.year}</Badge>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Ownership</p>
+                        <p className="font-bold truncate">{vehicle.customerName || 'PRIVATE_FLEET'}</p>
                     </div>
                     <div>
-                        <h4 className="font-black text-sm tracking-tight">{vehicle.make} {vehicle.model}</h4>
-                        <p className="text-[10px] font-mono text-muted-foreground uppercase">{vehicle.licensePlate}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Technical Odo</p>
+                        <p className="font-black">{vehicle.mileage?.toLocaleString() || 0} <span className="text-[9px] text-muted-foreground">KM</span></p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Color Finish</p>
+                        <p className="font-bold uppercase text-muted-foreground">{vehicle.color || 'NO_DATA'}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">File Status</p>
+                        <div className="flex items-center gap-1">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">SYNCED</span>
+                        </div>
                     </div>
                 </div>
-                <Badge variant="outline" className="font-mono text-[10px] bg-background border-border/50">
-                    {vehicle.year}
-                </Badge>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 py-2 border-y border-border/30">
-                <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Owner</p>
-                    <p className="text-xs font-bold truncate">{vehicle.customerName || 'Private Fleet'}</p>
+                
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); navigate(`/vehicles/${vehicle.id}`); }}>
+                        <Eye size={18} /> FULL INTEL
+                    </Button>
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); navigate(`/vehicles/edit/${vehicle.id}`); }}>
+                        <Edit size={18} /> EDIT
+                    </Button>
                 </div>
-                <div className="space-y-0.5 text-right">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Odometer</p>
-                    <p className="text-xs font-bold">{vehicle.mileage?.toLocaleString() || 0} KM</p>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-                <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg border-border/50 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={() => navigate(`/vehicles/${vehicle.id}`)}>
-                    <Eye size={14} /> Full Intel
-                </Button>
-                <Button variant="outline" size="sm" className="h-9 w-9 rounded-lg border-border/50 p-0" onClick={() => navigate(`/vehicles/edit/${vehicle.id}`)}>
-                    <Edit size={14} />
-                </Button>
-                <Button variant="outline" size="sm" className="h-9 w-9 rounded-lg border-border/50 p-0 text-rose-500 hover:bg-rose-500/10" onClick={() => handleDelete(vehicle.id)}>
-                    <Trash size={14} />
-                </Button>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 
     const columns = [
@@ -165,7 +173,7 @@ const VehicleList = () => {
     };
 
     return (
-        <div className="w-full mx-auto space-y-8 pb-10">
+        <div className="w-full mx-auto space-y-8 pb-10 pr-10">
             <ResponsiveDataContainer
                 title="Fleet Intelligence"
                 description={
@@ -217,12 +225,12 @@ const VehicleList = () => {
                     </div>
                 }
                 data={vehicles}
-                renderCard={renderCard}
+                renderCard={renderVehicleCard}
                 columns={columns}
-                onRowClick={(v) => navigate(`/vehicles/${v.id}`)}
+                onRowClick={(row) => navigate(`/vehicles/${row.id}`)}
                 onSort={handleSort}
                 sortConfig={sortConfig}
-                loading={loading && vehicles.length === 0}
+                loading={loading && vehicles.length == 0}
             />
 
             {!loading && vehicles.length > 0 && (

@@ -119,39 +119,54 @@ const CustomerList = () => {
     ];
 
     const renderCustomerCard = (customer) => (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-muted group-hover:bg-background transition-colors">
-                        <Users size={20} className="text-emerald-500" />
+        <Card 
+            className="overflow-hidden border-border/50 hover:bg-card/80 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+            onClick={() => navigate(`/customers/${customer.id}`)}
+        >
+            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                <div className="space-y-0.5">
+                    <CardTitle className="text-mg font-black group-hover:text-emerald-500 transition-colors">
+                        {customer.firstName} {customer.lastName}
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{customer.email || 'NO_EMAIL_ON_FILE'}</p>
+                </div>
+                <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] font-black">ACTIVE</Badge>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Phone Identity</p>
+                        <p className="font-bold">{customer.phone}</p>
                     </div>
                     <div>
-                        <h4 className="font-black text-sm tracking-tight">{customer.firstName} {customer.lastName}</h4>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{customer.phone}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Asset Count</p>
+                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-none font-black text-[10px]">
+                            {customer.vehicleCount || 0} UNITS
+                        </Badge>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Member Since</p>
+                        <p className="font-bold">{new Date(customer.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Status</p>
+                        <div className="flex items-center gap-1">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">VERIFIED</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 py-2 border-y border-border/30">
-                <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Assets</p>
-                    <p className="text-xs font-bold">{customer.vehicleCount || 0} Vehicles</p>
+                
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); navigate(`/customers/${customer.id}`); }}>
+                        <Eye size={18} /> PROFILE
+                    </Button>
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); navigate(`/customers/edit/${customer.id}`); }}>
+                        <Edit size={18} /> EDIT
+                    </Button>
                 </div>
-                <div className="space-y-0.5 text-right">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Status</p>
-                    <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] font-black">ACTIVE</Badge>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-                <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg border-border/50 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={() => navigate(`/customers/${customer.id}`)}>
-                    <Eye size={14} /> Full Profile
-                </Button>
-                <Button variant="outline" size="sm" className="h-9 w-9 rounded-lg border-border/50 p-0" onClick={() => navigate(`/customers/edit/${customer.id}`)}>
-                    <Edit size={14} />
-                </Button>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 
     const filters = (

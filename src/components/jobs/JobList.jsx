@@ -24,9 +24,10 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 import { cn } from "@/lib/utils";
+import { useNavigate } from 'react-router-dom';
 
 const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar}) => {
-
+    const navigate = useNavigate();
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
@@ -122,7 +123,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         try {
             const response = await jobService.createInvoice(jobId);
             if (response?.status === 200 || response?.data?.success && response.data) {
-                toast.success(`Generated Invoice ${response.data.invoiceNumber}`);
+                toast.success('Generated Invoice successfully');
             } else {
                 toast.error("Failed to generate invoice");
             }
@@ -203,35 +204,49 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     ];
 
     const renderJobCard = (job) => (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                    <h4 className="font-mono font-black text-emerald-500 tracking-tighter text-sm uppercase">{job.jobNumber}</h4>
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase">LOGGED {new Date(job.createdAt).toLocaleDateString()}</span>
+        <Card 
+            className="overflow-hidden border-border/50 hover:bg-card/80 hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+            onClick={() => onViewJob(job)}
+        >
+            <CardHeader className="pb-3 bg-muted/20 flex flex-row items-center justify-between space-y-0">
+                <div className="space-y-0.5">
+                    <CardTitle className="text-mg font-mono font-black text-emerald-500 tracking-tighter uppercase">
+                        {job.jobNumber}
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">LOGGED {new Date(job.createdAt).toLocaleDateString()}</p>
                 </div>
                 {getStatusBadge(job.status)}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 py-2 border-y border-border/30">
-                <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Stakeholder</p>
-                    <p className="text-xs font-bold truncate">{job.customer}</p>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Stakeholder</p>
+                        <p className="font-bold truncate">{job.customer}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Revenue</p>
+                        <p className="font-black text-emerald-500">₹{job.cost?.toFixed(0)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Asset Info</p>
+                        <p className="font-medium text-[11px] truncate uppercase">{job.vehicle}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider mb-1">Tech Lead</p>
+                        <p className="font-bold text-muted-foreground uppercase">{job.technician || 'UNASSIGNED'}</p>
+                    </div>
                 </div>
-                <div className="space-y-0.5 text-right">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Revenue</p>
-                    <p className="text-xs font-black text-emerald-500">₹{job.cost?.toFixed(0)}</p>
+                
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={(e) => { e.stopPropagation(); onViewJob(job); }}>
+                        <Eye size={18} /> INTEL
+                    </Button>
+                    <Button variant="outline" size="lg" className="flex-1 h-12 gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500" onClick={(e) => { e.stopPropagation(); createInvoice(job.id); }}>
+                        <FileText size={18} /> BILL
+                    </Button>
                 </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-                <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg border-border/50 gap-2 text-[10px] font-black uppercase tracking-widest" onClick={() => onViewJob(job)}>
-                    <Eye size={14} /> INTEL
-                </Button>
-                <Button variant="outline" size="sm" className="h-9 w-9 rounded-lg border-border/50 p-0 text-emerald-500" onClick={() => createInvoice(job.id)}>
-                    <FileText size={14} />
-                </Button>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 
     const filters = (
@@ -276,7 +291,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     };
 
     return (
-        <div className="w-full mx-auto space-y-8 pb-10">
+        <div className="w-full mx-auto space-y-8 pb-10 pr-10">
             <ResponsiveDataContainer
                 title="Operational Intelligence"
                 description="Managing high-throughput workshop service flow"
@@ -288,7 +303,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                 onRowClick={onViewJob}
                 onSort={handleSort}
                 sortConfig={sortConfig}
-                loading={loading && jobs.length === 0}
+                loading={loading && jobs.length == 0}
                 emptyMessage="No service jobs found matching your criteria. Start a new job to begin tracking workshop output."
                 emptyIcon={Wrench}
                 emptyActionLabel="INITIATE FIRST OPERATION"
