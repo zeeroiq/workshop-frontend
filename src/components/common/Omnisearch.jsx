@@ -12,7 +12,9 @@ import {
     History,
     FileText,
     Truck,
-    ShoppingCart
+    ShoppingCart,
+    X,
+    Trash2
 } from 'lucide-react';
 import { 
     Dialog, 
@@ -24,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { searchService } from '@/services/searchService';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const Omnisearch = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -90,6 +93,11 @@ const Omnisearch = () => {
         localStorage.setItem('search_history', JSON.stringify(newHistory));
     };
 
+    const clearHistory = () => {
+        setHistory([]);
+        localStorage.removeItem('search_history');
+    };
+
     const handleSelect = (type, item) => {
         setIsOpen(false);
         setQuery('');
@@ -125,7 +133,7 @@ const Omnisearch = () => {
                 icon = 'invoice';
                 break;
             case 'supplier':
-                path = `/inventory`; // Suppliers usually managed in inventory
+                path = `/inventory`; 
                 label = `${item.name}`;
                 icon = 'supplier';
                 break;
@@ -161,13 +169,15 @@ const Omnisearch = () => {
     };
 
     return (
-        <>
+        <div className="flex-1 w-full">
             <button 
                 onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-xs font-bold text-muted-foreground bg-muted/30 border border-border/50 rounded-xl hover:bg-muted/50 transition-all group"
+                className="flex items-center justify-between w-full px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold text-muted-foreground bg-muted/30 border border-border/50 rounded-xl hover:bg-muted/50 transition-all group"
             >
-                <Search size={14} className="group-hover:text-emerald-500 transition-colors" />
-                <span className="hidden sm:inline">Search everything...</span>
+                <div className="flex items-center gap-2">
+                    <Search size={14} className="group-hover:text-emerald-500 transition-colors" />
+                    <span className="hidden sm:inline">Search everything...</span><span className="sm:hidden">Search...</span>
+                </div>
                 <kbd className="hidden lg:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
                     <span className="text-xs">⌘</span>K
                 </kbd>
@@ -196,9 +206,17 @@ const Omnisearch = () => {
                     <div className="max-h-[500px] overflow-y-auto p-2 custom-scrollbar">
                         {query.length < 2 && history.length > 0 && (
                             <div className="mb-4">
-                                <h3 className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 flex items-center gap-2">
-                                    <History size={12} /> Recent History
-                                </h3>
+                                <div className="flex items-center justify-between px-3 py-2">
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 flex items-center gap-2">
+                                        <History size={12} /> Recent History
+                                    </h3>
+                                    <button 
+                                        onClick={clearHistory}
+                                        className="text-[9px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-400 transition-colors flex items-center gap-1"
+                                    >
+                                        <Trash2 size={10} /> Clear
+                                    </button>
+                                </div>
                                 {history.map((item, idx) => (
                                     <SearchResultItem 
                                         key={idx}
@@ -334,7 +352,7 @@ const Omnisearch = () => {
                     </div>
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 };
 

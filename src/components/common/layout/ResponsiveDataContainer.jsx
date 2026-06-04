@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
 import EmptyState from '../feedback/EmptyState';
-import { FileSearch } from 'lucide-react';
+import { FileSearch, ChevronUp, ChevronDown } from 'lucide-react';
 
 const ResponsiveDataContainer = ({ 
     title, 
@@ -27,7 +27,9 @@ const ResponsiveDataContainer = ({
     emptyMessage = "No records found.",
     emptyIcon: EmptyIcon = FileSearch,
     emptyActionLabel,
-    onEmptyAction
+    onEmptyAction,
+    onSort,
+    sortConfig = { key: null, direction: 'asc' }
 }) => {
     const [viewMode, setViewMode] = useState('table');
     const isMobile = useMediaQuery('(max-width: 767px)');
@@ -42,13 +44,20 @@ const ResponsiveDataContainer = ({
 
     const activeView = isMobile ? 'grid' : viewMode;
 
+    const handleSort = (column) => {
+        if (!onSort || !column.sortable) return;
+        const key = column.sortKey || column.accessor;
+        const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        onSort(key, direction);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Section */}
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
-                        <h1 className="text-xl md:text-2xl font-bold tracking-tight">{title}</h1>
+                        {title && <h1 className="text-xl md:text-2xl font-bold tracking-tight">{title}</h1>}
                         {description && <p className="text-sm text-muted-foreground">{description}</p>}
                     </div>
                     <div className="flex items-center gap-3">
@@ -94,10 +103,26 @@ const ResponsiveDataContainer = ({
                                             key={index} 
                                             className={cn(
                                                 "font-semibold uppercase tracking-wider text-[10px]",
+                                                col.sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
                                                 col.className
                                             )}
+                                            onClick={() => handleSort(col)}
                                         >
-                                            {col.header}
+                                            <div className="flex items-center gap-2">
+                                                {col.header}
+                                                {col.sortable && onSort && (
+                                                    <div className="flex flex-col">
+                                                        <ChevronUp size={10} className={cn(
+                                                            "mb-[-2px]",
+                                                            sortConfig.key === (col.sortKey || col.accessor) && sortConfig.direction === 'asc' ? "text-emerald-500" : "text-muted-foreground/30"
+                                                        )} />
+                                                        <ChevronDown size={10} className={cn(
+                                                            "mt-[-2px]",
+                                                            sortConfig.key === (col.sortKey || col.accessor) && sortConfig.direction === 'desc' ? "text-emerald-500" : "text-muted-foreground/30"
+                                                        )} />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </TableHead>
                                     ))}
                                 </TableRow>
@@ -106,7 +131,11 @@ const ResponsiveDataContainer = ({
                                 {data.map((row, rowIndex) => (
                                     <TableRow 
                                         key={row.id || rowIndex}
-                                        onClick={() => onRowClick?.(row)}
+                                        onClick={(e) => {
+                                            // Don't trigger if clicking a button or link
+                                            if (e.target.closest('button') || e.target.closest('a')) return;
+                                            onRowClick?.(row);
+                                        }}
                                         className={cn(
                                             "group transition-colors",
                                             onRowClick && "cursor-pointer hover:bg-emerald-500/[0.02] dark:hover:bg-emerald-500/[0.05]"
@@ -131,7 +160,7 @@ const ResponsiveDataContainer = ({
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {data.map((row, index) => (
-                        <div key={row.id || index}>
+                        <div key={row.id || index} onClick={() => onRowClick?.(row)} className={onRowClick ? "cursor-pointer" : ""}>
                             {renderCard(row)}
                         </div>
                     ))}

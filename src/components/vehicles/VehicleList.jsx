@@ -18,17 +18,25 @@ const VehicleList = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [activeFilter, setActiveFilter] = useState('ALL');
+    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchVehicles();
-    }, [currentPage, searchTerm, activeFilter]);
+    }, [currentPage, searchTerm, activeFilter, sortConfig]);
 
     const fetchVehicles = async () => {
         setLoading(true);
         try {
-            // Backend now supports 'activeFilter' directly in getAll.
-            const response = await vehicleService.getAll(currentPage, 10, searchTerm, activeFilter);
+            // Updated to pass search, filter and sort
+            const response = await vehicleService.getAll(
+                currentPage, 
+                10, 
+                searchTerm, 
+                activeFilter,
+                sortConfig.key,
+                sortConfig.direction
+            );
             if (response.data) {
                 setVehicles(response.data.content || []);
                 setTotalPages(response.data.totalPages || 0);
@@ -99,6 +107,8 @@ const VehicleList = () => {
     const columns = [
         {
             header: 'Asset Identity',
+            sortable: true,
+            sortKey: 'make',
             render: (v) => (
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-muted/50">
@@ -113,10 +123,14 @@ const VehicleList = () => {
         },
         {
             header: 'Year',
+            sortable: true,
+            sortKey: 'year',
             render: (v) => <span className="font-mono text-xs font-bold">{v.year}</span>
         },
         {
             header: 'Owner Mapping',
+            sortable: true,
+            sortKey: 'customer.firstName',
             render: (v) => (
                 <div className="text-xs font-bold text-foreground/80">
                     {v.customerName || <span className="text-muted-foreground opacity-50 italic">Unassigned</span>}
@@ -125,6 +139,8 @@ const VehicleList = () => {
         },
         {
             header: 'Odometer',
+            sortable: true,
+            sortKey: 'currentMileage',
             render: (v) => <span className="font-black text-xs">{v.mileage?.toLocaleString() || 0} <span className="text-[9px] text-muted-foreground ml-0.5">KM</span></span>
         },
         {
@@ -132,13 +148,13 @@ const VehicleList = () => {
             className: 'text-right',
             render: (v) => (
                 <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-500" onClick={() => navigate(`/vehicles/${v.id}`)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-emerald-500/10 hover:text-emerald-500" onClick={(e) => { e.stopPropagation(); navigate(`/vehicles/${v.id}`); }}>
                         <Eye size={14} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => navigate(`/vehicles/edit/${v.id}`)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={(e) => { e.stopPropagation(); navigate(`/vehicles/edit/${v.id}`); }}>
                         <Edit size={14} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:bg-rose-500/10" onClick={() => handleDelete(v.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-rose-500 hover:bg-rose-500/10" onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }}>
                         <Trash size={14} />
                     </Button>
                 </div>
@@ -146,8 +162,12 @@ const VehicleList = () => {
         }
     ];
 
+    const handleSort = (key, direction) => {
+        setSortConfig({ key, direction });
+    };
+
     return (
-        <div className="w-full max-w-7xl mx-auto space-y-8 pb-10">
+        <div className="w-full mx-auto space-y-8 pb-10">
             {/* Header Section */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/50 pb-6">
                 <div className="space-y-1">
@@ -227,6 +247,9 @@ const VehicleList = () => {
                         data={vehicles}
                         renderCard={renderCard}
                         columns={columns}
+                        onRowClick={(v) => navigate(`/vehicles/${v.id}`)}
+                        onSort={handleSort}
+                        sortConfig={sortConfig}
                     />
 
                     <PaginationComponent

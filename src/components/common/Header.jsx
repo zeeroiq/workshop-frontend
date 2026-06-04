@@ -21,7 +21,7 @@ const Header = ({ onToggleSidebar }) => {
     const user = authService.getUser();
     const [workshopInfo, setWorkshopInfo] = useState({
         name: user?.workshopName || 'Vishwakarma',
-        logoUrl: null
+        logoUrl: null, omnisearchEnabled: true
     });
 
     const getDisplayName = (name) => {
@@ -43,7 +43,7 @@ const Header = ({ onToggleSidebar }) => {
                 const data = await workshopService.getSettings();
                 setWorkshopInfo({
                     name: data.name,
-                    logoUrl: data.logoUrl
+                    logoUrl: data.logoUrl, omnisearchEnabled: data.omnisearchEnabled
                 });
             } catch (error) {
                 console.error('Failed to fetch workshop info:', error);
@@ -58,7 +58,7 @@ const Header = ({ onToggleSidebar }) => {
             if (event.detail) {
                 setWorkshopInfo({
                     name: event.detail.name,
-                    logoUrl: event.detail.logoUrl
+                    logoUrl: event.detail.logoUrl, omnisearchEnabled: event.detail.omnisearchEnabled
                 });
             }
         };
@@ -74,7 +74,7 @@ const Header = ({ onToggleSidebar }) => {
 
     return (
         <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border/50 bg-background/80 px-4 backdrop-blur-md lg:px-8">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1">
                 <Button 
                     variant="ghost" 
                     size="icon" 
@@ -85,24 +85,24 @@ const Header = ({ onToggleSidebar }) => {
                     <Menu size={20} />
                 </Button>
                 
-                {/* Branding - Mobile only, as Desktop has it in Sidebar */}
-                <Link to="/dashboard" className="flex items-center gap-2 lg:hidden group">
+                {/* Branding - Visible on Mobile and Tablet, as Desktop has it in Sidebar */}
+                <Link to="/dashboard" className="flex items-center gap-2 lg:hidden group shrink-0">
                     {workshopInfo.logoUrl ? (
                         <img 
                             src={getAuthenticatedUrl(workshopInfo.logoUrl)} 
                             alt="Logo" 
-                            className="h-7 w-7 object-contain rounded shadow-sm group-hover:scale-110 transition-transform" 
+                            className="h-6 w-6 sm:h-7 sm:w-7 object-contain rounded shadow-sm group-hover:scale-110 transition-transform" 
                         />
                     ) : (
                         <div className="rounded bg-emerald-500 p-1 shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                            <Wrench size={14} className="text-emerald-950" />
+                            <Wrench size={12} className="text-emerald-950 sm:size-14" />
                         </div>
                     )}
                     
                     <TooltipProvider>
                         <Tooltip delayDuration={300}>
                             <TooltipTrigger asChild>
-                                <span className="text-sm font-bold tracking-tight truncate max-w-[120px] group-hover:text-emerald-500 transition-colors">
+                                <span className="text-[10px] sm:text-sm font-bold tracking-tight truncate max-w-[80px] sm:max-w-[120px] group-hover:text-emerald-500 transition-colors">
                                     {getDisplayName(workshopInfo.name)}
                                 </span>
                             </TooltipTrigger>
@@ -115,12 +115,17 @@ const Header = ({ onToggleSidebar }) => {
                     </TooltipProvider>
                 </Link>
 
-                <div className="hidden lg:flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Operational Console</span>
+                {/* Omnisearch - Flexible and respects config */}
+                {workshopInfo.omnisearchEnabled && (
+                    <div className="flex flex-1 items-center gap-2 lg:gap-6 mx-1 sm:mx-4 max-w-2xl">
+                        <div className="hidden lg:flex items-center gap-2 text-muted-foreground shrink-0">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Operational Console</span>
+                        </div>
+                        <div className="flex-1">
+                            <Omnisearch />
+                        </div>
                     </div>
-                    <Omnisearch />
-                </div>
+                )}
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
