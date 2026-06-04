@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, Filter, Car, History, Wrench, AlertTriangle, Loader2 } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Car, History, Wrench, AlertTriangle } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +27,6 @@ const VehicleList = () => {
     const fetchVehicles = async () => {
         setLoading(true);
         try {
-            // Updated to pass search, filter and sort
             const response = await vehicleService.getAll(
                 currentPage, 
                 10, 
@@ -168,96 +166,71 @@ const VehicleList = () => {
 
     return (
         <div className="w-full mx-auto space-y-8 pb-10">
-            {/* Header Section */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border/50 pb-6">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500/80">Registry: Active</span>
-                    </div>
-                    <h1 className="text-4xl font-black text-foreground tracking-tight">Fleet Intelligence</h1>
-                    <p className="text-muted-foreground font-medium">Monitoring <span className="text-foreground font-bold">{totalPages * 10}+</span> high-performance assets.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="relative group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
-                        <Input
-                            placeholder="Search by VIN or Plate..."
-                            className="pl-10 w-64 h-12 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <Button asChild className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px]">
+            <ResponsiveDataContainer
+                title="Fleet Intelligence"
+                description={
+                    <span>Monitoring <span className="text-foreground font-bold">{totalPages * 10}+</span> high-performance assets.</span>
+                }
+                actions={
+                    <Button asChild className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px]">
                         <Link to="/vehicles/new" className="flex items-center gap-2">
-                            <Plus size={16} strokeWidth={3} /> Register Asset
+                            <Plus size={14} strokeWidth={3} /> Register Asset
                         </Link>
                     </Button>
-                </div>
-            </div>
-
-            {/* Quick Filters */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-                {[
-                    { id: 'ALL', label: 'All Assets', icon: <Car size={14} /> },
-                    { id: 'UNDER_MAINTENANCE', label: 'In Service', icon: <Wrench size={14} /> },
-                    { id: 'HISTORY_PENDING', label: 'Pending Docs', icon: <History size={14} /> },
-                    { id: 'ALERT', label: 'Alerts', icon: <AlertTriangle size={14} /> }
-                ].map(filter => (
-                    <button
-                        key={filter.id}
-                        onClick={() => {
-                            setActiveFilter(filter.id);
-                            toast.info(`Filtering by ${filter.label}`);
-                        }}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
-                            activeFilter === filter.id 
-                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
-                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
-                        )}
-                    >
-                        {filter.icon}
-                        {filter.label}
-                    </button>
-                ))}
-            </div>
-
-            {loading && vehicles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Syncing Fleet Registry...</p>
-                </div>
-            ) : vehicles.length === 0 ? (
-                <Card className="border-dashed border-border/50 bg-card/30">
-                    <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="p-4 rounded-full bg-muted/50 mb-4">
-                            <Search size={32} className="text-muted-foreground opacity-20" />
+                }
+                filters={
+                    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
+                            {[
+                                { id: 'ALL', label: 'All Assets', icon: <Car size={14} /> },
+                                { id: 'UNDER_MAINTENANCE', label: 'In Service', icon: <Wrench size={14} /> },
+                                { id: 'HISTORY_PENDING', label: 'Pending Docs', icon: <History size={14} /> },
+                                { id: 'ALERT', label: 'Alerts', icon: <AlertTriangle size={14} /> }
+                            ].map(filter => (
+                                <button
+                                    key={filter.id}
+                                    onClick={() => {
+                                        setActiveFilter(filter.id);
+                                        toast.info(`Filtering by ${filter.label}`);
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
+                                        activeFilter === filter.id 
+                                            ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
+                                            : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
+                                    )}
+                                >
+                                    {filter.icon}
+                                    {filter.label}
+                                </button>
+                            ))}
                         </div>
-                        <h3 className="text-lg font-black uppercase tracking-tight mb-1">No Assets Found</h3>
-                        <p className="text-sm text-muted-foreground mb-6">Your search parameters returned zero registry matches.</p>
-                        <Button variant="outline" onClick={() => { setSearchTerm(''); setActiveFilter('ALL'); }} className="rounded-xl border-border/50 uppercase text-[10px] font-black tracking-widest">
-                            Clear Parameters
-                        </Button>
-                    </CardContent>
-                </Card>
-            ) : (
-                <div className="space-y-6">
-                    <ResponsiveDataContainer
-                        data={vehicles}
-                        renderCard={renderCard}
-                        columns={columns}
-                        onRowClick={(v) => navigate(`/vehicles/${v.id}`)}
-                        onSort={handleSort}
-                        sortConfig={sortConfig}
-                    />
+                        <div className="relative group w-full md:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                            <Input
+                                placeholder="Search by VIN or Plate..."
+                                className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                }
+                data={vehicles}
+                renderCard={renderCard}
+                columns={columns}
+                onRowClick={(v) => navigate(`/vehicles/${v.id}`)}
+                onSort={handleSort}
+                sortConfig={sortConfig}
+                loading={loading && vehicles.length === 0}
+            />
 
-                    <PaginationComponent
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
+            {!loading && vehicles.length > 0 && (
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
             )}
         </div>
     );

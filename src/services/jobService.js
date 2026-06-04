@@ -1,10 +1,14 @@
 import api from './api';
 
 export const jobService = {
-    getAllJobs: (page = 0, size = 10, jobStatus = '', search = '') => {
+    getAllJobs: (page = 0, size = 10, jobStatus = '', search = '', sort = 'id', direction = 'desc') => {
         const params = { page, size };
-        if (jobStatus) params.jobStatus = jobStatus;
-        if (search) params.search = search;
+        if (sort)
+            params.sort = sort + "," + direction;
+        if (jobStatus)
+            params.jobStatus = jobStatus;
+        if (search)
+            params.search = search;
         return api.get('/jobs', { params })
             .then(response => response.data.success ? { ...response, data: response.data.data } : response);
     },

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import StatsCard from './StatsCard';
 import RecentActivity from './RecentActivity';
+import DynamicWidget from './DynamicWidget';
 import { dashboardService } from '@/services/dashboardService';
 import { authService } from '@/services/authService';
 import { workshopService } from '@/services/workshopService';
@@ -60,11 +61,13 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('monthly');
     const [showSetup, setShowSetup] = useState(false);
+    const [pinnedWidgets, setPinnedWidgets] = useState([]);
     const user = authService.getUser();
 
     useEffect(() => {
         fetchDashboardStats();
         checkSetupStatus();
+        fetchPinnedWidgets();
     }, [timeRange]);
 
     const checkSetupStatus = async () => {
@@ -75,6 +78,17 @@ const Dashboard = () => {
             }
         } catch (error) {
             console.error('Failed to check setup status:', error);
+        }
+    };
+
+    const fetchPinnedWidgets = async () => {
+        try {
+            const response = await dashboardService.getPinnedWidgets();
+            if (response.data && response.data.success) {
+                setPinnedWidgets(response.data.data || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch pinned widgets:", error);
         }
     };
 
@@ -113,6 +127,10 @@ const Dashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleUnpin = (id) => {
+        setPinnedWidgets(prev => prev.filter(w => w.id !== id));
     };
 
     if (loading) {
@@ -155,6 +173,23 @@ const Dashboard = () => {
                     </Select>
                 </div>
             </div>
+
+            {/* Pinned Intelligent Widgets */}
+            {pinnedWidgets.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Zap size={16} className="text-emerald-500" />
+                        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground/60">Intelligent Insights</h2>
+                    </div>
+                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {pinnedWidgets.map(widget => (
+                            <div key={widget.id} className="h-[400px]">
+                                <DynamicWidget widget={widget} onUnpin={handleUnpin} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Metrics Grid */}
             <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
