@@ -13,14 +13,12 @@ import {
     Filter
 } from 'lucide-react';
 import {getStatusBadge} from "./helper/utils";
-import {JOB_FILTER_OPTIONS} from "./helper/constants";
 import {jobService} from "@/services/jobService";
 import {toast} from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 import { cn } from "@/lib/utils";
@@ -30,7 +28,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     const navigate = useNavigate();
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeFilter, setActiveFilter] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
@@ -65,33 +63,20 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     const loadJobs = useCallback(async () => {
         setLoading(true);
         try {
-            let response;
-            if (searchTerm) {
-                response = await jobService.getJobLikeJobNumber(searchTerm);
-                if (response?.data) {
-                    setJobs(response.data.content.map(transformJobData));
-                    setTotalPages(response.data.totalPages || 1);
-                } else {
-                    setJobs([]);
-                    setTotalPages(1);
-                }
+            const response = await jobService.getAllJobs(
+                currentPage, 
+                10, 
+                activeFilter, 
+                searchTerm,
+                sortConfig.key,
+                sortConfig.direction
+            );
+            if (response?.data?.content) {
+                setJobs(response.data.content.map(transformJobData));
+                setTotalPages(response.data.totalPages || 1);
             } else {
-                const jobStatus = activeTab === 'all' ? '' : activeTab.toUpperCase().replaceAll('-', '_');
-                response = await jobService.getAllJobs(
-                    currentPage, 
-                    10, 
-                    jobStatus, 
-                    searchTerm,
-                    sortConfig.key,
-                    sortConfig.direction
-                );
-                if (response?.data?.content?.length > 0) {
-                    setJobs(response.data.content.map(transformJobData));
-                    setTotalPages(response.data.totalPages || 1);
-                } else {
-                    setJobs([]);
-                    setTotalPages(1);
-                }
+                setJobs([]);
+                setTotalPages(1);
             }
         } catch (error) {
             console.error('Error loading jobs:', error);
@@ -101,14 +86,12 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         } finally {
             setLoading(false);
         }
-    }, [currentPage, activeTab, searchTerm, sortConfig]);
+    }, [currentPage, activeFilter, searchTerm, sortConfig]);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            if (searchTerm) {
-                loadJobs();
-            }
-        }, 500);
+            loadJobs();
+        }, searchTerm ? 500 : 0);
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm, loadJobs]);
@@ -117,7 +100,16 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         if (!searchTerm) {
             loadJobs();
         }
-    }, [currentPage, activeTab, sortConfig, loadJobs]);
+    }, [currentPage, activeFilter, sortConfig, loadJobs]);
+
+    const handleFilter = (filterValue) => {
+        if (activeFilter === filterValue) {
+            setActiveFilter(''); // Toggle off
+        } else {
+            setActiveFilter(filterValue);
+        }
+        setCurrentPage(0);
+    };
 
     const createInvoice = async (jobId) => {
         try {
@@ -252,18 +244,30 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     const filters = (
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
-                <Select value={activeTab} onValueChange={setActiveTab}>
-                    <SelectTrigger className="w-48 bg-card/50 border-border/50 text-[10px] font-black uppercase tracking-widest rounded-xl">
-                        <SelectValue placeholder="All Operations" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover/95 backdrop-blur-xl border-border/50">
-                        <SelectItem value="all">ALL OPERATIONS</SelectItem>
-                        {JOB_FILTER_OPTIONS.map(status => (
-                            <SelectItem key={status.value} value={status.value}>{status.label.toUpperCase()}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Button variant="outline" className="border-border/50 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2" onClick={onShowCalendar}>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { label: 'Open', value: 'OPEN' },
+                    { label: 'Completed', value: 'COMPLETED' },
+                    { label: 'Invoiced', value: 'INVOICED' },
+                    { label: 'Paid', value: 'PAID' },
+                    { label: 'Recent', value: 'RECENT' }
+                ].map(filter => (
+                    <button
+                        key={filter.value}
+                        className={cn(
+                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
+                            activeFilter === filter.value
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
+                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
+                        )}
+                        onClick={() => handleFilter(filter.value)}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+                <Button variant="outline" className="border-border/50 h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2 ml-2" onClick={onShowCalendar}>
                     <Calendar size={14} /> CALENDAR
                 </Button>
             </div>

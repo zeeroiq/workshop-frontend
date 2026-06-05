@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash, Eye, Plus, Search, User } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, User, Filter } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
@@ -8,18 +8,23 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import { cn } from "@/lib/utils";
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [activeFilter, setActiveFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
-        loadSuppliers();
-    }, [currentPage, searchTerm, statusFilter]);
+        const delayDebounceFn = setTimeout(() => {
+            loadSuppliers();
+        }, searchTerm ? 500 : 0);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [currentPage, searchTerm, activeFilter]);
 
     const loadSuppliers = async () => {
         try {
@@ -28,8 +33,8 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 page: currentPage,
                 size: 10,
                 sort: 'name,asc',
-                ...(searchTerm && { search: searchTerm }),
-                ...(statusFilter !== 'all' && { status: statusFilter })
+                search: searchTerm,
+                filter: activeFilter || undefined
             };
             const response = await inventoryService.getSuppliers(params);
             if (response?.data?.success) {
@@ -42,6 +47,15 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFilter = (filterValue) => {
+        if (activeFilter === filterValue) {
+            setActiveFilter(''); // Toggle off
+        } else {
+            setActiveFilter(filterValue);
+        }
+        setCurrentPage(0);
     };
 
     const handleDelete = async (supplier) => {
@@ -163,39 +177,55 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     );
 
     const filters = (
-        <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { label: 'Active', value: 'ACTIVE' },
+                    { label: 'Inactive', value: 'INACTIVE' },
+                    { label: 'Recent', value: 'RECENT' }
+                ].map(filter => (
+                    <button
+                        key={filter.value}
+                        className={cn(
+                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
+                            activeFilter === filter.value
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
+                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
+                        )}
+                        onClick={() => handleFilter(filter.value)}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
+            <div className="relative group w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
                 <Input
                     type="text"
-                    placeholder="Search by name, contact or email..."
+                    placeholder="Search by name, contact..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-muted/30 border-border/50"
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(0);
+                    }}
+                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
                 />
             </div>
-            <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-            >
-                <option value="all">All Statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-                <option value="SUSPENDED">Suspended</option>
-            </select>
         </div>
     );
 
     const actions = (
-        <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 gap-2">
-            <Plus size={16} />
+        <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2">
+            <Plus size={16} strokeWidth={3} />
             <span>Add Supplier</span>
         </Button>
     );
 
     return (
-        <div className="pb-6">
+        <div className="w-full mx-auto space-y-8 pb-10 pr-10">
             <ResponsiveDataContainer
                 title="Suppliers"
                 description="Manage your vendor partnerships and contact details"
@@ -205,8 +235,8 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 data={suppliers}
                 renderCard={renderSupplierCard}
                 onRowClick={onViewDetails}
-                loading={loading}
-                emptyMessage="No suppliers found."
+                loading={loading && suppliers.length === 0}
+                emptyMessage="No suppliers found matching your criteria."
             />
             {totalPages > 1 && (
                 <div className="mt-6 flex justify-center">

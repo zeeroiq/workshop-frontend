@@ -15,7 +15,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [parts, setParts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [activeFilter, setActiveFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
@@ -25,7 +25,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         }, searchTerm ? 500 : 0);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [currentPage, searchTerm, statusFilter]);
+    }, [currentPage, searchTerm, activeFilter]);
 
     const loadParts = async () => {
         try {
@@ -33,15 +33,11 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
             const params = { 
                 page: currentPage, 
                 size: 10,
-                filter: statusFilter !== 'all' ? statusFilter : undefined
+                search: searchTerm,
+                filter: activeFilter || undefined
             };
             
-            let response;
-            if (searchTerm) {
-                response = await inventoryService.searchParts(searchTerm, { params });
-            } else {
-                response = await inventoryService.getParts(params);
-            }
+            const response = await inventoryService.getParts(params);
             
             if (response.data) {
                 setParts(response.data.content || []);
@@ -55,13 +51,12 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         }
     };
 
-    const handleFilterChange = (value) => {
-        setStatusFilter(value);
-        setCurrentPage(0);
-    };
-
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
+    const handleFilter = (filterValue) => {
+        if (activeFilter === filterValue) {
+            setActiveFilter(''); // Toggle off
+        } else {
+            setActiveFilter(filterValue);
+        }
         setCurrentPage(0);
     };
 
@@ -216,58 +211,43 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     };
 
     const filters = (
-        <div className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Search parts by name, number or category..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="pl-10 bg-muted/30 border-border/50"
-                    />
-                </div>
-                <div className="flex gap-2">
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => handleFilterChange(e.target.value)}
-                        className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                    >
-                        <option value="all">All Statuses</option>
-                        <option value="in-stock">In Stock</option>
-                        <option value="low-stock">Low Stock</option>
-                        <option value="out-of-stock">Out of Stock</option>
-                    </select>
-                    <Button variant="outline" className="border-border/50 gap-2">
-                        <Filter size={16} />
-                        <span className="hidden sm:inline">More Filters</span>
-                    </Button>
-                </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
                     <Filter size={10} /> Quick Filters:
                 </span>
                 {[
                     { label: 'Out of Stock', value: 'out-of-stock' },
                     { label: 'Low Stock', value: 'low-stock' },
-                    { label: 'In Stock', value: 'in-stock' }
+                    { label: 'In Stock', value: 'in-stock' },
+                    { label: 'Recent', value: 'RECENT' }
                 ].map(filter => (
                     <button
                         key={filter.value}
-                        onClick={() => handleFilterChange(filter.value)}
                         className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
-                            statusFilter === filter.value 
-                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
-                                : "bg-muted/30 text-muted-foreground border-border/50 hover:border-emerald-500/50 hover:text-foreground"
+                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
+                            activeFilter === filter.value
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
+                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
                         )}
+                        onClick={() => handleFilter(filter.value)}
                     >
                         {filter.label}
                     </button>
                 ))}
+            </div>
+            <div className="relative group w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                <Input
+                    type="text"
+                    placeholder="Search parts by name, number..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(0);
+                    }}
+                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
+                />
             </div>
         </div>
     );
@@ -275,15 +255,15 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const actions = (
         <div className="flex items-center gap-2">
             <PartScannerModal onPartAction={({type, data}) => type === 'edit' ? onEdit(data) : onCreate(data)} />
-            <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 gap-2">
-                <Plus size={16} />
+            <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2">
+                <Plus size={16} strokeWidth={3} />
                 <span className="hidden sm:inline">Add Part</span>
             </Button>
         </div>
     );
 
     return (
-        <div className="pb-6 space-y-6">
+        <div className="w-full mx-auto space-y-8 pb-10 pr-10">
             <ResponsiveDataContainer
                 title="Parts Inventory"
                 description="Manage your workshop spare parts and stock levels"
@@ -293,7 +273,7 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 data={parts}
                 renderCard={renderPartCard}
                 onRowClick={onViewDetails}
-                loading={loading}
+                loading={loading && parts.length === 0}
                 emptyMessage="Your parts catalog is empty. Populate your inventory to track stock levels and billing."
                 emptyIcon={Package}
                 emptyActionLabel="Stock New Part"

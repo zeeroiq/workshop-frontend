@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash, Eye, Plus, Search, Car, History, Wrench, AlertTriangle } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, Car, History, Wrench, AlertTriangle, Filter } from 'lucide-react';
 import { vehicleService } from '@/services/vehicleService';
 import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,16 @@ const VehicleList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [activeFilter, setActiveFilter] = useState('ALL');
+    const [activeFilter, setActiveFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchVehicles();
+        const delayDebounceFn = setTimeout(() => {
+            fetchVehicles();
+        }, searchTerm ? 500 : 0);
+
+        return () => clearTimeout(delayDebounceFn);
     }, [currentPage, searchTerm, activeFilter, sortConfig]);
 
     const fetchVehicles = async () => {
@@ -32,7 +36,7 @@ const VehicleList = () => {
                 currentPage, 
                 10, 
                 searchTerm, 
-                activeFilter,
+                activeFilter || 'ALL',
                 sortConfig.key,
                 sortConfig.direction
             );
@@ -46,6 +50,15 @@ const VehicleList = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFilter = (filterValue) => {
+        if (activeFilter === filterValue) {
+            setActiveFilter(''); // Toggle off
+        } else {
+            setActiveFilter(filterValue);
+        }
+        setCurrentPage(0);
     };
 
     const handleDelete = async (id) => {
@@ -172,6 +185,44 @@ const VehicleList = () => {
         setSortConfig({ key, direction });
     };
 
+    const filters = (
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
+                    <Filter size={10} /> Quick Filters:
+                </span>
+                {[
+                    { id: 'UNDER_MAINTENANCE', label: 'In Service', icon: <Wrench size={12} /> },
+                    { id: 'HISTORY_PENDING', label: 'Pending Docs', icon: <History size={12} /> },
+                    { id: 'ALERT', label: 'Alerts', icon: <AlertTriangle size={12} /> }
+                ].map(filter => (
+                    <button
+                        key={filter.id}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
+                            activeFilter === filter.id
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
+                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
+                        )}
+                        onClick={() => handleFilter(filter.id)}
+                    >
+                        {filter.icon}
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
+            <div className="relative group w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                <Input
+                    placeholder="Search by VIN or Plate..."
+                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+        </div>
+    );
+
     return (
         <div className="w-full mx-auto space-y-8 pb-10 pr-10">
             <ResponsiveDataContainer
@@ -186,44 +237,7 @@ const VehicleList = () => {
                         </Link>
                     </Button>
                 }
-                filters={
-                    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
-                            {[
-                                { id: 'ALL', label: 'All Assets', icon: <Car size={14} /> },
-                                { id: 'UNDER_MAINTENANCE', label: 'In Service', icon: <Wrench size={14} /> },
-                                { id: 'HISTORY_PENDING', label: 'Pending Docs', icon: <History size={14} /> },
-                                { id: 'ALERT', label: 'Alerts', icon: <AlertTriangle size={14} /> }
-                            ].map(filter => (
-                                <button
-                                    key={filter.id}
-                                    onClick={() => {
-                                        setActiveFilter(filter.id);
-                                        toast.info(`Filtering by ${filter.label}`);
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
-                                        activeFilter === filter.id 
-                                            ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20" 
-                                            : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
-                                    )}
-                                >
-                                    {filter.icon}
-                                    {filter.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="relative group w-full md:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
-                            <Input
-                                placeholder="Search by VIN or Plate..."
-                                className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                }
+                filters={filters}
                 data={vehicles}
                 renderCard={renderVehicleCard}
                 columns={columns}
