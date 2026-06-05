@@ -1,25 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash, Eye, Plus, Search, User } from 'lucide-react';
+import { Edit, Trash, Eye, Plus, Search, User, Filter } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import { cn } from "@/lib/utils";
 
 const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     const [suppliers, setSuppliers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [activeFilter, setActiveFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
-        loadSuppliers();
-    }, [currentPage, searchTerm, statusFilter]);
+        const delayDebounceFn = setTimeout(() => {
+            loadSuppliers();
+        }, searchTerm ? 500 : 0);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [currentPage, searchTerm, activeFilter]);
 
     const loadSuppliers = async () => {
         try {
@@ -28,8 +40,8 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 page: currentPage,
                 size: 10,
                 sort: 'name,asc',
-                ...(searchTerm && { search: searchTerm }),
-                ...(statusFilter !== 'all' && { status: statusFilter })
+                search: searchTerm,
+                filter: activeFilter || undefined
             };
             const response = await inventoryService.getSuppliers(params);
             if (response?.data?.success) {
@@ -42,6 +54,15 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFilter = (filterValue) => {
+        if (activeFilter === filterValue) {
+            setActiveFilter(''); // Toggle off
+        } else {
+            setActiveFilter(filterValue);
+        }
+        setCurrentPage(0);
     };
 
     const handleDelete = async (supplier) => {
@@ -162,40 +183,47 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         </Card>
     );
 
-    const filters = (
-        <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        const filters = (
+        <>
+            <div className="relative group w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
                 <Input
                     type="text"
-                    placeholder="Search by name, contact or email..."
+                    placeholder="Search by name, contact..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-muted/30 border-border/50"
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(0);
+                    }}
+                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm focus:border-emerald-500/50 transition-all"
                 />
             </div>
-            <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-            >
-                <option value="all">All Statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-                <option value="SUSPENDED">Suspended</option>
-            </select>
-        </div>
+            
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
+                    <SelectTrigger className="w-full md:w-[200px] h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-background/50 backdrop-blur-sm">
+                        <SelectValue placeholder="Filter Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">ALL SUPPLIERS</SelectItem>
+                        <SelectItem value="RECENT">RECENTLY ADDED</SelectItem>
+                        <SelectItem value="ACTIVE">ACTIVE VENDORS</SelectItem>
+                        <SelectItem value="INACTIVE">INACTIVE VENDORS</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </>
     );
 
     const actions = (
-        <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 gap-2">
-            <Plus size={16} />
+        <Button onClick={onCreate} className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] gap-2">
+            <Plus size={16} strokeWidth={3} />
             <span>Add Supplier</span>
         </Button>
     );
 
     return (
-        <div className="pb-6">
+        <div className="w-full mx-auto pb-10 pr-6 md:pr-10">
             <ResponsiveDataContainer
                 title="Suppliers"
                 description="Manage your vendor partnerships and contact details"
@@ -205,8 +233,8 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                 data={suppliers}
                 renderCard={renderSupplierCard}
                 onRowClick={onViewDetails}
-                loading={loading}
-                emptyMessage="No suppliers found."
+                loading={loading && suppliers.length === 0}
+                emptyMessage="No suppliers found matching your criteria."
             />
             {totalPages > 1 && (
                 <div className="mt-6 flex justify-center">

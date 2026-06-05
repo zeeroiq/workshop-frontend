@@ -1,230 +1,83 @@
 import api from './api';
 
 export const jobService = {
-    getAllJobs: (page = 0, size = 10, jobStatus = '', search = '') => {
+    getAllJobs: (page = 0, size = 10, filter = '', search = '', sort = 'id', direction = 'desc') => {
         const params = { page, size };
-        if (jobStatus) params.jobStatus = jobStatus;
-        if (search) params.search = search;
+        if (sort)
+            params.sort = sort + "," + direction;
+        if (filter)
+            params.filter = filter;
+        if (search)
+            params.search = search;
         return api.get('/jobs', { params })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            });
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response);
     },
 
     getJobById: (id) =>
         api.get(`/jobs/${id}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
     getJobLikeJobNumber: (jobNumber) =>
         api.get(`/jobs/alike/${jobNumber}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    getJobByCustomerId: (customerId) =>
-        api.get(`/jobs/customer/${customerId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    getJobByMechanicId: (mechanicId) =>
-        api.get(`/jobs/mechanic/${mechanicId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    getJobsByStatus: (jobStatus) =>
-        api.get(`/jobs/jobStatus/${jobStatus}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    getJobSByVehicleId: (vehicleId) =>
-        api.get(`/jobs/vehicle/${vehicleId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
     createJob: (jobData) =>
         api.post('/jobs', jobData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
     updateJob: (id, jobData) =>
         api.put(`/jobs/${id}`, jobData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
     updateJobBuNumber: (jobNumber, jobData) =>
         api.put(`/jobs/${jobNumber}/by-number`, jobData)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
     deleteJob: (id) =>
         api.delete(`/jobs/${id}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            })
-            .catch(error => {
-                return {
-                    status: error?.response?.status || 500,
-                    message: error.message,
-                    details: error?.response?.data?.message
-                };
-            }),
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
-    assignMechanic: (jobId, mechanicId) =>
-        api.post(`/jobs/${jobId}/assign-mechanic`, { mechanicId })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+    updateJobStatus: (id, status) =>
+        api.patch(`/jobs/${id}/status?status=${status}`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
-    convertEstimateToJob: (jobId) =>
-        api.post(`/jobs/${jobId}/convert-to-job`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+    assignMechanic: (id, mechanicId) =>
+        api.patch(`/jobs/${id}/assign-mechanic?mechanicId=${mechanicId}`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
-    createInvoice: (jobId) =>
-        api.post(`/jobs/${jobId}/create-invoice`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
+    addJobItem: (id, itemDTO) =>
+        api.post(`/jobs/${id}/items`, itemDTO)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
 
-    addItemToJob: (jobId, item) =>
-        api.post(`/jobs/${jobId}/items`, { item })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    addNoteToJob: (jobId, note) =>
-        api.post(`/jobs/${jobId}/notes`, { note })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    updateJobStatus: (jobId, jobStatus) =>
-        api.post(`/jobs/${jobId}/jobStatus`, { jobStatus })
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-
-    removeItemFromJob: (jobId, itemId) =>
+    removeJobItem: (jobId, itemId) =>
         api.delete(`/jobs/${jobId}/items/${itemId}`)
-            .then(response => {
-                if (response?.data?.success) {
-                    return {
-                        ...response,
-                        data: response.data.data
-                    };
-                }
-                return response;
-            }),
-}
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    addJobNote: (id, noteDTO) =>
+        api.post(`/jobs/${id}/notes`, noteDTO)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    convertEstimateToJob: (id) =>
+        api.post(`/jobs/${id}/convert-to-job`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    createInvoice: (id) =>
+        api.post(`/jobs/${id}/create-invoice`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    getJobsByStatus: (status) =>
+        api.get(`/jobs/status/${status}`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    getJobsByVehicle: (vehicleId) =>
+        api.get(`/jobs/vehicle/${vehicleId}`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    getJobsByCustomer: (customerId) =>
+        api.get(`/jobs/customer/${customerId}`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response),
+
+    getJobsByMechanic: (mechanicId) =>
+        api.get(`/jobs/mechanic/${mechanicId}`)
+            .then(response => response.data.success ? { ...response, data: response.data.data } : response)
+};

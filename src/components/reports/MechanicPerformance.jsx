@@ -14,6 +14,7 @@ import { TIME_PERIODS, EXPORT_FORMATS, REPORT_TYPES } from './constants/reportsC
 import ExportControls from './ExportControls';
 import DataVisualizer from './DataVisualizer';
 import TimePeriodFilter from "./TimePeriodFilter";
+import PinToDashboard from "./PinToDashboard";
 import { userService } from "@/services/userService";
 import { toast } from "react-toastify";
 
@@ -121,10 +122,18 @@ const MechanicPerformance = () => {
                     </h3>
                     <p className="text-sm text-muted-foreground">Technician efficiency and output benchmarking</p>
                 </div>
-                <ExportControls getCriteria={() => ({
-                    ...criteria,
-                    mechanicId: criteria.mechanicId !== 'all' ? Number(criteria.mechanicId) : undefined,
-                })} />
+                <div className="flex items-center gap-2">
+                    <PinToDashboard 
+                        title="Workforce Efficiency" 
+                        reportType="MECHANIC_PERFORMANCE" 
+                        chartType="BAR" 
+                        config={criteria} 
+                    />
+                    <ExportControls getCriteria={() => ({
+                        ...criteria,
+                        mechanicId: criteria.mechanicId !== 'all' ? Number(criteria.mechanicId) : undefined,
+                    })} />
+                </div>
             </div>
 
             <Card className="border-border/50 bg-muted/20 shadow-none">

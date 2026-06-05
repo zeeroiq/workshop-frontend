@@ -16,11 +16,12 @@ import {
     MapPin, 
     FileText, 
     Zap,
-    Image as ImageIcon
+    Image as ImageIcon, Search
 } from "lucide-react";
 import { getAuthenticatedUrl } from "@/utils/storage";
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '../ui/checkbox';
 
 const Settings = () => {
     const [settings, setSettings] = useState({
@@ -28,7 +29,7 @@ const Settings = () => {
         address: '',
         phone: '',
         email: '',
-        invoicePrefix: 'INV'
+        invoicePrefix: 'INV', omnisearchEnabled: true
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -54,8 +55,12 @@ const Settings = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setSettings(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setSettings(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+
+    const handleToggleChange = (name, checked) => {
+        setSettings(prev => ({ ...prev, [name]: checked }));
     };
 
     const handleLogoUpload = async (e) => {
@@ -244,6 +249,23 @@ const Settings = () => {
                                     className="bg-background/50 border-border/50 min-h-[100px] font-bold py-4"
                                     placeholder="Complete operational address"
                                 />
+                            </div>
+
+                                                        <div className="pt-6 border-t border-border/50">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <Search size={18} className="text-emerald-500" />
+                                    <h4 className="text-sm font-black uppercase tracking-tight">Search & Discovery</h4>
+                                </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-background/30">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-sm font-bold uppercase tracking-tight">Enable Global Omnisearch</Label>
+                                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Activate CMD+K shortcut and global search bar across the platform</p>
+                                    </div>
+                                    <Checkbox
+                                        checked={settings.omnisearchEnabled}
+                                        onCheckedChange={(checked) => handleToggleChange('omnisearchEnabled', checked)}
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-6 border-t border-border/50">

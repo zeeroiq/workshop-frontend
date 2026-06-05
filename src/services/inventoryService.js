@@ -24,7 +24,7 @@ export const inventoryService = {
     deletePart: (id) => api.delete(`${BASE_URL}/parts/${id}`).then(handleResponse),
     updateStock: (id, stockData) => api.patch(`${BASE_URL}/parts/${id}/stock`, stockData).then(handleResponse),
     getLowStockParts: (config = {}) => api.get(`${BASE_URL}/parts/low-stock`, config).then(handleResponse),
-    searchParts: (query, config = {}) => api.get(`${BASE_URL}/parts/search`, { params: { q: query }, ...config }).then(handleResponse),
+    searchParts: (query, config = {}) => api.get(`${BASE_URL}/parts/search`, { params: { search: query }, ...config }).then(handleResponse),
     uploadPartImage: (file) => {
         const formData = new FormData();
         formData.append("image", file);
@@ -48,5 +48,5 @@ export const inventoryService = {
     createSupplier: (data) => api.post(`${BASE_URL}/suppliers`, data).then(handleResponse),
     updateSupplier: (id, data) => api.put(`${BASE_URL}/suppliers/${id}`, data).then(handleResponse),
     deleteSupplier: (id) => api.delete(`${BASE_URL}/suppliers/${id}`).then(handleResponse),
-    searchSuppliers: (query, config = {}) => api.get(`${BASE_URL}/suppliers/search`, { params: { q: query }, ...config }).then(handleResponse),
+    searchSuppliers: (query, config = {}) => api.get(`${BASE_URL}/suppliers/search`, { params: { search: query }, ...config }).then(handleResponse),
 };

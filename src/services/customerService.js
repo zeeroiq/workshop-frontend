@@ -1,9 +1,14 @@
 import api from './api';
 
 export const customerService = {
-    getAll: (page = 0, size = 10, search = '', config = {}) => {
+    getAll: (page = 0, size = 10, search = '', sort = 'id', direction = 'desc', filter = '', config = {}) => {
         const params = { page, size };
-        if (search) params.search = search;
+        if (search)
+            params.search = search;
+        if (filter)
+            params.filter = filter;
+        if (sort)
+            params.sort = sort + "," + direction;
         return api.get('/customers', { params, ...config })
             .then(response => {
                 // Handle the API response structure
