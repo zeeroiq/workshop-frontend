@@ -6,6 +6,13 @@ import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import { cn } from '@/lib/utils';
 import ResponsiveDataContainer from '../common/layout/ResponsiveDataContainer';
@@ -187,29 +194,22 @@ const VehicleList = () => {
 
     const filters = (
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
-                    <Filter size={10} /> Quick Filters:
+            <div className="flex items-center gap-3 flex-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1 shrink-0">
+                    <Filter size={10} /> Filters:
                 </span>
-                {[
-                    { id: 'UNDER_MAINTENANCE', label: 'In Service', icon: <Wrench size={12} /> },
-                    { id: 'HISTORY_PENDING', label: 'Pending Docs', icon: <History size={12} /> },
-                    { id: 'ALERT', label: 'Alerts', icon: <AlertTriangle size={12} /> }
-                ].map(filter => (
-                    <button
-                        key={filter.id}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
-                            activeFilter === filter.id
-                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
-                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
-                        )}
-                        onClick={() => handleFilter(filter.id)}
-                    >
-                        {filter.icon}
-                        {filter.label}
-                    </button>
-                ))}
+                
+                <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
+                    <SelectTrigger className="w-[180px] h-9 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-card/50">
+                        <SelectValue placeholder="Fleet Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">ALL ASSETS</SelectItem>
+                        <SelectItem value="UNDER_MAINTENANCE">IN SERVICE</SelectItem>
+                        <SelectItem value="HISTORY_PENDING">PENDING DOCUMENTATION</SelectItem>
+                        <SelectItem value="ALERT">HIGH MILEAGE ALERTS</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
             <div className="relative group w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />

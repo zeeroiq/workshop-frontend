@@ -19,6 +19,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 import { cn } from "@/lib/utils";
@@ -243,31 +250,35 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
 
     const filters = (
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
-                    <Filter size={10} /> Quick Filters:
+            <div className="flex items-center gap-3 flex-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1 shrink-0">
+                    <Filter size={10} /> Filters:
                 </span>
-                {[
-                    { label: 'Open', value: 'OPEN' },
-                    { label: 'Completed', value: 'COMPLETED' },
-                    { label: 'Invoiced', value: 'INVOICED' },
-                    { label: 'Paid', value: 'PAID' },
-                    { label: 'Recent', value: 'RECENT' }
-                ].map(filter => (
-                    <button
-                        key={filter.value}
-                        className={cn(
-                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
-                            activeFilter === filter.value
-                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
-                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
-                        )}
-                        onClick={() => handleFilter(filter.value)}
-                    >
-                        {filter.label}
-                    </button>
-                ))}
-                <Button variant="outline" className="border-border/50 h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2 ml-2" onClick={onShowCalendar}>
+                
+                <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
+                    <SelectTrigger className="w-[180px] h-9 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-card/50">
+                        <SelectValue placeholder="Status Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">ALL OPERATIONS</SelectItem>
+                        <SelectItem value="RECENT">RECENT (30 DAYS)</SelectItem>
+                        <SelectItem value="OPEN">OPEN JOBS</SelectItem>
+                        <SelectItem value="SCHEDULED">SCHEDULED</SelectItem>
+                        <SelectItem value="ESTIMATE_PENDING">ESTIMATE PENDING</SelectItem>
+                        <SelectItem value="ESTIMATE_SENT">ESTIMATE SENT</SelectItem>
+                        <SelectItem value="AWAITING_APPROVAL">AWAITING APPROVAL</SelectItem>
+                        <SelectItem value="APPROVED">APPROVED</SelectItem>
+                        <SelectItem value="IN_PROGRESS">IN PROGRESS</SelectItem>
+                        <SelectItem value="AWAITING_PARTS">AWAITING PARTS</SelectItem>
+                        <SelectItem value="READY_FOR_REVIEW">READY FOR REVIEW</SelectItem>
+                        <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                        <SelectItem value="INVOICED">INVOICED</SelectItem>
+                        <SelectItem value="PAID">PAID</SelectItem>
+                        <SelectItem value="CANCELLED">CANCELLED</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Button variant="outline" className="border-border/50 h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2" onClick={onShowCalendar}>
                     <Calendar size={14} /> CALENDAR
                 </Button>
             </div>

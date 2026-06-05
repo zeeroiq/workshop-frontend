@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import { cn } from "@/lib/utils";
@@ -212,29 +219,23 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
     const filters = (
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
-                    <Filter size={10} /> Quick Filters:
+            <div className="flex items-center gap-3 flex-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1 shrink-0">
+                    <Filter size={10} /> Filters:
                 </span>
-                {[
-                    { label: 'Out of Stock', value: 'out-of-stock' },
-                    { label: 'Low Stock', value: 'low-stock' },
-                    { label: 'In Stock', value: 'in-stock' },
-                    { label: 'Recent', value: 'RECENT' }
-                ].map(filter => (
-                    <button
-                        key={filter.value}
-                        className={cn(
-                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
-                            activeFilter === filter.value
-                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
-                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
-                        )}
-                        onClick={() => handleFilter(filter.value)}
-                    >
-                        {filter.label}
-                    </button>
-                ))}
+                
+                <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
+                    <SelectTrigger className="w-[180px] h-9 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-card/50">
+                        <SelectValue placeholder="Status Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">ALL PARTS</SelectItem>
+                        <SelectItem value="RECENT">RECENTLY ADDED</SelectItem>
+                        <SelectItem value="in-stock">IN STOCK</SelectItem>
+                        <SelectItem value="low-stock">LOW STOCK ALERT</SelectItem>
+                        <SelectItem value="out-of-stock">OUT OF STOCK</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
             <div className="relative group w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
