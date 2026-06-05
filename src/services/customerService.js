@@ -1,10 +1,12 @@
 import api from './api';
 
 export const customerService = {
-    getAll: (page = 0, size = 10, search = '', sort = 'id', direction = 'desc', config = {}) => {
+    getAll: (page = 0, size = 10, search = '', sort = 'id', direction = 'desc', filter = '', config = {}) => {
         const params = { page, size };
         if (search)
             params.search = search;
+        if (filter)
+            params.filter = filter;
         if (sort)
             params.sort = sort + "," + direction;
         return api.get('/customers', { params, ...config })

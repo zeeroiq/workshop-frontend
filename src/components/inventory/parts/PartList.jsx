@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Trash, Eye, Plus, Search, Filter, AlertTriangle, Package } from 'lucide-react';
 import { inventoryService } from '@/services/inventoryService';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
+import PaginationComponent from "@/components/common/PaginationComponent";
 import { cn } from "@/lib/utils";
 
 const PartList = ({ onViewDetails, onEdit, onCreate }) => {
@@ -15,22 +16,53 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
-        loadParts();
-    }, []);
+        const delayDebounceFn = setTimeout(() => {
+            loadParts();
+        }, searchTerm ? 500 : 0);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [currentPage, searchTerm, statusFilter]);
 
     const loadParts = async () => {
         try {
             setLoading(true);
-            const response = await inventoryService.getParts({ page: 0, size: 1000 });
-            setParts(response.data.content || []);
+            const params = { 
+                page: currentPage, 
+                size: 10,
+                filter: statusFilter !== 'all' ? statusFilter : undefined
+            };
+            
+            let response;
+            if (searchTerm) {
+                response = await inventoryService.searchParts(searchTerm, { params });
+            } else {
+                response = await inventoryService.getParts(params);
+            }
+            
+            if (response.data) {
+                setParts(response.data.content || []);
+                setTotalPages(response.data.totalPages || 0);
+            }
         } catch (error) {
             console.error('Error loading parts:', error);
             toast.error('Failed to load parts.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFilterChange = (value) => {
+        setStatusFilter(value);
+        setCurrentPage(0);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(0);
     };
 
     const handleDelete = async (part) => {
@@ -40,8 +72,8 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
 
         try {
             await inventoryService.deletePart(part.id);
-            setParts(parts.filter(p => p.id !== part.id));
             toast.success('Part deleted successfully.');
+            loadParts();
         } catch (error) {
             console.error('Error deleting part:', error);
             toast.error('Failed to delete part.');
@@ -53,22 +85,6 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
         if (quantity <= minQuantity) return { text: 'Low Stock', color: 'warning', icon: <AlertTriangle size={12} className="mr-1" /> };
         return { text: 'In Stock', color: 'success', icon: null };
     };
-
-    const filteredParts = useMemo(() => {
-        return parts.filter(part => {
-            const matchesSearch = 
-                part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                part.partNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                part.category?.toLowerCase().includes(searchTerm.toLowerCase());
-            
-            if (statusFilter === 'all') return matchesSearch;
-            
-            const status = part.quantityInStock === 0 ? 'OUT_OF_STOCK' : 
-                          part.quantityInStock <= part.minStockLevel ? 'LOW_STOCK' : 'IN_STOCK';
-            
-            return matchesSearch && status === statusFilter;
-        });
-    }, [parts, searchTerm, statusFilter]);
 
     const columns = [
         {
@@ -208,20 +224,20 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                         type="text"
                         placeholder="Search parts by name, number or category..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                         className="pl-10 bg-muted/30 border-border/50"
                     />
                 </div>
                 <div className="flex gap-2">
                     <select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        onChange={(e) => handleFilterChange(e.target.value)}
                         className="bg-muted/30 border border-border/50 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     >
                         <option value="all">All Statuses</option>
-                        <option value="IN_STOCK">In Stock</option>
-                        <option value="LOW_STOCK">Low Stock</option>
-                        <option value="OUT_OF_STOCK">Out of Stock</option>
+                        <option value="in-stock">In Stock</option>
+                        <option value="low-stock">Low Stock</option>
+                        <option value="out-of-stock">Out of Stock</option>
                     </select>
                     <Button variant="outline" className="border-border/50 gap-2">
                         <Filter size={16} />
@@ -235,13 +251,13 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                     <Filter size={10} /> Quick Filters:
                 </span>
                 {[
-                    { label: 'Out of Stock', value: 'OUT_OF_STOCK' },
-                    { label: 'Low Stock', value: 'LOW_STOCK' },
-                    { label: 'High Value', value: 'high-value' }
+                    { label: 'Out of Stock', value: 'out-of-stock' },
+                    { label: 'Low Stock', value: 'low-stock' },
+                    { label: 'In Stock', value: 'in-stock' }
                 ].map(filter => (
                     <button
                         key={filter.value}
-                        onClick={() => setStatusFilter(filter.value)}
+                        onClick={() => handleFilterChange(filter.value)}
                         className={cn(
                             "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight transition-all border",
                             statusFilter === filter.value 
@@ -267,14 +283,14 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
     );
 
     return (
-        <div className="pb-6">
+        <div className="pb-6 space-y-6">
             <ResponsiveDataContainer
                 title="Parts Inventory"
                 description="Manage your workshop spare parts and stock levels"
                 actions={actions}
                 filters={filters}
                 columns={columns}
-                data={filteredParts}
+                data={parts}
                 renderCard={renderPartCard}
                 onRowClick={onViewDetails}
                 loading={loading}
@@ -283,6 +299,14 @@ const PartList = ({ onViewDetails, onEdit, onCreate }) => {
                 emptyActionLabel="Stock New Part"
                 onEmptyAction={onCreate}
             />
+
+            {!loading && parts.length > 0 && (
+                <PaginationComponent
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            )}
         </div>
     );
 };

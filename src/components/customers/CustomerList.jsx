@@ -16,13 +16,14 @@ const CustomerList = () => {
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilter, setActiveFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
 
     useEffect(() => {
         fetchCustomers();
-    }, [currentPage, sortConfig]);
+    }, [currentPage, sortConfig, activeFilter]);
 
     const fetchCustomers = async () => {
         setLoading(true);
@@ -32,7 +33,8 @@ const CustomerList = () => {
                 10, 
                 searchTerm, 
                 sortConfig.key, 
-                sortConfig.direction
+                sortConfig.direction,
+                activeFilter
             );
             if (response.data) {
                 setCustomers(response.data.content || []);
@@ -44,6 +46,15 @@ const CustomerList = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFilter = (filterValue) => {
+        if (activeFilter === filterValue) {
+            setActiveFilter(''); // Toggle off
+        } else {
+            setActiveFilter(filterValue);
+        }
+        setCurrentPage(0);
     };
 
     const handleSearch = (e) => {
@@ -184,11 +195,11 @@ const CustomerList = () => {
                         key={filter.value}
                         className={cn(
                             "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
-                            "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
+                            activeFilter === filter.value
+                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
+                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
                         )}
-                        onClick={() => {
-                            toast.info(`Filtering by ${filter.label}...`);
-                        }}
+                        onClick={() => handleFilter(filter.value)}
                     >
                         {filter.label}
                     </button>
