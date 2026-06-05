@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import ResponsiveDataContainer from '@/components/common/layout/ResponsiveDataContainer';
 import { cn } from "@/lib/utils";
@@ -176,32 +183,9 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
         </Card>
     );
 
-    const filters = (
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2 self-center flex items-center gap-1">
-                    <Filter size={10} /> Quick Filters:
-                </span>
-                {[
-                    { label: 'Active', value: 'ACTIVE' },
-                    { label: 'Inactive', value: 'INACTIVE' },
-                    { label: 'Recent', value: 'RECENT' }
-                ].map(filter => (
-                    <button
-                        key={filter.value}
-                        className={cn(
-                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border whitespace-nowrap",
-                            activeFilter === filter.value
-                                ? "bg-emerald-500 text-emerald-950 border-emerald-500 shadow-lg shadow-emerald-500/20"
-                                : "bg-card/50 text-muted-foreground border-border/50 hover:bg-card hover:text-foreground"
-                        )}
-                        onClick={() => handleFilter(filter.value)}
-                    >
-                        {filter.label}
-                    </button>
-                ))}
-            </div>
-            <div className="relative group w-full md:w-64">
+        const filters = (
+        <>
+            <div className="relative group w-full md:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
                 <Input
                     type="text"
@@ -211,10 +195,24 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
                         setSearchTerm(e.target.value);
                         setCurrentPage(0);
                     }}
-                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
+                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm focus:border-emerald-500/50 transition-all"
                 />
             </div>
-        </div>
+            
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
+                    <SelectTrigger className="w-full md:w-[200px] h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-background/50 backdrop-blur-sm">
+                        <SelectValue placeholder="Filter Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">ALL SUPPLIERS</SelectItem>
+                        <SelectItem value="RECENT">RECENTLY ADDED</SelectItem>
+                        <SelectItem value="ACTIVE">ACTIVE VENDORS</SelectItem>
+                        <SelectItem value="INACTIVE">INACTIVE VENDORS</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+        </>
     );
 
     const actions = (
@@ -225,7 +223,7 @@ const SupplierList = ({ onViewDetails, onEdit, onCreate }) => {
     );
 
     return (
-        <div className="w-full mx-auto space-y-8 pb-10 pr-10">
+        <div className="w-full mx-auto pb-10 pr-6 md:pr-10">
             <ResponsiveDataContainer
                 title="Suppliers"
                 description="Manage your vendor partnerships and contact details"

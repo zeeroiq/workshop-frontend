@@ -248,16 +248,23 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
         </Card>
     );
 
-    const filters = (
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1 shrink-0">
-                    <Filter size={10} /> Filters:
-                </span>
-                
+        const filters = (
+        <>
+            <div className="relative group w-full md:w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                <Input
+                    type="text"
+                    placeholder="Search jobs by ID, customer, plate..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm focus:border-emerald-500/50 transition-all"
+                />
+            </div>
+            
+            <div className="flex items-center gap-2 w-full md:w-auto">
                 <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
-                    <SelectTrigger className="w-[180px] h-9 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-card/50">
-                        <SelectValue placeholder="Status Filter" />
+                    <SelectTrigger className="w-full md:w-[200px] h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-background/50 backdrop-blur-sm">
+                        <SelectValue placeholder="Filter Operations" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="ALL">ALL OPERATIONS</SelectItem>
@@ -278,21 +285,11 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
                     </SelectContent>
                 </Select>
 
-                <Button variant="outline" className="border-border/50 h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2" onClick={onShowCalendar}>
-                    <Calendar size={14} /> CALENDAR
+                <Button variant="outline" className="border-border/50 h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2 shrink-0 bg-background/50" onClick={onShowCalendar}>
+                    <Calendar size={14} />
                 </Button>
             </div>
-            <div className="relative group w-full md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
-                <Input
-                    type="text"
-                    placeholder="Search by Job ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full h-10 bg-background/50 border-border/50 font-bold rounded-xl backdrop-blur-sm"
-                />
-            </div>
-        </div>
+        </>
     );
 
     const actions = (
@@ -306,7 +303,7 @@ const JobList = ({onViewJob, onEditJob, onDeleteJob, onCreateJob, onShowCalendar
     };
 
     return (
-        <div className="w-full mx-auto space-y-8 pb-10 pr-10">
+        <div className="w-full mx-auto pb-10 pr-6 md:pr-10">
             <ResponsiveDataContainer
                 title="Operational Intelligence"
                 description="Managing high-throughput workshop service flow"
