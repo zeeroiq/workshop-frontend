@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Edit, Trash, Eye, Plus, Search, Filter, Users } from 'lucide-react';
 import { customerService } from '@/services/customerService';
 import { toast } from 'react-toastify';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -23,14 +23,28 @@ const CustomerList = () => {
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Reset page when search term or filter changes
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [debouncedSearchTerm, activeFilter]);
+
     useEffect(() => {
         fetchCustomers();
-    }, [currentPage, sortConfig, activeFilter]);
+    }, [currentPage, sortConfig, activeFilter, debouncedSearchTerm]);
 
     const fetchCustomers = async () => {
         setLoading(true);
@@ -38,7 +52,7 @@ const CustomerList = () => {
             const response = await customerService.getAll(
                 currentPage, 
                 10, 
-                searchTerm, 
+                debouncedSearchTerm, 
                 sortConfig.key, 
                 sortConfig.direction,
                 activeFilter
@@ -48,8 +62,8 @@ const CustomerList = () => {
                 setTotalPages(response.data.totalPages || 0);
             }
         } catch (error) {
-            toast.error('Failed to sync customer registry');
-            console.error('Error fetching customers:', error);
+            toast.error("Failed to sync customer registry");
+            console.error("Error fetching customers:", error);
         } finally {
             setLoading(false);
         }
@@ -61,27 +75,20 @@ const CustomerList = () => {
         } else {
             setActiveFilter(filterValue);
         }
-        setCurrentPage(0);
-    };
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        setCurrentPage(0);
-        fetchCustomers();
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Decommission this customer from the registry?')) {
+        if (!window.confirm("Decommission this customer from the registry?")) {
             return;
         }
 
         try {
             await customerService.delete(id);
-            toast.success('Customer decommissioned successfully');
+            toast.success("Customer decommissioned successfully");
             fetchCustomers();
         } catch (error) {
-            toast.error('Failed to decommission customer');
-            console.error('Delete error:', error);
+            toast.error("Failed to decommission customer");
+            console.error("Delete error:", error);
         }
     };
 
@@ -103,7 +110,7 @@ const CustomerList = () => {
             render: (row) => (
                 <div className="flex flex-col">
                     <span className="text-xs font-bold">{row.phone}</span>
-                    <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{row.email || 'NO_EMAIL_ON_FILE'}</span>
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{row.email || "NO_EMAIL_ON_FILE"}</span>
                 </div>
             )
         },
@@ -146,7 +153,7 @@ const CustomerList = () => {
                     <CardTitle className="text-mg font-black group-hover:text-emerald-500 transition-colors">
                         {customer.firstName} {customer.lastName}
                     </CardTitle>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{customer.email || 'NO_EMAIL_ON_FILE'}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{customer.email || "NO_EMAIL_ON_FILE"}</p>
                 </div>
                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[8px] font-black">ACTIVE</Badge>
             </CardHeader>
@@ -187,7 +194,7 @@ const CustomerList = () => {
         </Card>
     );
 
-        const filters = (
+    const filters = (
         <>
             <div className="relative group w-full md:w-72">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
@@ -201,7 +208,7 @@ const CustomerList = () => {
             </div>
             
             <div className="flex items-center gap-2 w-full md:w-auto">
-                <Select value={activeFilter || 'ALL'} onValueChange={handleFilter}>
+                <Select value={activeFilter || "ALL"} onValueChange={handleFilter}>
                     <SelectTrigger className="w-full md:w-[200px] h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-border/50 bg-background/50 backdrop-blur-sm">
                         <SelectValue placeholder="Filter Registry" />
                     </SelectTrigger>
@@ -245,7 +252,7 @@ const CustomerList = () => {
                 emptyMessage="You have no customers registered yet. Onboard your first customer to start tracking history."
                 emptyIcon={Users}
                 emptyActionLabel="Onboard First Customer"
-                onEmptyAction={() => navigate('/customers/new')}
+                onEmptyAction={() => navigate("/customers/new")}
             />
             
             {!loading && customers.length > 0 && (
