@@ -214,6 +214,7 @@ const VehicleList = () => {
                         <SelectItem value="UNDER_MAINTENANCE">IN SERVICE</SelectItem>
                         <SelectItem value="HISTORY_PENDING">PENDING DOCUMENTATION</SelectItem>
                         <SelectItem value="ALERT">HIGH MILEAGE ALERTS</SelectItem>
+                        <SelectItem value="RECENT">RECENTLY MODIFIED</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
