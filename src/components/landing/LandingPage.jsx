@@ -47,9 +47,20 @@ const LandingPage = () => {
     password: '',
     phone: '',
   });
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [timer, setTimer] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => setTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
 
   useEffect(() => {
     if (location.hash === '#onboard') {
@@ -70,27 +81,64 @@ const LandingPage = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters long');
+      return;
+    }
+    if (!formData.phone) {
+      toast.error('Phone number is required for OTP verification');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onboardingService.registerWorkshop(formData);
+      await onboardingService.sendOtp(formData.phone);
+      toast.success('OTP sent successfully to your phone!');
+      setOtpSent(true);
+      setTimer(60);
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      toast.error(error.response?.data?.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (e) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) {
+      toast.error('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const nameParts = formData.fullName.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Doe';
+
+      const registerPayload = {
+        username: formData.email,
+        firstName: firstName,
+        lastName: lastName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        otp: otp,
+      };
+
+      await onboardingService.registerWithOtp(registerPayload);
       toast.success('Workshop registered successfully! Initializing workspace...');
       
-      // Auto-login after successful registration
       try {
           const response = await authService.login(formData.email, formData.password);
           if (response?.data?.success) {
               const { token, user } = response.data.data;
               authService.setToken(token);
               authService.setUser(user);
-              toast.success(`Welcome to ${user.workshopName}!`);
+              toast.success(`Welcome to YourWorkshop!`);
               navigate('/dashboard');
           } else {
               toast.info('Registration complete. Please sign in to continue.');
@@ -109,9 +157,11 @@ const LandingPage = () => {
         password: '',
         phone: '',
       });
+      setOtp('');
+      setOtpSent(false);
     } catch (error) {
       console.error('Onboarding error:', error);
-      toast.error(error.response?.data?.message || 'Failed to register workshop. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to verify OTP and register. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -482,89 +532,145 @@ const LandingPage = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div className="space-y-2">
-                          <Label htmlFor="workshopName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Workshop Name</Label>
-                          <Input
-                            id="workshopName"
-                            name="workshopName"
-                            placeholder="e.g. Apex Motors"
-                            value={formData.workshopName}
-                            onChange={handleChange}
-                            required
-                            className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="fullName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
-                          <Input
-                            id="fullName"
-                            name="fullName"
-                            placeholder="John Doe"
-                            value={formData.fullName}
-                            onChange={handleChange}
-                            required
-                            className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="john@yourworkshop.com"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                          className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="password" name="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Secure Password</Label>
-                        <Input
-                          id="password"
-                          name="password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={formData.password}
-                          onChange={handleChange}
-                          required
-                          className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Direct Contact</Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          placeholder="+1 (555) 000-0000"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          required
-                          className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
-                        />
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-14 text-lg font-black mt-4 shadow-lg shadow-emerald-500/20 border-none"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <div className="flex items-center gap-2">
-                            <Rocket className="w-5 h-5 animate-bounce" /> Initializing...
+                    {!otpSent ? (
+                      <form onSubmit={handleSendOtp} className="space-y-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          <div className="space-y-2">
+                            <Label htmlFor="workshopName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Workshop Name</Label>
+                            <Input
+                              id="workshopName"
+                              name="workshopName"
+                              placeholder="e.g. Apex Motors"
+                              value={formData.workshopName}
+                              onChange={handleChange}
+                              required
+                              className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
+                            />
                           </div>
-                        ) : (
-                          'Launch My Workspace'
-                        )}
-                      </Button>
-                    </form>
+                          <div className="space-y-2">
+                            <Label htmlFor="fullName" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
+                            <Input
+                              id="fullName"
+                              name="fullName"
+                              placeholder="John Doe"
+                              value={formData.fullName}
+                              onChange={handleChange}
+                              required
+                              className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="john@yourworkshop.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                            className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="password" name="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Secure Password</Label>
+                          <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                            className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Direct Contact</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            placeholder="+1 (555) 000-0000"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            required
+                            className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-12"
+                          />
+                        </div>
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-14 text-lg font-black mt-4 shadow-lg shadow-emerald-500/20 border-none"
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                              <Rocket className="w-5 h-5 animate-bounce" /> Sending OTP...
+                            </div>
+                          ) : (
+                            'Send Verification Code'
+                          )}
+                        </Button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerifyAndRegister} className="space-y-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="otp" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Verification Code (OTP)</Label>
+                          <Input
+                            id="otp"
+                            name="otp"
+                            type="text"
+                            maxLength="6"
+                            placeholder="123456"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                            required
+                            className="bg-background border-border focus:border-emerald-500 focus:ring-emerald-500/20 text-foreground h-14 text-center text-2xl font-black tracking-[0.5em]"
+                            autoFocus
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between items-center px-1">
+                          <button 
+                            type="button" 
+                            className="text-xs font-bold text-muted-foreground hover:text-emerald-500 transition-colors cursor-pointer"
+                            onClick={() => setOtpSent(false)}
+                          >
+                            Edit Information
+                          </button>
+                          
+                          <button 
+                            type="button" 
+                            disabled={timer > 0 || isSubmitting}
+                            className={cn(
+                              "text-xs font-bold transition-colors cursor-pointer",
+                              timer > 0 ? "text-muted-foreground/50 cursor-not-allowed" : "text-emerald-600 hover:text-emerald-500"
+                            )}
+                            onClick={handleSendOtp}
+                          >
+                            {timer > 0 ? `Resend code in ${timer}s` : 'Resend Code'}
+                          </button>
+                        </div>
+
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-14 text-lg font-black mt-4 shadow-lg shadow-emerald-500/20 border-none"
+                          disabled={isSubmitting || otp.length < 6}
+                        >
+                          {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                              <Rocket className="w-5 h-5 animate-bounce" /> Verifying...
+                            </div>
+                          ) : (
+                            'Verify & Launch Workspace'
+                          )}
+                        </Button>
+                      </form>
+                    )}
                   </CardContent>
                   <CardFooter>
                     <p className="text-[10px] text-muted-foreground text-center w-full font-bold uppercase tracking-widest">

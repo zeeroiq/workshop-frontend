@@ -1,9 +1,17 @@
 import api from './api';
 
 export const onboardingService = {
-  registerWorkshop: async (onboardingData) => {
+  sendOtp: async (phone) => {
     try {
-      const response = await api.post('/auth/onboard', onboardingData);
+      const response = await api.post('/auth/send-otp', { phone });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  registerWithOtp: async (onboardingData) => {
+    try {
+      const response = await api.post('/auth/register-with-otp', onboardingData);
       return response.data;
     } catch (error) {
       throw error;
