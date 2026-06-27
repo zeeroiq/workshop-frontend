@@ -13,7 +13,8 @@ import {
     X,
     ChevronDown,
     LogOut,
-    Shield
+    Shield,
+    Bot
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -106,6 +107,7 @@ const Sidebar = ({ isExpanded, onClose }) => {
         { path: '/inventory', icon: <Boxes size={20} />, label: 'Inventory' },
         { path: '/invoices', icon: <FileText size={20} />, label: 'Invoices' },
         { path: '/reports', icon: <ChartBar size={20} />, label: 'Reports' },
+        { path: '/siteiq', icon: <Bot size={20} />, label: 'SiteIQ' },
         { path: '/settings', icon: <Settings2 size={20} />, label: 'Settings' },
         {
             label: 'Manage',

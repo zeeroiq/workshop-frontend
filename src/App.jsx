@@ -26,6 +26,12 @@ import UserForm from "@/components/workshop/users/UserForm";
 import RoleForm from "@/components/workshop/roles/RoleForm";
 import Settings from "./components/workshop/Settings";
 
+// Lazy loaded SiteIQ pages
+const SiteIQIndexPage = React.lazy(() => import('./components/siteiq/SiteIQIndexPage'));
+const ChatbotListPage = React.lazy(() => import('./components/siteiq/ChatbotListPage'));
+const ChatbotCreatePage = React.lazy(() => import('./components/siteiq/ChatbotCreatePage'));
+const ChatbotDetailPage = React.lazy(() => import('./components/siteiq/ChatbotDetailPage'));
+
 import {ThemeProvider} from './components/common/ThemeProvider';
 
 function AppContent() {
@@ -101,6 +107,29 @@ function AppContent() {
                                 <Route path="/manage/roles/new" element={<RoleForm/>}/>
                                 <Route path="/manage/roles/edit/:id" element={<RoleForm/>}/>
                                 <Route path="/settings" element={<Settings/>}/>
+                                
+                                {/* SiteIQ Routes */}
+                                <Route path="/siteiq" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <SiteIQIndexPage />
+                                    </React.Suspense>
+                                } />
+                                <Route path="/siteiq/chatbots" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <ChatbotListPage />
+                                    </React.Suspense>
+                                } />
+                                <Route path="/siteiq/chatbots/new" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <ChatbotCreatePage />
+                                    </React.Suspense>
+                                } />
+                                <Route path="/siteiq/chatbots/:id" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <ChatbotDetailPage />
+                                    </React.Suspense>
+                                } />
+
                                 <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
                             </Routes>
                         </MainLayout>

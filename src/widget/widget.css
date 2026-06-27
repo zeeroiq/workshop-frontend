@@ -1,0 +1,244 @@
+:root {
+    --siteiq-primary: #4F46E5;
+    --siteiq-secondary: #ffffff;
+    --siteiq-font: 'Inter', sans-serif;
+}
+
+.siteiq-widget-container {
+    font-family: var(--siteiq-font);
+    position: fixed;
+    z-index: 999999;
+    width: 350px;
+    height: 500px;
+    max-height: 80vh;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-sizing: border-box;
+}
+
+.siteiq-widget-container * {
+    box-sizing: border-box;
+}
+
+.siteiq-bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+
+.siteiq-bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+
+.siteiq-minimized {
+    height: 60px;
+}
+
+.siteiq-fab {
+    position: fixed;
+    z-index: 999999;
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: var(--siteiq-secondary);
+}
+
+.siteiq-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.siteiq-header {
+    height: 60px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.siteiq-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.siteiq-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    object-fit: cover;
+}
+
+.siteiq-bot-name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.siteiq-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.siteiq-icon-btn {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.siteiq-icon-btn:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.1);
+}
+
+.siteiq-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f9fafb;
+}
+
+.siteiq-message-wrapper {
+    display: flex;
+    width: 100%;
+}
+
+.siteiq-user-wrapper {
+    justify-content: flex-end;
+}
+
+.siteiq-assistant-wrapper {
+    justify-content: flex-start;
+}
+
+.siteiq-message {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.siteiq-user-message {
+    background: var(--siteiq-primary);
+    color: var(--siteiq-secondary);
+    border-bottom-right-radius: 4px;
+}
+
+.siteiq-assistant-message {
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+}
+
+.siteiq-markdown p {
+    margin: 0 0 8px 0;
+}
+
+.siteiq-markdown p:last-child {
+    margin: 0;
+}
+
+.siteiq-markdown a {
+    color: var(--siteiq-primary);
+    text-decoration: underline;
+}
+
+.siteiq-input-area {
+    padding: 12px 16px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.siteiq-input {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    max-height: 100px;
+    transition: border-color 0.2s;
+}
+
+.siteiq-input:focus {
+    border-color: var(--siteiq-primary);
+}
+
+.siteiq-send-btn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.siteiq-send-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+    color: var(--siteiq-primary);
+}
+
+.siteiq-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.siteiq-typing-indicator {
+    padding: 12px;
+}
+
+.siteiq-spin {
+    animation: siteiq-spin 1s linear infinite;
+    color: var(--siteiq-primary);
+}
+
+@keyframes siteiq-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.siteiq-error-banner {
+    background: #fef2f2;
+    color: #b91c1c;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 8px;
+}
