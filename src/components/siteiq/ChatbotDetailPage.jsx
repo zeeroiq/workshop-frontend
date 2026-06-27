@@ -4,6 +4,7 @@ import { useChatbot } from '@/hooks/siteiq/useChatbot';
 import { useScrapeProgress } from '@/hooks/siteiq/useScrapeProgress';
 import { useChatbotPages } from '@/hooks/siteiq/useChatbotPages';
 import { toast } from 'react-toastify';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +26,8 @@ import {
 import LoadingSpinner from '../common/LoadingSpinner';
 import ChatbotStatusBadge from './ChatbotStatusBadge';
 import ScrapeProgressBar from './ScrapeProgressBar';
+import AppearanceTab from './AppearanceTab';
+import BehaviorTab from './BehaviorTab';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import {
     Table,
@@ -40,7 +43,7 @@ const ChatbotDetailPage = () => {
     const navigate = useNavigate();
     
     // Core data hooks
-    const { chatbot, loading: chatbotLoading, error: chatbotError, refetch: refetchChatbot } = useChatbot(id);
+    const { chatbot, loading: chatbotLoading, error: chatbotError, refetch: refetchChatbot, updateChatbot } = useChatbot(id);
     const { job, isRunning, progressRatio, statusMessage, error: progressError, triggerScrape } = useScrapeProgress(id);
     
     // Pages tab data hook
@@ -242,18 +245,14 @@ const ChatbotDetailPage = () => {
                     </Card>
                 </TabsContent>
 
-                {/* Appearance Tab Placeholder */}
-                <TabsContent value="appearance" className="space-y-6 mt-0">
-                    <div className="p-8 text-center text-muted-foreground border border-dashed border-border/50 rounded-2xl">
-                        Appearance customization coming soon
-                    </div>
+                {/* Appearance Tab */}
+                <TabsContent value="appearance" className="space-y-6 mt-0 border-none outline-none">
+                    <AppearanceTab chatbot={chatbot} onUpdate={updateChatbot} />
                 </TabsContent>
 
-                {/* Behavior Tab Placeholder */}
-                <TabsContent value="behavior" className="space-y-6 mt-0">
-                    <div className="p-8 text-center text-muted-foreground border border-dashed border-border/50 rounded-2xl">
-                        Behavior configuration coming soon
-                    </div>
+                {/* Behavior Tab */}
+                <TabsContent value="behavior" className="space-y-6 mt-0 border-none outline-none">
+                    <BehaviorTab chatbot={chatbot} onUpdate={updateChatbot} />
                 </TabsContent>
 
                 {/* Embed Tab */}
