@@ -7,79 +7,97 @@ const getBaseUrl = () => {
         const script = document.querySelector('script[src*="widget.js"]');
         if (script && script.src) {
             const url = new URL(script.src);
-            return `${url.origin}/api/siteiq/widget`;
+            return `${url.origin}/api/siteiq/public/widget/v1`;
         }
     }
     // Fallback
-    return 'http://localhost:8080/api/siteiq/widget';
+    return 'http://localhost:8080/api/siteiq/public/widget/v1';
 };
 
-const createPublicApi = (apiKey) => {
+const createPublicApi = (chatbotId, apiKey) => {
     const baseURL = getBaseUrl();
     const instance = axios.create({
         baseURL,
         headers: {
-            'x-api-key': apiKey,
+            'X-Api-Key': apiKey,
             'Content-Type': 'application/json'
         }
     });
 
     return {
-        getChatbotConfig: () => instance.get('/config').then(res => res.data),
-        createSession: () => instance.post('/sessions').then(res => res.data),
-        sendMessage: (sessionId, content) => instance.post(`/sessions/${sessionId}/messages`, { content }).then(res => res.data),
+        // Fetch public config
+        getChatbotConfig: () => instance.get(`/${chatbotId}/config`).then(res => res.data),
         
-        // SSE for streaming response
+        // Mock session creation locally since backend doesn't require a dedicated session init endpoint
+        createSession: () => Promise.resolve({ id: crypto.randomUUID() }),
+        
+        // SSE for streaming response using native fetch API to handle stream robustly
         streamMessage: (sessionId, content, onMessage, onError, onComplete) => {
-            const url = `${baseURL}/sessions/${sessionId}/messages/stream`;
-            
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 const abortController = new AbortController();
                 
-                // First POST the message
-                instance.post(`/sessions/${sessionId}/messages`, { content })
-                    .then(response => {
-                        const messageId = response.data?.id;
-                        
-                        // Then listen to the stream
-                        const eventSource = new EventSource(`${url}?apiKey=${apiKey}`, { withCredentials: false });
-                        
-                        eventSource.onmessage = (event) => {
-                            try {
-                                const data = JSON.parse(event.data);
-                                if (data.status === 'COMPLETED' || data.status === 'ERROR') {
-                                    eventSource.close();
-                                    if (data.status === 'ERROR') {
-                                        onError?.(new Error(data.error));
-                                        reject(new Error(data.error));
-                                    } else {
-                                        onComplete?.();
-                                        resolve();
+                try {
+                    const response = await fetch(`${baseURL}/${chatbotId}/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Api-Key': apiKey,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ sessionId, message: content }),
+                        signal: abortController.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    
+                    let done = false;
+                    while (!done) {
+                        const { value, done: readerDone } = await reader.read();
+                        done = readerDone;
+                        if (value) {
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n');
+                            
+                            for (const line of lines) {
+                                if (line.startsWith('data:')) {
+                                    const dataStr = line.replace('data:', '').trim();
+                                    if (!dataStr) continue;
+                                    
+                                    try {
+                                        const parsed = JSON.parse(dataStr);
+                                        // Support the backend's ChatToken signature: token, done, sources
+                                        if (parsed.done) {
+                                            onComplete?.(parsed.sources);
+                                            resolve();
+                                            return;
+                                        } else {
+                                            onMessage?.(parsed.token || '');
+                                        }
+                                    } catch (e) {
+                                        console.error('Error parsing SSE data', e, dataStr);
                                     }
-                                } else if (data.contentDelta) {
-                                    onMessage?.(data.contentDelta);
+                                } else if (line.startsWith('event: error')) {
+                                    throw new Error('Server returned stream error event');
                                 }
-                            } catch (e) {
-                                console.error('Error parsing SSE', e);
                             }
-                        };
-                        
-                        eventSource.onerror = (err) => {
-                            console.error('SSE Error', err);
-                            eventSource.close();
-                            onError?.(err);
-                            reject(err);
-                        };
-                        
-                        abortController.signal.addEventListener('abort', () => {
-                            eventSource.close();
-                        });
-                    })
-                    .catch(err => {
+                        }
+                    }
+                    onComplete?.();
+                    resolve();
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        console.log('Stream aborted by client');
+                    } else {
+                        console.error('Stream error:', err);
                         onError?.(err);
                         reject(err);
-                    });
-                    
+                    }
+                }
+                
                 return abortController;
             });
         }

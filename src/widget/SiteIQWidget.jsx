@@ -4,7 +4,7 @@ import { MessageCircle, X, Send, Minus, Maximize2, Loader2, Bot } from 'lucide-r
 import ReactMarkdown from 'react-markdown';
 import './widget.css';
 
-const SiteIQWidget = ({ apiKey }) => {
+const SiteIQWidget = ({ chatbotId, apiKey }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [config, setConfig] = useState(null);
@@ -18,8 +18,8 @@ const SiteIQWidget = ({ apiKey }) => {
     const apiRef = useRef(null);
 
     useEffect(() => {
-        if (!apiKey) return;
-        apiRef.current = createPublicApi(apiKey);
+        if (!chatbotId || !apiKey) return;
+        apiRef.current = createPublicApi(chatbotId, apiKey);
         
         // Fetch config
         apiRef.current.getChatbotConfig()
@@ -37,7 +37,7 @@ const SiteIQWidget = ({ apiKey }) => {
                 console.error("Failed to load widget config", err);
                 setError("Failed to load chat configuration");
             });
-    }, [apiKey]);
+    }, [chatbotId, apiKey]);
 
     useEffect(() => {
         if (isOpen && !session && config) {

@@ -4,7 +4,13 @@ import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import path from 'path';
 
 export default defineConfig({
-    plugins: [react(), cssInjectedByJsPlugin()],
+    plugins: [
+        react(), 
+        cssInjectedByJsPlugin()
+    ],
+    define: {
+        'process.env.NODE_ENV': JSON.stringify('production')
+    },
     resolve: {
         alias: {
             '@': path.resolve(process.cwd(), 'src'),
@@ -24,10 +30,6 @@ export default defineConfig({
             output: {
                 globals: {}
             }
-        },
-        // We define process.env so React doesn't crash when bundled
-        define: {
-            'process.env.NODE_ENV': '"production"'
         }
     }
 });

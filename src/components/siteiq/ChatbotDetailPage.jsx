@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChatbot } from '@/hooks/siteiq/useChatbot';
 import { useScrapeProgress } from '@/hooks/siteiq/useScrapeProgress';
 import { useChatbotPages } from '@/hooks/siteiq/useChatbotPages';
+import { chatbotApi } from '@/services/siteiq/chatbotApi';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -53,6 +54,16 @@ const ChatbotDetailPage = () => {
         size: 10,
         sort: 'createdAt,desc'
     });
+
+    const [embedCode, setEmbedCode] = useState('');
+
+    useEffect(() => {
+        if (id) {
+            chatbotApi.getEmbedCode(id).then(res => {
+                setEmbedCode(res.embedCode || res);
+            }).catch(console.error);
+        }
+    }, [id]);
 
     const handleStartScrape = async () => {
         try {
@@ -275,16 +286,13 @@ const ChatbotDetailPage = () => {
                             </div>
                             
                             <div className="relative group">
-                                <pre className="p-4 rounded-xl bg-slate-950 text-slate-50 overflow-x-auto text-xs font-mono border border-border/50 leading-relaxed">
-{`<script 
-    src="http://localhost:3000/widget/widget.js" 
-    data-chatbot-id="${chatbot.id}">
-</script>`}
+                                <pre className="p-4 rounded-xl bg-slate-950 text-slate-50 overflow-x-hidden whitespace-pre-wrap break-words text-xs font-mono border border-border/50 leading-relaxed">
+                                    {embedCode || 'Loading snippet...'}
                                 </pre>
                                 <Button 
                                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 text-white border-none h-8 px-3 text-[10px] uppercase font-bold tracking-widest"
                                     onClick={() => {
-                                        navigator.clipboard.writeText(`<script src="http://localhost:3000/widget/widget.js" data-chatbot-id="${chatbot.id}"></script>`);
+                                        navigator.clipboard.writeText(embedCode);
                                         toast.success('Copied to clipboard');
                                     }}
                                 >
