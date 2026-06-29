@@ -29,6 +29,7 @@ import ChatbotStatusBadge from './ChatbotStatusBadge';
 import ScrapeProgressBar from './ScrapeProgressBar';
 import AppearanceTab from './AppearanceTab';
 import BehaviorTab from './BehaviorTab';
+import AnalyticsTab from './AnalyticsTab';
 import PaginationComponent from "@/components/common/PaginationComponent";
 import {
     Table,
@@ -313,11 +314,9 @@ const ChatbotDetailPage = () => {
                     </Card>
                 </TabsContent>
 
-                {/* Analytics Tab Placeholder */}
-                <TabsContent value="analytics" className="space-y-6 mt-0">
-                    <div className="p-8 text-center text-muted-foreground border border-dashed border-border/50 rounded-2xl">
-                        Analytics dashboard coming soon
-                    </div>
+                {/* Analytics Tab */}
+                <TabsContent value="analytics" className="space-y-6 mt-0 border-none outline-none">
+                    <AnalyticsTab chatbotId={chatbot?.id} />
                 </TabsContent>
             </Tabs>
         </div>
