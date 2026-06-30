@@ -11,6 +11,7 @@ export const chatbotApi = {
     listPages: (id, params) => api.get(`/chatbots/${id}/pages`, { params }).then(res => res.data),
     deletePage: (id, pageId) => api.delete(`/chatbots/${id}/pages/${pageId}`).then(res => res.data),
     getEmbedCode: (id) => api.get(`/chatbots/${id}/embed-code`).then(res => res.data),
+    getApiKey: (id) => api.get(`/chatbots/${id}/api-key`).then(res => res.data),
     regenerateKey: (id) => api.post(`/chatbots/${id}/regenerate-key`).then(res => res.data),
     getAnalytics: (id, from, to) => api.get(`/chatbots/${id}/analytics`, { params: { from, to } }).then(res => res.data),
 };

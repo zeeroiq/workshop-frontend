@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChatbot } from '@/hooks/siteiq/useChatbot';
 import { useScrapeProgress } from '@/hooks/siteiq/useScrapeProgress';
-import { useChatbotPages } from '@/hooks/siteiq/useChatbotPages';
 import { chatbotApi } from '@/services/siteiq/chatbotApi';
 import { toast } from 'react-toastify';
 import { cn } from '@/lib/utils';
@@ -26,19 +25,12 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ChatbotStatusBadge from './ChatbotStatusBadge';
-import ScrapeProgressBar from './ScrapeProgressBar';
 import AppearanceTab from './AppearanceTab';
 import BehaviorTab from './BehaviorTab';
 import AnalyticsTab from './AnalyticsTab';
-import PaginationComponent from "@/components/common/PaginationComponent";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import PagesTab from './PagesTab';
+import EmbedApiTab from './EmbedApiTab';
+import ScrapeProgressBar from "@/components/siteiq/ScrapeProgressBar";
 
 const ChatbotDetailPage = () => {
     const { id } = useParams();
@@ -47,38 +39,11 @@ const ChatbotDetailPage = () => {
     // Core data hooks
     const { chatbot, loading: chatbotLoading, error: chatbotError, refetch: refetchChatbot, updateChatbot } = useChatbot(id);
     const { job, isRunning, progressRatio, statusMessage, error: progressError, triggerScrape } = useScrapeProgress(id);
-    
-    // Pages tab data hook
-    const [currentPage, setCurrentPage] = useState(0);
-    const { content: pages, page, loading: pagesLoading, deletePage } = useChatbotPages(id, {
-        page: currentPage,
-        size: 10,
-        sort: 'createdAt,desc'
-    });
-
-    const [embedCode, setEmbedCode] = useState('');
-
-    useEffect(() => {
-        if (id) {
-            chatbotApi.getEmbedCode(id).then(res => {
-                setEmbedCode(res.embedCode || res);
-            }).catch(console.error);
-        }
-    }, [id]);
 
     const handleStartScrape = async () => {
         try {
             await triggerScrape();
             toast.info('Scraping job queued.');
-        } catch (e) {
-            // Error handled in hook
-        }
-    };
-
-    const handleDeletePage = async (pageId) => {
-        if (!window.confirm("Are you sure you want to delete this page from the index?")) return;
-        try {
-            await deletePage(pageId);
         } catch (e) {
             // Error handled in hook
         }
@@ -175,86 +140,7 @@ const ChatbotDetailPage = () => {
 
                 {/* Pages Tab */}
                 <TabsContent value="pages" className="space-y-6 mt-0 border-none outline-none">
-                    <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm rounded-2xl">
-                        <CardHeader className="border-b border-border/50 bg-muted/20 p-6 flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
-                                    <FileText size={18} className="text-emerald-500" /> Indexed Pages
-                                </CardTitle>
-                                <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
-                                    Total: {page?.totalElements || 0} pages crawled
-                                </CardDescription>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            {pagesLoading && pages?.length === 0 ? (
-                                <div className="p-8 flex justify-center"><LoadingSpinner /></div>
-                            ) : pages?.length === 0 ? (
-                                <div className="p-12 text-center flex flex-col items-center">
-                                    <FileText size={48} className="text-muted-foreground/30 mb-4" />
-                                    <h3 className="text-lg font-black mb-1">No pages indexed yet</h3>
-                                    <p className="text-sm text-muted-foreground max-w-sm mb-6">Click "Retrain Bot" above to start scraping your website and building the knowledge base.</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="bg-muted/10">
-                                            <TableRow className="border-border/50">
-                                                <TableHead className="font-bold text-[10px] uppercase tracking-widest">URL</TableHead>
-                                                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-center">Status</TableHead>
-                                                <TableHead className="font-bold text-[10px] uppercase tracking-widest text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {pages.map((p) => (
-                                                <TableRow key={p.id} className="border-border/50 hover:bg-muted/10 transition-colors group">
-                                                    <TableCell className="font-medium">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-foreground truncate max-w-[400px]" title={p.url}>
-                                                                {p.url}
-                                                            </span>
-                                                            {p.title && <span className="text-xs text-muted-foreground truncate max-w-[400px]">{p.title}</span>}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        <Badge variant="outline" className={cn(
-                                                            "text-[10px] font-bold uppercase tracking-widest",
-                                                            p.status === 'SUCCESS' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
-                                                            p.status === 'FAILED' ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : 
-                                                            "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                                                        )}>
-                                                            {p.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-8 w-8 rounded-lg text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500/10"
-                                                            onClick={() => handleDeletePage(p.id)}
-                                                            title="Delete from index"
-                                                        >
-                                                            <Trash size={14} />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
-                            
-                            {!pagesLoading && page?.totalPages > 1 && (
-                                <div className="p-4 border-t border-border/50">
-                                    <PaginationComponent
-                                        currentPage={currentPage}
-                                        totalPages={page.totalPages}
-                                        onPageChange={setCurrentPage}
-                                    />
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                    <PagesTab chatbotId={chatbot?.id} />
                 </TabsContent>
 
                 {/* Appearance Tab */}
@@ -269,49 +155,7 @@ const ChatbotDetailPage = () => {
 
                 {/* Embed Tab */}
                 <TabsContent value="embed" className="space-y-6 mt-0 border-none outline-none">
-                    <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm rounded-2xl">
-                        <CardHeader className="border-b border-border/50 bg-muted/20 p-6">
-                            <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
-                                <Code size={18} className="text-emerald-500" /> Embed Widget
-                            </CardTitle>
-                            <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
-                                Add the assistant to your website
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-6">
-                            <div className="space-y-2">
-                                <h3 className="text-sm font-bold">1. Copy the tracking snippet</h3>
-                                <p className="text-xs text-muted-foreground">
-                                    Paste this code inside the <code>&lt;head&gt;</code> tag or at the end of the <code>&lt;body&gt;</code> tag of your website.
-                                </p>
-                            </div>
-                            
-                            <div className="relative group">
-                                <pre className="p-4 rounded-xl bg-slate-950 text-slate-50 overflow-x-hidden whitespace-pre-wrap break-words text-xs font-mono border border-border/50 leading-relaxed">
-                                    {embedCode || 'Loading snippet...'}
-                                </pre>
-                                <Button 
-                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 text-white border-none h-8 px-3 text-[10px] uppercase font-bold tracking-widest"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(embedCode);
-                                        toast.success('Copied to clipboard');
-                                    }}
-                                >
-                                    Copy Code
-                                </Button>
-                            </div>
-                            
-                            <div className="bg-blue-500/10 text-blue-600 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3 mt-4">
-                                <Bot size={20} className="mt-0.5 shrink-0" />
-                                <div>
-                                    <h4 className="text-sm font-bold">Widget Configuration</h4>
-                                    <p className="text-xs mt-1 opacity-90 leading-relaxed">
-                                        The widget will automatically apply your defined Appearance and Behavior settings. If you update the configuration, changes will reflect instantly without needing to update the script on your site.
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <EmbedApiTab chatbotId={chatbot?.id} />
                 </TabsContent>
 
                 {/* Analytics Tab */}
