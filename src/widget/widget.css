@@ -245,3 +245,52 @@
     text-align: center;
     margin-bottom: 8px;
 }
+
+/* Feedback and Email Capture */
+.siteiq-feedback-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 8px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 6px;
+}
+
+.siteiq-feedback-btn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.siteiq-feedback-btn:hover {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.siteiq-feedback-btn.active {
+    color: var(--siteiq-primary);
+    background: #eef2ff;
+}
+
+.siteiq-email-capture {
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+.siteiq-email-prompt {
+    font-size: 13px;
+    color: #4b5563;
+    padding: 12px 16px 4px;
+    font-weight: 500;
+}
+
+.siteiq-email-input {
+    border-radius: 6px;
+}

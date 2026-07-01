@@ -32,7 +32,7 @@ const createPublicApi = (chatbotId, apiKey) => {
         createSession: () => Promise.resolve({ id: crypto.randomUUID() }),
         
         // SSE for streaming response using native fetch API to handle stream robustly
-        streamMessage: (sessionId, content, onMessage, onError, onComplete) => {
+        streamMessage: (sessionId, content, email, onMessage, onError, onComplete) => {
             return new Promise(async (resolve, reject) => {
                 const abortController = new AbortController();
                 
@@ -43,7 +43,7 @@ const createPublicApi = (chatbotId, apiKey) => {
                             'X-Api-Key': apiKey,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ sessionId, message: content }),
+                        body: JSON.stringify({ sessionId, message: content, email: email || undefined }),
                         signal: abortController.signal
                     });
 
@@ -99,6 +99,14 @@ const createPublicApi = (chatbotId, apiKey) => {
                 }
                 
                 return abortController;
+            });
+        },
+        
+        // Submit feedback for a message
+        submitFeedback: (messageId, feedbackValue) => {
+            return instance.post(`/${chatbotId}/feedback`, {
+                messageId,
+                feedback: feedbackValue
             });
         }
     };

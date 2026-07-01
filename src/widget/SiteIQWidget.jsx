@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import createPublicApi from './publicApi';
-import { MessageCircle, X, Send, Minus, Maximize2, Loader2, Bot } from 'lucide-react';
+import { MessageCircle, X, Send, Minus, Maximize2, Loader2, Bot, ThumbsUp, ThumbsDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import './widget.css';
 
@@ -11,6 +11,8 @@ const SiteIQWidget = ({ chatbotId, apiKey }) => {
     const [session, setSession] = useState(null);
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
+    const [emailValue, setEmailValue] = useState('');
+    const [emailCaptured, setEmailCaptured] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [error, setError] = useState(null);
     
@@ -64,6 +66,17 @@ const SiteIQWidget = ({ chatbotId, apiKey }) => {
         }
     };
 
+    const handleFeedback = async (messageId, feedbackValue) => {
+        try {
+            await apiRef.current.submitFeedback(messageId, feedbackValue);
+            setMessages(prev => prev.map(m => 
+                m.id === messageId ? { ...m, feedback: feedbackValue } : m
+            ));
+        } catch (err) {
+            console.error("Failed to submit feedback", err);
+        }
+    };
+
     const handleSend = async (e) => {
         if (e) e.preventDefault();
         if (!inputValue.trim() || !session || isTyping) return;
@@ -80,6 +93,7 @@ const SiteIQWidget = ({ chatbotId, apiKey }) => {
             await apiRef.current.streamMessage(
                 session.id,
                 userMsg,
+                emailCaptured ? emailValue : null,
                 (chunk) => {
                     setMessages(prev => prev.map(m => 
                         m.id === aiMsgId ? { ...m, content: m.content + chunk } : m
@@ -161,7 +175,27 @@ const SiteIQWidget = ({ chatbotId, apiKey }) => {
                             <div key={msg.id} className={`siteiq-message-wrapper ${msg.role === 'user' ? 'siteiq-user-wrapper' : 'siteiq-assistant-wrapper'}`}>
                                 <div className={`siteiq-message ${msg.role === 'user' ? 'siteiq-user-message' : 'siteiq-assistant-message'}`}>
                                     {msg.role === 'assistant' ? (
-                                        <ReactMarkdown className="siteiq-markdown">{msg.content}</ReactMarkdown>
+                                        <>
+                                            <ReactMarkdown className="siteiq-markdown">{msg.content}</ReactMarkdown>
+                                            {msg.id !== 'welcome' && (
+                                                <div className="siteiq-feedback-actions">
+                                                    <button 
+                                                        className={`siteiq-feedback-btn ${msg.feedback === 'up' ? 'active' : ''}`} 
+                                                        onClick={() => handleFeedback(msg.id, 'up')}
+                                                        aria-label="Helpful"
+                                                    >
+                                                        <ThumbsUp size={14} />
+                                                    </button>
+                                                    <button 
+                                                        className={`siteiq-feedback-btn ${msg.feedback === 'down' ? 'active' : ''}`}
+                                                        onClick={() => handleFeedback(msg.id, 'down')}
+                                                        aria-label="Not helpful"
+                                                    >
+                                                        <ThumbsDown size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
                                     ) : (
                                         msg.content
                                     )}
@@ -178,25 +212,53 @@ const SiteIQWidget = ({ chatbotId, apiKey }) => {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="siteiq-input-area">
-                        <textarea
-                            className="siteiq-input"
-                            placeholder="Type a message..."
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            disabled={!session || isTyping}
-                            rows={1}
-                        />
-                        <button 
-                            className="siteiq-send-btn" 
-                            onClick={handleSend}
-                            disabled={!inputValue.trim() || !session || isTyping}
-                            style={{ color: inputValue.trim() ? 'var(--siteiq-primary)' : 'inherit' }}
-                        >
-                            <Send size={20} />
-                        </button>
-                    </div>
+                    {config.collectEmail && !emailCaptured ? (
+                        <div className="siteiq-email-capture">
+                            <div className="siteiq-email-prompt">Please provide your email to start chat:</div>
+                            <div className="siteiq-input-area" style={{ borderTop: 'none', padding: '10px 16px' }}>
+                                <input
+                                    type="email"
+                                    className="siteiq-input siteiq-email-input"
+                                    placeholder="your.email@example.com"
+                                    value={emailValue}
+                                    onChange={(e) => setEmailValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && emailValue) {
+                                            setEmailCaptured(true);
+                                        }
+                                    }}
+                                />
+                                <button 
+                                    className="siteiq-send-btn" 
+                                    onClick={() => setEmailCaptured(true)}
+                                    disabled={!emailValue.trim()}
+                                    style={{ color: emailValue.trim() ? 'var(--siteiq-primary)' : 'inherit' }}
+                                >
+                                    <Send size={20} />
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="siteiq-input-area">
+                            <textarea
+                                className="siteiq-input"
+                                placeholder="Type a message..."
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                disabled={!session || isTyping}
+                                rows={1}
+                            />
+                            <button 
+                                className="siteiq-send-btn" 
+                                onClick={handleSend}
+                                disabled={!inputValue.trim() || !session || isTyping}
+                                style={{ color: inputValue.trim() ? 'var(--siteiq-primary)' : 'inherit' }}
+                            >
+                                <Send size={20} />
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
         </div>
