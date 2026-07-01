@@ -35,7 +35,7 @@ const PagesTab = ({ chatbotId }) => {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { content: pages, page, loading, deletePage, refetch } = useChatbotPages(chatbotId, {
+    const { content: pages, totalElements, totalPages, loading, deletePage, refetch } = useChatbotPages(chatbotId, {
         page: currentPage,
         size: 10,
         sort: 'createdAt,desc',
@@ -65,7 +65,7 @@ const PagesTab = ({ chatbotId }) => {
                         <FileText size={18} className="text-emerald-500" /> Indexed Pages
                     </CardTitle>
                     <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">
-                        Total: {page?.totalElements || 0} pages in the knowledge base
+                        Total: {totalElements || 0} pages in the knowledge base
                     </CardDescription>
                 </div>
                 
@@ -87,7 +87,9 @@ const PagesTab = ({ chatbotId }) => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All Status</SelectItem>
-                            <SelectItem value="SUCCESS">Success</SelectItem>
+                            <SelectItem value="CHUNKED">Chunked</SelectItem>
+                            <SelectItem value="SCRAPED">Scraped</SelectItem>
+                            <SelectItem value="SKIPPED">Skipped</SelectItem>
                             <SelectItem value="FAILED">Failed</SelectItem>
                             <SelectItem value="PENDING">Pending</SelectItem>
                         </SelectContent>
@@ -141,8 +143,9 @@ const PagesTab = ({ chatbotId }) => {
                                         <TableCell className="text-center">
                                             <Badge variant="outline" className={cn(
                                                 "text-[10px] font-bold uppercase tracking-widest",
-                                                p.status === 'SUCCESS' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
+                                                p.status === 'CHUNKED' || p.status === 'SCRAPED' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
                                                 p.status === 'FAILED' ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : 
+                                                p.status === 'SKIPPED' ? "bg-orange-500/10 text-orange-500 border-orange-500/20" :
                                                 "bg-blue-500/10 text-blue-500 border-blue-500/20"
                                             )}>
                                                 {p.status}
@@ -172,11 +175,11 @@ const PagesTab = ({ chatbotId }) => {
                     </div>
                 )}
                 
-                {!loading && page?.totalPages > 1 && (
+                {!loading && totalPages > 1 && (
                     <div className="p-4 border-t border-border/50">
                         <PaginationComponent
                             currentPage={currentPage}
-                            totalPages={page.totalPages}
+                            totalPages={totalPages}
                             onPageChange={setCurrentPage}
                         />
                     </div>
