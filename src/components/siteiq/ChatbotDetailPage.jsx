@@ -1,27 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useChatbot } from '@/hooks/siteiq/useChatbot';
-import { useScrapeProgress } from '@/hooks/siteiq/useScrapeProgress';
-import { chatbotApi } from '@/services/siteiq/chatbotApi';
-import { toast } from 'react-toastify';
-import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import React, {useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useChatbot} from '@/hooks/siteiq/useChatbot';
+import {useScrapeProgress} from '@/hooks/siteiq/useScrapeProgress';
+import {chatbotApi} from '@/services/siteiq/chatbotApi';
+import {toast} from 'react-toastify';
+import {cn} from '@/lib/utils';
+import {Button} from '@/components/ui/button';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {
-    Bot,
-    Play,
-    Settings2,
-    Palette,
-    Code,
-    BarChart3,
-    FileText,
-    ExternalLink,
     ArrowLeft,
-    Trash,
+    BarChart3,
+    Bot,
+    CheckCircle2,
+    Code,
+    FileText,
     Globe,
-    Loader2
+    Loader2,
+    Palette,
+    Play,
+    Settings2
 } from 'lucide-react';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ChatbotStatusBadge from './ChatbotStatusBadge';
@@ -31,6 +28,7 @@ import AnalyticsTab from './AnalyticsTab';
 import PagesTab from './PagesTab';
 import EmbedApiTab from './EmbedApiTab';
 import ScrapeProgressBar from "@/components/siteiq/ScrapeProgressBar";
+import {workshopBotService} from '@/services/siteiq/workshopBotService';
 
 const ChatbotDetailPage = () => {
     const { id } = useParams();
@@ -39,6 +37,39 @@ const ChatbotDetailPage = () => {
     // Core data hooks
     const { chatbot, loading: chatbotLoading, error: chatbotError, refetch: refetchChatbot, updateChatbot } = useChatbot(id);
     const { job, isRunning, progressRatio, statusMessage, error: progressError, triggerScrape } = useScrapeProgress(id);
+
+    const [isActive, setIsActive] = useState(false);
+    const [togglingActive, setTogglingActive] = useState(false);
+
+    useEffect(() => {
+        if (chatbot?.id) {
+            setIsActive(workshopBotService.isBotActive(chatbot.id));
+        }
+    }, [chatbot?.id]);
+
+    const handleToggleActive = async () => {
+        if (!chatbot?.id) return;
+        setTogglingActive(true);
+        try {
+            const active = await workshopBotService.toggleBotActive(
+                chatbot.id,
+                null,
+                chatbot.name,
+                chatbotApi
+            );
+            setIsActive(active);
+            if (active) {
+                toast.success(`"${chatbot.name}" is now active on this workshop!`);
+            } else {
+                toast.info(`"${chatbot.name}" has been disabled from workshop.`);
+            }
+        } catch (err) {
+            console.error("Failed to toggle bot state:", err);
+            toast.error("Failed to update active state: " + (err.message || ''));
+        } finally {
+            setTogglingActive(false);
+        }
+    };
 
     const handleStartScrape = async () => {
         try {
@@ -94,8 +125,28 @@ const ChatbotDetailPage = () => {
                         </a>
                     </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleToggleActive}
+                        variant={isActive ? "default" : "outline"}
+                        disabled={togglingActive}
+                        className={cn(
+                            "h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
+                            isActive
+                                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                                : "border-border/60 hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/50"
+                        )}
+                    >
+                        {togglingActive ? (
+                            <><Loader2 size={16} className="mr-2 animate-spin"/> Updating...</>
+                        ) : isActive ? (
+                            <><CheckCircle2 size={16} className="mr-2 text-white"/> Active on Workshop</>
+                        ) : (
+                            <><Bot size={16} className="mr-2"/> Enable on Workshop</>
+                        )}
+                    </Button>
+
                     <Button 
                         onClick={handleStartScrape} 
                         disabled={isRunning}

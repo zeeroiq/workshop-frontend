@@ -6,12 +6,19 @@ const getBaseUrl = () => {
     if (typeof document !== 'undefined') {
         const script = document.querySelector('script[src*="widget.js"]');
         if (script && script.src) {
-            const url = new URL(script.src);
-            return `${url.origin}/api/siteiq/public/widget/v1`;
+            try {
+                const url = new URL(script.src);
+                return `${url.origin}/api/siteiq/public/widget/v1`;
+            } catch (e) {
+                // Ignore parse error
+            }
+        }
+        if (typeof window !== 'undefined' && window.location && window.location.origin) {
+            return `${window.location.origin}/api/siteiq/public/widget/v1`;
         }
     }
     // Fallback
-    return 'http://localhost:8080/api/siteiq/public/widget/v1';
+    return '/api/siteiq/public/widget/v1';
 };
 
 const createPublicApi = (chatbotId, apiKey) => {

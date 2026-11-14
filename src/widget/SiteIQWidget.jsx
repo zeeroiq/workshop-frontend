@@ -1,8 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import createPublicApi from './publicApi';
-import { MessageCircle, X, Send, Minus, Maximize2, Loader2, Bot, ThumbsUp, ThumbsDown } from 'lucide-react';
+import {Bot, Loader2, Maximize2, MessageCircle, Minus, Send, ThumbsDown, ThumbsUp, X} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import './widget.css';
+
+class MarkdownErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {hasError: false};
+    }
+
+    static getDerivedStateFromError() {
+        return {hasError: true};
+    }
+
+    componentDidCatch(err) {
+        console.warn("Markdown rendering fallback:", err);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return <span style={{whiteSpace: "pre-wrap"}}>{this.props.fallback || ""}</span>;
+        }
+        return this.props.children;
+    }
+}
 
 const SiteIQWidget = ({ chatbotId, apiKey }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -176,7 +198,11 @@ const SiteIQWidget = ({ chatbotId, apiKey }) => {
                                 <div className={`siteiq-message ${msg.role === 'user' ? 'siteiq-user-message' : 'siteiq-assistant-message'}`}>
                                     {msg.role === 'assistant' ? (
                                         <>
-                                            <ReactMarkdown className="siteiq-markdown">{msg.content}</ReactMarkdown>
+                                            <div className="siteiq-markdown">
+                                                <MarkdownErrorBoundary fallback={msg.content}>
+                                                    <ReactMarkdown>{msg.content || ""}</ReactMarkdown>
+                                                </MarkdownErrorBoundary>
+                                            </div>
                                             {msg.id !== 'welcome' && (
                                                 <div className="siteiq-feedback-actions">
                                                     <button 

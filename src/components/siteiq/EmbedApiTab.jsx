@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { 
-    Code, 
-    Bot, 
-    Key, 
-    RefreshCw, 
-    Eye, 
-    EyeOff, 
-    Copy, 
-    Check,
-    AlertTriangle
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { toast } from 'react-toastify';
-import { chatbotApi } from '@/services/siteiq/chatbotApi';
+import React, {useEffect, useState} from 'react';
+import {AlertTriangle, Bot, Check, CheckCircle2, Code, Copy, Eye, EyeOff, Key, RefreshCw, Sparkles} from 'lucide-react';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
+import {Button} from '@/components/ui/button';
+import {toast} from 'react-toastify';
+import {chatbotApi} from '@/services/siteiq/chatbotApi';
+import {workshopBotService} from '@/services/siteiq/workshopBotService';
+import {cn} from '@/lib/utils';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const EmbedApiTab = ({ chatbotId }) => {
@@ -24,6 +16,14 @@ const EmbedApiTab = ({ chatbotId }) => {
     const [showKey, setShowKey] = useState(false);
     const [copiedEmbed, setCopiedEmbed] = useState(false);
     const [copiedKey, setCopiedKey] = useState(false);
+    const [applying, setApplying] = useState(false);
+    const [isActive, setIsActive] = useState(false);
+
+    useEffect(() => {
+        if (chatbotId) {
+            setIsActive(workshopBotService.isBotActive(chatbotId));
+        }
+    }, [chatbotId]);
 
     const fetchData = async () => {
         if (!chatbotId) return;
@@ -69,6 +69,34 @@ const EmbedApiTab = ({ chatbotId }) => {
         }
     };
 
+    const handleApplyToWorkshop = async () => {
+        if (!chatbotId || !apiKey) {
+            toast.error("Chatbot details not ready");
+            return;
+        }
+
+        setApplying(true);
+        try {
+            const active = await workshopBotService.toggleBotActive(
+                chatbotId,
+                apiKey,
+                null,
+                chatbotApi
+            );
+            setIsActive(active);
+            if (active) {
+                toast.success("Chatbot activated on this workshop! The widget is now live.");
+            } else {
+                toast.info("Chatbot deactivated from workshop.");
+            }
+        } catch (error) {
+            console.error("Failed to toggle chatbot on workshop:", error);
+            toast.error("Failed to update workshop chatbot: " + (error.message || ''));
+        } finally {
+            setApplying(false);
+        }
+    };
+
     const handleCopy = (text, type) => {
         navigator.clipboard.writeText(text);
         if (type === 'embed') {
@@ -97,6 +125,49 @@ const EmbedApiTab = ({ chatbotId }) => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
+                    {/* One-click Workshop Integration */}
+                    <div
+                        className="bg-emerald-500/10 border border-emerald-500/20 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <Sparkles size={16} className="text-emerald-500"/>
+                                <h4 className="text-sm font-black uppercase tracking-tight text-foreground">One-Click
+                                    Workshop Onboarding</h4>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Instantly connect and activate this chatbot as the live AI assistant on this workshop
+                                portal without copying scripts or redeploying.
+                            </p>
+                        </div>
+                        <Button
+                            onClick={handleApplyToWorkshop}
+                            disabled={applying || !apiKey}
+                            className={cn(
+                                "shrink-0 h-11 px-5 font-black text-xs uppercase tracking-wider transition-all",
+                                isActive
+                                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
+                                    : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
+                            )}
+                        >
+                            {applying ? (
+                                <>
+                                    <RefreshCw size={14} className="mr-2 animate-spin"/>
+                                    Updating...
+                                </>
+                            ) : isActive ? (
+                                <>
+                                    <CheckCircle2 size={14} className="mr-2 text-white"/>
+                                    Active on Workshop
+                                </>
+                            ) : (
+                                <>
+                                    <Bot size={14} className="mr-2"/>
+                                    Enable on Workshop
+                                </>
+                            )}
+                        </Button>
+                    </div>
+
                     <div className="space-y-2">
                         <h3 className="text-sm font-bold">1. Copy the tracking snippet</h3>
                         <p className="text-xs text-muted-foreground">

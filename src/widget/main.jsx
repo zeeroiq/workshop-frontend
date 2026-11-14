@@ -3,39 +3,65 @@ if (typeof process === 'undefined') {
 }
 
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 import SiteIQWidget from './SiteIQWidget';
 
-// Parse API key from script tag data attributes or global window object
-let apiKey = window.SITEIQ_API_KEY;
-let chatbotId = window.SITEIQ_CHATBOT_ID;
+let currentRoot = null;
 
-// Also allow extracting from the script tag itself if embedded
-if (!apiKey || !chatbotId) {
-    const currentScript = document.currentScript || document.querySelector('script[data-chatbot-id]');
-    if (currentScript) {
-        chatbotId = currentScript.getAttribute('data-chatbot-id');
-        apiKey = currentScript.getAttribute('data-api-key');
+export const destroy = () => {
+    if (currentRoot) {
+        try {
+            currentRoot.unmount();
+        } catch (e) {
+            console.warn("Failed to unmount SiteIQWidget", e);
+        }
+        currentRoot = null;
     }
-}
+    const container = document.getElementById('siteiq-widget-root');
+    if (container) {
+        container.remove();
+    }
+};
 
-const mountWidget = () => {
-    // Prevent multiple initializations
-    if (document.getElementById('siteiq-widget-root')) {
+export const init = (options = {}) => {
+    let cid = options.chatbotId || window.SITEIQ_CHATBOT_ID;
+    let key = options.apiKey || window.SITEIQ_API_KEY;
+
+    if (!cid || !key) {
+        const currentScript = document.currentScript || document.querySelector('script[data-chatbot-id]');
+        if (currentScript) {
+            cid = cid || currentScript.getAttribute('data-chatbot-id');
+            key = key || currentScript.getAttribute('data-api-key');
+        }
+    }
+
+    if (!cid || !key) {
         return;
     }
+
+    destroy();
 
     const container = document.createElement('div');
     container.id = 'siteiq-widget-root';
     document.body.appendChild(container);
 
-    const root = createRoot(container);
-    root.render(<SiteIQWidget chatbotId={chatbotId} apiKey={apiKey} />);
+    currentRoot = createRoot(container);
+    currentRoot.render(<SiteIQWidget chatbotId={cid} apiKey={key}/>);
 };
 
-// Initialize when DOM is ready
+// Expose globally on window
+window.SiteIQ = {init, destroy};
+
+// Auto-mount if script attributes or global variables are already set
+const autoMount = () => {
+    const hasScriptConfig = document.querySelector('script[data-chatbot-id]') != null;
+    if (window.SITEIQ_CHATBOT_ID || hasScriptConfig) {
+        init();
+    }
+};
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', mountWidget);
+    document.addEventListener('DOMContentLoaded', autoMount);
 } else {
-    mountWidget();
+    autoMount();
 }
