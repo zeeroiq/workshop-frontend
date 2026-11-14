@@ -9,7 +9,7 @@
     "build:int": "vite build --mode integration",
     "build:cert": "vite build --mode certification",
     "build:prod": "vite build --mode production",
-    "build:widget": "vite build -c vite.widget.config.js && mkdir -p public/widget && cp dist/widget/widget.js public/widget/widget.js",
+    "build:widget": "vite build -c vite.widget.config.js --mode production && mkdir -p public/widget && cp dist/widget/widget.js public/widget/widget.js",
     "test": "jest",
     "lint": "eslint src/**/*.{js,jsx}",
     "lint:fix": "eslint src/**/*.{js,jsx} --fix",
