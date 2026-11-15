@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import React, {useEffect, useState} from 'react';
+import {BrowserRouter as Router, Navigate, Route, Routes} from 'react-router-dom';
+import {ToastContainer} from 'react-toastify';
 import Dashboard from './components/dashboard/Dashboard';
 import CustomerList from './components/customers/CustomerList';
 import CustomerForm from './components/customers/CustomerForm';
@@ -9,7 +9,7 @@ import Login from './components/auth/Login';
 import LandingPage from './components/landing/LandingPage';
 import MainLayout from './components/common/MainLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import { authService } from './services/authService';
+import {authService} from './services/authService';
 import 'react-toastify/dist/ReactToastify.css';
 import './styles/App.css';
 import VehicleDetails from "./components/vehicles/VehicleDetails";
@@ -25,8 +25,14 @@ import Manage from "./components/manage/Manage";
 import UserForm from "@/components/workshop/users/UserForm";
 import RoleForm from "@/components/workshop/roles/RoleForm";
 import Settings from "./components/workshop/Settings";
-
+import ChatbotWidgetLoader from "./components/siteiq/ChatbotWidgetLoader";
 import {ThemeProvider} from './components/common/ThemeProvider';
+
+// Lazy loaded SiteIQ pages
+const SiteIQIndexPage = React.lazy(() => import('./components/siteiq/SiteIQIndexPage'));
+const ChatbotListPage = React.lazy(() => import('./components/siteiq/ChatbotListPage'));
+const ChatbotCreatePage = React.lazy(() => import('./components/siteiq/ChatbotCreatePage'));
+const ChatbotDetailPage = React.lazy(() => import('./components/siteiq/ChatbotDetailPage'));
 
 function AppContent() {
     const [user, setUser] = useState(null);
@@ -101,12 +107,36 @@ function AppContent() {
                                 <Route path="/manage/roles/new" element={<RoleForm/>}/>
                                 <Route path="/manage/roles/edit/:id" element={<RoleForm/>}/>
                                 <Route path="/settings" element={<Settings/>}/>
+                                
+                                {/* SiteIQ Routes */}
+                                <Route path="/siteiq" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <SiteIQIndexPage />
+                                    </React.Suspense>
+                                } />
+                                <Route path="/siteiq/chatbots" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <ChatbotListPage />
+                                    </React.Suspense>
+                                } />
+                                <Route path="/siteiq/chatbots/new" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <ChatbotCreatePage />
+                                    </React.Suspense>
+                                } />
+                                <Route path="/siteiq/chatbots/:id" element={
+                                    <React.Suspense fallback={<div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div></div>}>
+                                        <ChatbotDetailPage />
+                                    </React.Suspense>
+                                } />
+
                                 <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
                             </Routes>
                         </MainLayout>
                     </ProtectedRoute>
                 }/>
             </Routes>
+            <ChatbotWidgetLoader/>
             <ToastContainer
                 position="bottom-right"
                 autoClose={5000}

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /login
+Disallow: /dashboard
+Disallow: /customers
+Disallow: /vehicles
+Disallow: /inventory
+Disallow: /jobs
+Disallow: /invoices
+Disallow: /reports
+Disallow: /manage
+Disallow: /settings
+Disallow: /siteiq
+
+Sitemap: https://workshop.zeeroiq.com/sitemap.xml
