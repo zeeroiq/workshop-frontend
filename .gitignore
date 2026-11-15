@@ -37,3 +37,5 @@ pids
 *.pid
 *.seed
 *.pid.lock
+# Source maps - never commit to repo
+*.map

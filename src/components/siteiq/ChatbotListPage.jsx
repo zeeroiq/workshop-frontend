@@ -12,6 +12,15 @@ import {workshopBotService} from '@/services/siteiq/workshopBotService';
 import {chatbotApi} from '@/services/siteiq/chatbotApi';
 import {cn} from '@/lib/utils';
 
+const isSafeUrl = (url) => {
+    try {
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+        return false;
+    }
+};
+
 const ChatbotListPage = () => {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(0);
@@ -79,7 +88,7 @@ const ChatbotListPage = () => {
                                 </span>
                             )}
                         </div>
-                        <a href={row.seedUrl} target="_blank" rel="noopener noreferrer"
+                        <a href={isSafeUrl(row.seedUrl) ? row.seedUrl : '#'} target="_blank" rel="noopener noreferrer"
                            className="text-[10px] text-emerald-500 hover:underline flex items-center gap-1"
                            onClick={(e) => e.stopPropagation()}>
                             {row.seedUrl} <ExternalLink size={10}/>
@@ -176,7 +185,8 @@ const ChatbotListPage = () => {
                                 </span>
                             )}
                         </div>
-                        <a href={chatbot.seedUrl} target="_blank" rel="noopener noreferrer"
+                        <a href={isSafeUrl(chatbot.seedUrl) ? chatbot.seedUrl : '#'} target="_blank"
+                           rel="noopener noreferrer"
                            className="text-[10px] font-bold text-emerald-500 flex items-center gap-1 hover:underline"
                            onClick={(e) => e.stopPropagation()}>
                             {chatbot.seedUrl} <ExternalLink size={10}/>

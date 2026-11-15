@@ -1,34 +1,24 @@
-import React, { useState } from 'react';
-import { 
-    FileText, 
-    Trash, 
-    Search,
-    RefreshCw,
-    Globe
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import React, {useState} from 'react';
+import {FileText, Globe, RefreshCw, Search, Trash} from 'lucide-react';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
 import PaginationComponent from "@/components/common/PaginationComponent";
 import LoadingSpinner from '../common/LoadingSpinner';
-import { cn } from '@/lib/utils';
-import { useChatbotPages } from '@/hooks/siteiq/useChatbotPages';
+import {cn} from '@/lib/utils';
+import {useChatbotPages} from '@/hooks/siteiq/useChatbotPages';
+
+const isSafeUrl = (url) => {
+    try {
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+        return false;
+    }
+};
 
 const PagesTab = ({ chatbotId }) => {
     const [currentPage, setCurrentPage] = useState(0);
@@ -128,8 +118,8 @@ const PagesTab = ({ chatbotId }) => {
                                     <TableRow key={p.id} className="border-border/50 hover:bg-muted/10 transition-colors group">
                                         <TableCell className="font-medium pl-6">
                                             <div className="flex flex-col">
-                                                <a 
-                                                    href={p.url} 
+                                                <a
+                                                    href={isSafeUrl(p.url) ? p.url : '#'} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer" 
                                                     className="text-sm font-bold text-foreground hover:text-emerald-500 transition-colors truncate max-w-[400px]" 
