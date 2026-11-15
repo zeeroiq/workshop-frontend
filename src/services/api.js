@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { authService } from './authService';
+import {authService} from './authService';
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL || '/';
 
@@ -19,17 +19,16 @@ api.interceptors.request.use(
         }
 
         // Log request for debugging
-        console.log('API Request:', {
-            url: config.url,
-            method: config.method,
-            headers: config.headers,
-            data: config.data
-        });
+        if (import.meta.env.DEV) {
+            console.log('API Request:', {url: config.url, method: config.method});
+        }
 
         return config;
     },
     (error) => {
-        console.error('API Request Error:', error);
+        if (import.meta.env.DEV) {
+            console.error('API Request Error:', error);
+        }
         return Promise.reject(error);
     }
 );
@@ -38,20 +37,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => {
         // Log response for debugging
-        console.log('API Response:', {
-            url: response.config.url,
-            status: response.status,
-            data: response.data
-        });
+        if (import.meta.env.DEV) {
+            console.log('API Response:', {
+                url: response.config.url,
+                status: response.status,
+            });
+        }
 
         return response;
     },
     (error) => {
-        console.error('API Response Error:', {
-            url: error.config?.url,
-            status: error.response?.status,
-            data: error.response?.data
-        });
+        if (import.meta.env.DEV) {
+            console.error('API Response Error:', {
+                url: error.config?.url,
+                status: error.response?.status,
+            });
+        }
 
         if (error.response?.status === 401) {
             authService.logout();

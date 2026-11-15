@@ -15,6 +15,8 @@ export const authService = {
         localStorage.removeItem('token');
     },
 
+    // SECURITY NOTE: Storing authentication tokens in localStorage is a known security debt (vulnerable to XSS).
+    // The ideal fix is using httpOnly cookies, but that requires backend changes.
     getToken: () => {
         return localStorage.getItem('token');
     },
